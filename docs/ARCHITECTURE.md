@@ -122,9 +122,9 @@ Keep these module-relative paths stable: `main.go` embeds `frontend/dist`; `go.m
 | WebSocket | 連線／訊息檢視、訊息 hook、編解碼規則 | 插件可讀寫訊息本文；依連線是否經代理及規則而定 |
 | TCP | 連線與資料事件、轉送／腳本處理 | 依 Windows 驅動或代理設定；不是背景自動全攔截 |
 | UDP | 收送資料事件及插件 hook | Windows 擷取依驅動和程序設定；部分路徑需 SOCKS5 等代理 |
-| MCP | `POST /mcp` JSON-RPC、`GET /mcp` SSE、`/health` | 預設 `127.0.0.1:2026`；工具包含狀態、啟停監聽、設定系統代理、UI 命令與說明 |
+| MCP | `POST /mcp` JSON-RPC、`GET /mcp` SSE、`/health` | 預設 `127.0.0.1:2026`；可查詢捕獲會話和 WebSocket/TCP/UDP 訊息，也可控制監聽與系統代理 |
 
-MCP 服務支援 `initialize`、`ping`、`tools/list`、`tools/call`，並回覆 `resources/list`、`prompts/list`（目前為空集合）。可呼叫的工具為 `mcpnet_status`、`mcpnet_start_listener`、`mcpnet_stop_listener`、`mcpnet_set_system_proxy`、`mcpnet_command`、`mcpnet_help`。`mcpnet_set_system_proxy` 可能同時啟動監聽；將一般 UI 命令暴露給 MCP 也代表它可能修改設定或流量處理狀態。MCP 只綁定 loopback，但本機其他程式仍可能連線，請審慎使用。
+MCP 服務支援 `initialize`、`ping`、`tools/list`、`tools/call`，並回覆 `resources/list`、`prompts/list`（目前為空集合）。捕獲工具為 `mcpnet_list_captures`、`mcpnet_get_capture`、`mcpnet_get_messages`；其餘工具提供狀態、啟停監聽、系統代理、通用 UI 命令與說明。捕獲清單預設只回傳中繼資料；標頭與封包本文必須以 `include_body=true` 明確要求，本文以 Base64 傳回且每段最多 64 KiB。捕獲工具只讀取介面已顯示的會話，不會自行啟動監聽。`mcpnet_set_system_proxy` 可能同時啟動監聽；通用 UI 命令可能改變設定或流量處理狀態。MCP 只綁定 loopback，但本機其他程式仍可能連線，封包內容仍需視為敏感資料。
 
 ### 插件與公開邊界
 
@@ -218,9 +218,9 @@ flowchart TB
 | WebSocket | 查看连接与消息、运行消息钩子和编解码规则。 |
 | TCP | 连接与数据事件、转发和脚本处理；取决于驱动或代理设置。 |
 | UDP | 收发事件和插件钩子；Windows 捕获可能需要驱动、进程配置或代理。 |
-| MCP | `POST /mcp` JSON-RPC、`GET /mcp` SSE、`/health`；默认只监听 `127.0.0.1:2026`。工具支持状态、监听启停、系统代理、通用 UI 命令和帮助。 |
+| MCP | `POST /mcp` JSON-RPC、`GET /mcp` SSE、`/health`；默认只监听 `127.0.0.1:2026`。支持查询捕获会话和 WebSocket/TCP/UDP 消息，以及状态、监听和代理控制。 |
 
-MCP 方法包括 `initialize`、`ping`、`tools/list`、`tools/call`；资源和提示列表目前为空。系统代理工具可能同时启动监听，通用命令工具可能改变应用状态。MCP 绑定回环地址不代表本机程序无法访问。
+MCP 方法包括 `initialize`、`ping`、`tools/list`、`tools/call`；资源和提示列表目前为空。捕获工具为 `mcpnet_list_captures`、`mcpnet_get_capture` 和 `mcpnet_get_messages`。默认仅返回元数据；读取请求头和数据体必须显式设置 `include_body=true`，数据体以 Base64 返回且每段最多 64 KiB。查询不会自动开启监听；代理控制可能同时启动监听，通用命令可能改变应用状态。MCP 绑定回环地址不代表本机程序无法访问，捕获数据仍应视作敏感信息。
 
 插件运行目录为 `%USERPROFILE%\McpNet_new\plugins\<id>\`，含 `plugin.json` 和 `main.go`；钩子为 `OnHTTPRequest`、`OnHTTPResponse`、`OnWebSocket`、`OnUDP`、`OnURLDisplay`。`SetBody` 可修改流量，`SetURL` 只修改界面显示，因此只安装可信插件。GitHub 仓库仅允许 `plugins/examples/`，忽略个人插件、密钥、抓包和用户配置；示例默认禁用。个人 XXTEA/XOR、URL 显示及 UDP 解码插件保留在本机用户数据目录，不发布到 GitHub。
 
@@ -305,9 +305,9 @@ The repository root contains the Go/Wails app. `CommAnd/` dispatches UI commands
 | WebSocket | Connection/message inspection, message hooks, codec rules | Depends on the connection traversing the proxy and applicable rules. |
 | TCP | Connection/data events, forwarding, and scripts | Depends on Windows driver or proxy configuration. |
 | UDP | Send/receive events and plugin hooks | Windows capture may require a driver, process setup, or proxy. |
-| MCP | JSON-RPC `POST /mcp`, SSE `GET /mcp`, and `/health` | Bound to `127.0.0.1:2026` by default. |
+| MCP | JSON-RPC `POST /mcp`, SSE `GET /mcp`, and `/health`; query captured sessions and socket messages | Bound to `127.0.0.1:2026` by default. |
 
-MCP methods include `initialize`, `ping`, `tools/list`, and `tools/call`; resource and prompt lists are currently empty. Tools expose status, listener start/stop, system proxy control, generic UI commands, and help. Proxy control may start capture, and generic commands may change application state. Loopback binding does not prevent other local processes from connecting.
+MCP methods include `initialize`, `ping`, `tools/list`, and `tools/call`; resource and prompt lists are currently empty. `mcpnet_list_captures`, `mcpnet_get_capture`, and `mcpnet_get_messages` expose read-only capture monitoring. Capture listings return metadata only; headers and payloads require explicit `include_body=true`, payloads are Base64 and capped at 64 KiB each. Querying does not start capture. Other tools expose status, listener start/stop, system proxy control, generic UI commands, and help. Proxy control may start capture, and generic commands may change application state. Loopback binding does not prevent other local processes from connecting, so captured traffic remains sensitive.
 
 Runtime plugins are loaded from `%USERPROFILE%\McpNet_new\plugins\<id>\`, containing `plugin.json` and `main.go`. Hooks are `OnHTTPRequest`, `OnHTTPResponse`, `OnWebSocket`, `OnUDP`, and `OnURLDisplay`. `SetBody` can change traffic; `SetURL` changes display only. Install only code you trust. The GitHub allowlist keeps only `plugins/examples/`; personal finished plugins, keys, captures, and user configuration must not be committed. Personal WebSocket XXTEA/XOR, URL display, and UDP decoding stay under the local user-data directory. The example is disabled by default.
 

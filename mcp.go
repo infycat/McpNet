@@ -1,7 +1,9 @@
 package main
 
 import (
+	"changeme/MapHash"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -300,7 +303,7 @@ func (s *mcpServer) start() error {
 	mux.HandleFunc("/mcp", s.handleMCP)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = fmt.Fprintf(w, `{"ok":true,"name":"mcpnet","version":"1.1.0","port":%d}`, defaultMCPPort)
+		_, _ = fmt.Fprintf(w, `{"ok":true,"name":"mcpnet","version":"1.2.0","port":%d}`, defaultMCPPort)
 	})
 	s.srv = &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second}
 	s.running = true
@@ -479,7 +482,7 @@ func (s *mcpServer) handleOne(raw json.RawMessage) (any, bool) {
 			},
 			"serverInfo": map[string]any{
 				"name":    "mcpnet",
-				"version": "1.1.0",
+				"version": "1.2.0",
 			},
 		}), false
 	case "notifications/initialized", "notifications/cancelled":
@@ -543,6 +546,68 @@ func toolText(v any, isError bool) map[string]any {
 	}
 }
 
+const maxMCPBodyBytes = 64 << 10
+
+func argInt(args map[string]any, key string, fallback int) int {
+	v, ok := args[key]
+	if !ok {
+		return fallback
+	}
+	switch n := v.(type) {
+	case float64:
+		return int(n)
+	case float32:
+		return int(n)
+	case int:
+		return n
+	case int64:
+		return int(n)
+	case json.Number:
+		i, err := n.Int64()
+		if err == nil {
+			return int(i)
+		}
+	case string:
+		i, err := strconv.Atoi(strings.TrimSpace(n))
+		if err == nil {
+			return i
+		}
+	}
+	return fallback
+}
+
+func argBool(args map[string]any, key string) bool {
+	v, _ := args[key].(bool)
+	return v
+}
+
+func boundedBase64(body []byte) (string, bool) {
+	truncated := len(body) > maxMCPBodyBytes
+	if truncated {
+		body = body[:maxMCPBodyBytes]
+	}
+	return base64.StdEncoding.EncodeToString(body), truncated
+}
+
+func captureMetadata(c MapHash.CaptureSnapshot) map[string]any {
+	return map[string]any{
+		"capture_id": c.ID, "protocol": c.Protocol, "method": c.Method, "url": c.URL,
+		"pid": c.PID, "client_ip": c.ClientIP, "status_code": c.StatusCode,
+		"request_time": c.RequestAt, "response_time": c.ResponseAt,
+		"request_body_length": len(c.RequestBody), "response_body_length": len(c.ResponseBody),
+		"sent_bytes": c.SentBytes, "received_bytes": c.RecvBytes, "message_count": len(c.Messages),
+	}
+}
+
+func hasCaptureAfter(captures []MapHash.CaptureSnapshot, id int, protocol string) bool {
+	for _, c := range captures {
+		if c.ID > id && (protocol == "" || protocol == "<nil>" || strings.EqualFold(c.Protocol, protocol)) {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 	switch name {
 	case "mcpnet_status":
@@ -586,8 +651,90 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 				"启动监听", "停止监听", "监听状态", "设置IE代理",
 				"加载配置", "保存配置", "获取运行端口", "获取内网IP",
 			},
-			"note": "args is the same object the UI sends as Args; omit it for commands without arguments.",
+			"capture_tools": []string{"mcpnet_list_captures", "mcpnet_get_capture", "mcpnet_get_messages"},
+			"note":          "Capture listing is metadata-only. Headers and payloads are excluded unless include_body is explicitly true. The generic UI command tool can change app state.",
 		}, nil
+	case "mcpnet_list_captures":
+		limit := argInt(args, "limit", 50)
+		if limit < 1 {
+			limit = 1
+		}
+		if limit > 200 {
+			limit = 200
+		}
+		afterID := argInt(args, "after_id", 0)
+		protocol := strings.ToLower(strings.TrimSpace(fmt.Sprint(args["protocol"])))
+		all := HashMap.SnapshotCaptures()
+		items := make([]map[string]any, 0, limit)
+		next := afterID
+		for _, c := range all {
+			if c.ID <= afterID || (protocol != "" && protocol != "<nil>" && !strings.EqualFold(c.Protocol, protocol)) {
+				continue
+			}
+			items = append(items, captureMetadata(c))
+			next = c.ID
+			if len(items) == limit {
+				break
+			}
+		}
+		return map[string]any{"captures": items, "count": len(items), "next_after_id": next, "has_more": hasCaptureAfter(all, next, protocol)}, nil
+	case "mcpnet_get_capture":
+		id := argInt(args, "capture_id", -1)
+		if id < 0 {
+			return nil, fmt.Errorf("capture_id must be a non-negative integer")
+		}
+		c, ok := HashMap.SnapshotCapture(id)
+		if !ok {
+			return nil, fmt.Errorf("capture %d was not found (it may have been cleared or not displayed)", id)
+		}
+		out := captureMetadata(c)
+		if argBool(args, "include_body") {
+			out["request_headers"] = c.RequestHead
+			out["response_headers"] = c.ResponseHead
+			out["request_body_base64"], out["request_body_truncated"] = boundedBase64(c.RequestBody)
+			out["response_body_base64"], out["response_body_truncated"] = boundedBase64(c.ResponseBody)
+		}
+		return out, nil
+	case "mcpnet_get_messages":
+		id := argInt(args, "capture_id", -1)
+		if id < 0 {
+			return nil, fmt.Errorf("capture_id must be a non-negative integer")
+		}
+		c, ok := HashMap.SnapshotCapture(id)
+		if !ok {
+			return nil, fmt.Errorf("capture %d was not found (it may have been cleared or not displayed)", id)
+		}
+		offset := argInt(args, "offset", 0)
+		if offset < 0 {
+			offset = 0
+		}
+		if offset > len(c.Messages) {
+			offset = len(c.Messages)
+		}
+		limit := argInt(args, "limit", 100)
+		if limit < 1 {
+			limit = 1
+		}
+		if limit > 200 {
+			limit = 200
+		}
+		includeBody := argBool(args, "include_body")
+		if includeBody && limit > 1 {
+			limit = 1
+		}
+		end := offset + limit
+		if end > len(c.Messages) {
+			end = len(c.Messages)
+		}
+		messages := make([]map[string]any, 0, end-offset)
+		for _, m := range c.Messages[offset:end] {
+			row := map[string]any{"index": m.Index, "direction": m.Direction, "type": m.Type, "time": m.Time, "length": m.Length}
+			if includeBody {
+				row["payload_base64"], row["payload_truncated"] = boundedBase64(m.Body)
+			}
+			messages = append(messages, row)
+		}
+		return map[string]any{"capture_id": id, "messages": messages, "count": len(messages), "total": len(c.Messages), "offset": offset, "has_more": end < len(c.Messages)}, nil
 	default:
 		return nil, fmt.Errorf("unknown tool: %s", name)
 	}
@@ -602,6 +749,21 @@ func mcpTools() []mcpTool {
 		return m
 	}
 	return []mcpTool{
+		{
+			Name:        "mcpnet_list_captures",
+			Description: "List captured HTTP/HTTPS, WebSocket, TCP, and UDP sessions. Returns metadata only; no headers or payloads.",
+			InputSchema: obj(map[string]any{"after_id": map[string]any{"type": "integer", "minimum": 0}, "limit": map[string]any{"type": "integer", "minimum": 1, "maximum": 200}, "protocol": map[string]any{"type": "string", "description": "Optional HTTP, WebSocket, TCP, or UDP filter."}}, nil),
+		},
+		{
+			Name:        "mcpnet_get_capture",
+			Description: "Get one captured session's metadata. Set include_body=true to include headers and request/response payloads (base64, capped at 64 KiB each); these may contain credentials or personal data.",
+			InputSchema: obj(map[string]any{"capture_id": map[string]any{"type": "integer", "minimum": 0}, "include_body": map[string]any{"type": "boolean", "default": false}}, []string{"capture_id"}),
+		},
+		{
+			Name:        "mcpnet_get_messages",
+			Description: "List WebSocket/TCP/UDP messages for a captured session. Payloads are omitted unless include_body=true; then one message per call is returned with a Base64 payload capped at 64 KiB. Payloads may contain private data.",
+			InputSchema: obj(map[string]any{"capture_id": map[string]any{"type": "integer", "minimum": 0}, "offset": map[string]any{"type": "integer", "minimum": 0}, "limit": map[string]any{"type": "integer", "minimum": 1, "maximum": 200}, "include_body": map[string]any{"type": "boolean", "default": false}}, []string{"capture_id"}),
+		},
 		{
 			Name:        "mcpnet_status",
 			Description: "Return listener/system-proxy/MCP status for McpNet.",

@@ -62,13 +62,13 @@ type Request struct {
 	Display  bool        `json:"Display"` //是否需要显示到列表
 	Response struct {
 		Conn      *McpNet.HttpConn `json:"-"`
-		Header    http.Header        `json:"Header"`
-		Body      []byte             `json:"Body"`
-		StateCode int                `json:"StateCode"`
-		Error     bool               `json:"Error"`
+		Header    http.Header      `json:"Header"`
+		Body      []byte           `json:"Body"`
+		StateCode int              `json:"StateCode"`
+		Error     bool             `json:"Error"`
 	} `json:"Response"`
-	Break   uint8              `json:"Break"`
-	Wait    WaitGroup          `json:"-"`
+	Break   uint8            `json:"Break"`
+	Wait    WaitGroup        `json:"-"`
 	Conn    *McpNet.HttpConn `json:"-"`
 	WsConn  *McpNet.WsConn   `json:"-"`
 	TcpConn *McpNet.TcpConn  `json:"-"`
@@ -91,6 +91,107 @@ type Request struct {
 		Search   string `json:"search"`   //搜索的背景颜色
 	} `json:"color"` //显示图标
 }
+
+// CaptureSnapshot is a detached, JSON-friendly view of captured traffic for
+// read-only integrations such as the local MCP service. Bodies are copied so
+// callers cannot mutate the live capture records.
+type CaptureSnapshot struct {
+	ID           int                 `json:"id"`
+	Protocol     string              `json:"protocol"`
+	Method       string              `json:"method,omitempty"`
+	URL          string              `json:"url,omitempty"`
+	PID          string              `json:"pid,omitempty"`
+	ClientIP     string              `json:"client_ip,omitempty"`
+	StatusCode   int                 `json:"status_code,omitempty"`
+	RequestAt    string              `json:"request_time,omitempty"`
+	ResponseAt   string              `json:"response_time,omitempty"`
+	RequestHead  map[string][]string `json:"request_headers,omitempty"`
+	ResponseHead map[string][]string `json:"response_headers,omitempty"`
+	RequestBody  []byte              `json:"-"`
+	ResponseBody []byte              `json:"-"`
+	SentBytes    int                 `json:"sent_bytes"`
+	RecvBytes    int                 `json:"received_bytes"`
+	Messages     []CaptureMessage    `json:"messages,omitempty"`
+}
+
+type CaptureMessage struct {
+	Index     int    `json:"index"`
+	Direction string `json:"direction"`
+	Type      string `json:"type,omitempty"`
+	Time      string `json:"time,omitempty"`
+	Length    int    `json:"length"`
+	Body      []byte `json:"-"`
+}
+
+func cloneHeader(h http.Header) map[string][]string {
+	if h == nil {
+		return nil
+	}
+	out := make(map[string][]string, len(h))
+	for k, values := range h {
+		out[k] = append([]string(nil), values...)
+	}
+	return out
+}
+
+func snapshotRequest(id int, r *Request) CaptureSnapshot {
+	s := CaptureSnapshot{ID: id, Protocol: r.Way, Method: r.Method, URL: r.URL, PID: r.PID, ClientIP: r.ClientIP,
+		StatusCode: r.Response.StateCode, RequestAt: r.SendTime, ResponseAt: r.RecTime,
+		RequestHead: cloneHeader(r.Header), ResponseHead: cloneHeader(r.Response.Header),
+		RequestBody: append([]byte(nil), r.Body...), ResponseBody: append([]byte(nil), r.Response.Body...),
+		SentBytes: r.SendNum, RecvBytes: r.RecNum}
+	if s.Protocol == "" {
+		switch {
+		case r.WsConn != nil:
+			s.Protocol = "WebSocket"
+		case r.UdpConn != nil:
+			s.Protocol = "UDP"
+		case r.TcpConn != nil:
+			s.Protocol = "TCP"
+		default:
+			s.Protocol = "HTTP"
+		}
+	}
+	for i, msg := range r.SocketData {
+		if msg == nil || msg.Info == nil {
+			continue
+		}
+		direction := msg.Info.Ico
+		if strings.Contains(direction, "下行") {
+			direction = "server_to_client"
+		} else {
+			direction = "client_to_server"
+		}
+		s.Messages = append(s.Messages, CaptureMessage{Index: i, Direction: direction, Type: msg.Info.WsType, Time: msg.Info.Time, Length: msg.Info.Length, Body: append([]byte(nil), msg.Body...)})
+	}
+	return s
+}
+
+// SnapshotCaptures returns detached capture snapshots in ascending session ID.
+func (m *Map) SnapshotCaptures() []CaptureSnapshot {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	out := make([]CaptureSnapshot, 0, len(m.Request))
+	for id, r := range m.Request {
+		if r != nil && r.Display {
+			out = append(out, snapshotRequest(id, r))
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
+	return out
+}
+
+// SnapshotCapture returns one detached capture snapshot.
+func (m *Map) SnapshotCapture(id int) (CaptureSnapshot, bool) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	r := m.Request[id]
+	if r == nil || !r.Display {
+		return CaptureSnapshot{}, false
+	}
+	return snapshotRequest(id, r), true
+}
+
 type RequestWeb struct {
 	Method   string
 	URL      string

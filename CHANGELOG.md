@@ -6,8 +6,21 @@
 
 | 版本 | 日期 | 狀態 | 平台 | 檔案 | 發布說明 |
 |---|---|---|---|---|---|
+| [v1.2.0](https://github.com/infycat/McpNet/releases/tag/v1.2.0) | 2026-10-20 | MCP 捕獲監控更新 | Windows x64 | `McpNet-v1.2.0-windows-x64.exe` | [下載與校驗碼](https://github.com/infycat/McpNet/releases/tag/v1.2.0) |
 | [v1.1.0](https://github.com/infycat/McpNet/releases/tag/v1.1.0) | 2026-10-20 | 最新版／介面與插件功能更新 | Windows x64 | `McpNet-v1.1.0-windows-x64.exe` | [下載與校驗碼](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 | [v1.0.0](https://github.com/infycat/McpNet/releases/tag/v1.0.0) | 2026-10-19 | 首個公開版 | Windows x64 | `McpNet-v1.0.0-windows-x64.exe` | [下載與校驗碼](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+
+## v1.2.0 — 2026-10-20
+
+補足 MCP 的捕獲監控能力。MCP 客戶端現在可查詢已顯示的 HTTP(S)、WebSocket、TCP、UDP 會話及分頁讀取連線訊息；封包本文與標頭採明確 opt-in，預設不回傳，並以 Base64 與每段 64 KiB 上限傳輸。系統代理仍由使用者控制，不會自動開啟。
+
+- **MCP 工具：** `mcpnet_list_captures`、`mcpnet_get_capture`、`mcpnet_get_messages`；原有監聽、系統代理與狀態工具保留。
+- **隱私與大小限制：** 清單預設僅回傳中繼資料；讀取標頭／本文需 `include_body=true`，單段本文最多 64 KiB。
+- **平台：** Windows x64
+- **檔案：** `McpNet-v1.2.0-windows-x64.exe`
+- **檔案大小：** 91,820,032 bytes（約 87.6 MiB）
+- **SHA-256：** `951CB36062BD7E6E0D01E3074F53B29E603BD29F8B6B2144A61F6C6530E8B32D`
+- **下載：** [GitHub Release 成品](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe)
 
 ## v1.1.0 — 2026-10-20
 
