@@ -2,14 +2,40 @@ html {
     background-color: rgba(27, 38, 54, 1);
     text-align: center;
     color: white;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 body {
     margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
     color: white;
     font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
     "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
+}
+
+/* Element Plus teleports overlays under body, outside the main AG Grid tree. */
+:root[data-app-palette] .el-notification,
+:root[data-app-palette] .el-message-box,
+:root[data-app-palette] .el-dialog,
+:root[data-app-palette] .el-drawer,
+:root[data-app-palette] .el-popper.is-light {
+    color: var(--app-text);
+    background-color: var(--app-surface-raised);
+    border-color: var(--app-border);
+}
+
+:root[data-app-palette] .el-notification__title,
+:root[data-app-palette] .el-notification__content,
+:root[data-app-palette] .el-message-box__title,
+:root[data-app-palette] .el-dialog__title,
+:root[data-app-palette] .el-drawer__title {
+    color: var(--app-text);
 }
 
 @font-face {
@@ -22,6 +48,8 @@ body {
 
 #app {
     height: 100vh;
+    width: 100vw;
+    overflow: hidden;
     text-align: center;
 }
 

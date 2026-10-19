@@ -62,7 +62,6 @@ export default {
             })
           }, 1000)
         })
-        window.Theme.IsDark = true
       }
     }, 200)
   }

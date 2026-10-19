@@ -6,7 +6,7 @@
 
 ### 系統定位
 
-McpNet 是 Windows 桌面網路分析工具。Vue 3 呈現介面；Wails v2 將前端命令和事件連到 Go 應用；Go 負責規則、插件、MCP 與使用者設定；本機重建的 McpNet/SunnyNet 核心負責代理和協定處理。程式啟動會顯示 GUI 並啟動綁定 `127.0.0.1` 的 MCP 服務；流量監聽與系統代理則有各自的啟停控制。
+McpNet 是 Windows 桌面網路分析工具。Vue 3 呈現介面；Wails v2 將前端命令和事件連到 Go 應用；Go 負責規則、插件、MCP 與使用者設定；本機重建的 McpNet 核心負責代理和協定處理。程式啟動會顯示 GUI 並啟動綁定 `127.0.0.1` 的 MCP 服務；流量監聽與系統代理則有各自的啟停控制。
 
 ### 元件與請求流程
 
@@ -16,7 +16,7 @@ flowchart LR
   APP --> RULES[Rules and config]
   APP --> PLUG[Yaegi plugin hooks]
   APP --> MCP[MCP HTTP service]
-  APP --> CORE[McpNet / SunnyNet core]
+  APP --> CORE[McpNet core]
   CORE <--> DRV[Windows network driver / proxy path]
   DRV <--> NET[Target application and network]
   MCP <--> CLIENT[Local MCP client]
@@ -145,7 +145,7 @@ MCP 服務支援 `initialize`、`ping`、`tools/list`、`tools/call`，並回覆
 
 ### 系统定位与流程
 
-McpNet 是 Windows 桌面网络分析工具，由 Vue 3 前端、Wails v2/Go 应用和本地重建的 McpNet/SunnyNet 核心组成。应用启动会显示 GUI 并启动绑定 `127.0.0.1` 的 MCP 服务；流量监听与系统代理分别控制，启动应用不等于开始全系统抓包。
+McpNet 是 Windows 桌面网络分析工具，由 Vue 3 前端、Wails v2/Go 应用和本地重建的 McpNet 核心组成。应用启动会显示 GUI 并启动绑定 `127.0.0.1` 的 MCP 服务；流量监听与系统代理分别控制，启动应用不等于开始全系统抓包。
 
 ```mermaid
 flowchart LR
@@ -153,7 +153,7 @@ flowchart LR
   APP --> RULE[规则与配置]
   APP --> PLUG[Yaegi 插件钩子]
   APP --> MCP[MCP HTTP 服务]
-  APP --> CORE[McpNet / SunnyNet 核心]
+  APP --> CORE[McpNet 核心]
   CORE <--> DRV[Windows 驱动或代理路径]
   DRV <--> NET[目标应用与网络]
   MCP <--> CLIENT[本机 MCP 客户端]
@@ -232,7 +232,7 @@ MCP 方法包括 `initialize`、`ping`、`tools/list`、`tools/call`；资源和
 
 ### System overview and flow
 
-McpNet is a Windows desktop network analysis tool built from a Vue 3 frontend, a Wails v2/Go application, and a locally reconstructed McpNet/SunnyNet core. Startup opens the GUI and starts an MCP service bound to `127.0.0.1`; capture and system-proxy controls are separate. Launching the app does not itself enable system-wide interception.
+McpNet is a Windows desktop network analysis tool built from a Vue 3 frontend, a Wails v2/Go application, and a locally reconstructed McpNet core. Startup opens the GUI and starts an MCP service bound to `127.0.0.1`; capture and system-proxy controls are separate. Launching the app does not itself enable system-wide interception.
 
 ```mermaid
 flowchart LR
@@ -240,7 +240,7 @@ flowchart LR
   APP --> RULE[Rules and config]
   APP --> PLUG[Yaegi plugin hooks]
   APP --> MCP[MCP HTTP service]
-  APP --> CORE[McpNet / SunnyNet core]
+  APP --> CORE[McpNet core]
   CORE <--> DRV[Windows driver or proxy path]
   DRV <--> NET[Target app and network]
   MCP <--> CLIENT[Local MCP client]

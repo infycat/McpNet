@@ -669,6 +669,58 @@ export default {
 }
 </script>
 <style scoped>
+.top-component {
+  color: var(--app-text, var(--ag-foreground-color, #f5f5f5));
+}
+
+:deep(.ag-default-panel) {
+  color: var(--app-text, var(--ag-foreground-color, #f5f5f5));
+  background-color: var(--app-surface-raised, #2d3436);
+  border-color: var(--app-border, var(--ag-border-color, #424242));
+}
+
+:deep(.ag-panel-title-bar) {
+  color: var(--app-text, var(--ag-foreground-color, #f5f5f5));
+  background-color: var(--app-header, var(--ag-header-background-color, #1c1c1c));
+  border-bottom-color: var(--app-border, var(--ag-border-color, #424242));
+}
+
+:deep(.ag-panel-content-wrapper),
+:deep(.ag-chart),
+:deep(.ag-chart-components-wrapper),
+:deep(.ag-chart-empty-text),
+:deep(.el-main) {
+  color: var(--app-text, var(--ag-foreground-color, #f5f5f5));
+  background-color: var(--app-surface, #2d3436);
+}
+
+:deep(.el-collapse) {
+  --el-collapse-header-bg-color: var(--app-surface-raised, #343b3d);
+  --el-collapse-content-bg-color: var(--app-surface, #2d3436);
+  --el-collapse-border-color: var(--app-border, var(--ag-border-color, #424242));
+  --el-collapse-header-text-color: var(--app-text, var(--ag-foreground-color, #f5f5f5));
+  --el-collapse-content-text-color: var(--app-text, var(--ag-foreground-color, #f5f5f5));
+}
+
+:deep(.el-collapse-item__header) {
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+:deep(.el-collapse-item__header:hover) {
+  color: var(--app-text, var(--ag-foreground-color, #f5f5f5));
+  background-color: var(--app-row-hover, #3d4749);
+}
+
+:deep(.el-collapse-item__wrap) {
+  background-color: var(--app-surface, #2d3436);
+  border-bottom-color: var(--app-border, var(--ag-border-color, #424242));
+}
+
+:deep(.el-divider__text) {
+  color: var(--app-text, var(--ag-foreground-color, #f5f5f5));
+  background-color: var(--app-surface, #2d3436);
+}
+
 .custom-menu-item {
   height: 50px; /* 调整组件之间的下边距 */
 }

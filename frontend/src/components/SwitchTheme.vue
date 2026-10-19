@@ -15,31 +15,11 @@ import {CallGoDo} from "./CallbackEventsOn.js";
 export default {
   components: {},
   computed: {
-    IsDark() {
-      const m = this.Theme
-      const htmlElement = document.querySelector('html');
-      htmlElement.classList.remove('dark'); // 移除 'dark' 类
-      if (m) {
-        htmlElement.classList.add('dark');
-      } else {
-        htmlElement.classList.add('light');
-      }
-      this.$nextTick(() => {
-        const ns = document.getElementsByClassName("el-divider__text")
-        for (let i = 0; i < ns.length; i++) {
-          if (m) {
-            ns[i].style.backgroundColor = "rgb(45,52,54)"
-            ns[i].style.Color = "#ffffff"
-          } else {
-            ns[i].style.backgroundColor = "rgb(255,255,255)"
-            ns[i].style.Color = "#000000"
-          }
-        }
-      })
-      if (window.vm.List != null) {
-        window.vm.List.RefreshRenderedNodes()
-      }
-      return !m
+    IsDark() { return !this.Theme }
+  },
+  watch: {
+    Theme(value) {
+      if (window.ApplyAppTheme) window.ApplyAppTheme(value)
     }
   },
   data() {
@@ -48,17 +28,14 @@ export default {
     }
   }, methods: {
     SwitchTheme() {
-      if (window.Theme.IsDark) {
-        this.Theme = false
-        window.Theme.IsDark = false
-      } else {
-        this.Theme = true
-        window.Theme.IsDark = true
-      }
+      this.Theme = !window.Theme.IsDark
+      if (window.ApplyAppTheme) window.ApplyAppTheme(this.Theme)
+      else window.Theme.IsDark = this.Theme
       CallGoDo("更新主题", {Dark: window.Theme.IsDark})
     }
   }, mounted() {
     window.vm.Theme = this
+    if (window.ApplyAppTheme) window.ApplyAppTheme(window.Theme.IsDark)
   }
 }
 </script>

@@ -423,11 +423,34 @@ func RunHTTPRequestScriptCode(Conn *McpNet.HttpConn) (_Display bool) {
 	h.Header = Conn.Request.Header.Clone()
 	h.Method = Conn.Request.Method
 	h.Proto = "HTTP/1.1"
+	var requestBody []byte
 	if Conn.Request.Body != nil {
-		Body, _ := io.ReadAll(Conn.Request.Body)
+		requestBody, _ = io.ReadAll(Conn.Request.Body)
 		_ = Conn.Request.Body.Close()
-		h.Body = Body
-		Conn.Request.Body = io.NopCloser(bytes.NewBuffer(Body))
+		Conn.Request.Body = io.NopCloser(bytes.NewBuffer(requestBody))
+	}
+	requestURL := h.URL
+	requestCtx := &pluginCtx{
+		Direction: "out", Host: Conn.Request.URL.Host, Path: Conn.Request.URL.Path,
+		URL: requestURL, Method: h.Method, PID: Conn.PID,
+		Process: CommAnd.GetPidName(Conn.PID), Body: append([]byte(nil), requestBody...),
+	}
+	if runHook("OnHTTPRequest", requestCtx) {
+		requestBody = append([]byte(nil), requestCtx.Body...)
+	}
+	if requestCtx.WireBodySet {
+		requestBody = append([]byte(nil), requestCtx.WireBody...)
+	}
+	Conn.Request.Body = io.NopCloser(bytes.NewBuffer(requestBody))
+	if requestCtx.URL != "" && requestCtx.URL != requestURL {
+		if parsed, err := url.Parse(requestCtx.URL); err == nil && parsed.IsAbs() {
+			Conn.Request.URL = parsed
+			h.URL = parsed.String()
+		}
+	}
+	h.Body = requestBody
+	if requestCtx.DisplayBodySet {
+		h.Body = append([]byte(nil), requestCtx.DisplayBody...)
 	}
 	h.Conn = Conn
 
@@ -545,10 +568,36 @@ func RunHTTPResponseScriptCode(Conn *McpNet.HttpConn) (_Return_ bool) {
 		_ = Conn.Response.Body.Close()
 		Conn.Response.Body = io.NopCloser(bytes.NewBuffer(Body2))
 	}
+	responseCtx := &pluginCtx{
+		Direction: "in", Host: Conn.Request.URL.Host, Path: Conn.Request.URL.Path,
+		URL: URL, Method: Method, PID: Conn.PID,
+		Process: CommAnd.GetPidName(Conn.PID), Body: append([]byte(nil), Body2...),
+	}
+	responseChanged := runHook("OnHTTPResponse", responseCtx)
+	if responseChanged {
+		Body2 = append([]byte(nil), responseCtx.Body...)
+	}
+	if responseCtx.DisplayBodySet {
+		Body2 = append([]byte(nil), responseCtx.DisplayBody...)
+	}
+	if responseCtx.WireBodySet {
+		wireBody := append([]byte(nil), responseCtx.WireBody...)
+		if Conn.Response.Body != nil {
+			_ = Conn.Response.Body.Close()
+		}
+		Conn.Response.Body = io.NopCloser(bytes.NewBuffer(wireBody))
+	}
+	h1 := HashMap.GetRequest(Conn.Theology)
 	lock.Lock()
 	_Call := httpFunc
 	lock.Unlock()
 	if _Call == nil {
+		if h1 != nil {
+			h1.Response.Header = Header2
+			h1.Response.Body = Body2
+			h1.Response.StateCode = StateCode
+			h1.Response.Conn = Conn
+		}
 		return false
 	}
 	_, _, _, _, _Header, _Body, _StateCode, _, _Break := _Call(Conn.Theology, Conn.Type, Conn.PID, URL, Method, Header, Body, Conn.SetAgent, Header2, Body2, StateCode, true)
@@ -567,7 +616,6 @@ func RunHTTPResponseScriptCode(Conn *McpNet.HttpConn) (_Return_ bool) {
 		}
 		Conn.Response.Body = io.NopCloser(bytes.NewBuffer(_Body))
 	}
-	h1 := HashMap.GetRequest(Conn.Theology)
 	if h1 == nil {
 		return false
 	}
@@ -611,26 +659,49 @@ func RunWebSocketScriptCode(Conn *McpNet.WsConn) (_Return_ bool) {
 	Method := Conn.Request.Method
 	Body := Conn.GetMessageBody()
 	MessageType := Conn.GetMessageType()
-	decodedWS := false
-	if decoded, mt, ok := wsDecodeMessage(URL, Conn.Type, Body); ok {
-		Body = decoded
-		decodedWS = true
-		if mt > 0 { MessageType = mt }
-	}
 	lock.Lock()
 	_Call := wsFunc
 	lock.Unlock()
 	if _Call == nil {
+		// Local Go plugins are independent of the optional legacy JS hook.
+		// Run both directions before returning so captured outgoing JSON can
+		// still be encoded when no JS script has been configured.
+		wireBody, displayBody, messageType, wireChanged := wsProcessWithoutScript(URL, Conn.Type, Conn.GetMessageBody())
+		if wireChanged {
+			Conn.SetMessageBody(wireBody)
+			if messageType > 0 {
+				Conn.SetMessageType(messageType)
+			}
+		}
+		if len(displayBody) > 0 {
+			Conn.SetDisplayBody(displayBody)
+		}
 		return true
+	}
+	decodedWS := false
+	if decoded, mt, ok := wsDecodeMessage(URL, Conn.Type, Body); ok {
+		Body = decoded
+		decodedWS = true
+		if mt > 0 {
+			MessageType = mt
+		}
 	}
 	Body2, Break := _Call(Conn.Theology, Conn.Type, Conn.Pid, URL, Method, Header, MessageType, Body, Conn.SendToServer, Conn.SendToClient, Conn.Close)
 	displayBody := Body2
+	hasDisplayBody := decodedWS
 	if encoded, mt, ok := wsEncodeMessage(URL, Conn.Type, Body2); ok {
+		displayBody = append([]byte(nil), Body2...)
+		hasDisplayBody = true
 		Body2 = encoded
-		if mt > 0 { Conn.SetMessageType(mt) }
+		if mt > 0 {
+			Conn.SetMessageType(mt)
+		}
+	}
+	if decodedWS && (Conn.Type == public.WebsocketUserSend || Conn.Type == public.WebsocketServerSend) {
+		Body2 = wsKeepWireBodyForDisplayDecode(Conn.GetMessageBody(), Body, Body2)
 	}
 	Conn.SetMessageBody(Body2)
-	if decodedWS {
+	if hasDisplayBody {
 		Conn.SetDisplayBody(displayBody)
 	}
 	return Break

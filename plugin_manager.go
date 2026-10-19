@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -45,6 +46,35 @@ type pluginManifest struct {
 	Order       int    `json:"order"`
 }
 
+func parsePluginManifest(value any) (pluginManifest, error) {
+	var manifest pluginManifest
+	var raw []byte
+	switch v := value.(type) {
+	case string:
+		raw = []byte(v)
+	case nil:
+		return manifest, fmt.Errorf("插件清單為空")
+	default:
+		var err error
+		raw, err = json.Marshal(v)
+		if err != nil {
+			return manifest, err
+		}
+	}
+	if err := json.Unmarshal(raw, &manifest); err == nil {
+		return manifest, nil
+	}
+
+	// SyJson.GetData stringifies string values and leaves their JSON escaping
+	// intact. Accept that legacy representation as well as raw JSON/object data.
+	if unescaped, err := strconv.Unquote(`"` + string(raw) + `"`); err == nil {
+		if err := json.Unmarshal([]byte(unescaped), &manifest); err == nil {
+			return manifest, nil
+		}
+	}
+	return manifest, fmt.Errorf("插件清單不是有效的 JSON")
+}
+
 type loadedPlugin struct {
 	Manifest pluginManifest
 	Dir      string
@@ -61,6 +91,7 @@ type loadedPlugin struct {
 
 var (
 	pluginMu    sync.Mutex
+	hookMu      sync.Mutex
 	pluginList  []*loadedPlugin
 	pluginStamp string
 )
@@ -68,15 +99,19 @@ var (
 // ---- runtime context shared with plugin hooks ----
 
 type pluginCtx struct {
-	Direction string
-	Host      string
-	Path      string
-	URL       string
-	Method    string
-	Body      []byte
-	PID       int
-	Process   string
-	Changed   bool
+	Direction      string
+	Host           string
+	Path           string
+	URL            string
+	Method         string
+	Body           []byte
+	WireBody       []byte
+	WireBodySet    bool
+	DisplayBody    []byte
+	DisplayBodySet bool
+	PID            int
+	Process        string
+	Changed        bool
 }
 
 var (
@@ -242,7 +277,9 @@ func (p *loadedPlugin) compile() error {
 	}
 	i := interp.New(interp.Options{})
 	i.Use(stdlib.Symbols)
-	i.Use(pluginExports())
+	if err := i.Use(pluginExports()); err != nil {
+		return fmt.Errorf("register mcpnet plugin API: %w", err)
+	}
 	src := p.Source
 	if !strings.Contains(src, "package ") {
 		src = "package main\n" + src
@@ -287,6 +324,11 @@ func (p *loadedPlugin) call(hook string) {
 // runHook executes hook across enabled plugins. Returns true when any plugin
 // changed the body.
 func runHook(hook string, ctx *pluginCtx) bool {
+	// The interpreter and the context-backed mcpnet API are not safe for two
+	// captured connections to execute concurrently. Keep each hook pipeline
+	// bound to its own context for the full duration of plugin execution.
+	hookMu.Lock()
+	defer hookMu.Unlock()
 	ctxMu.Lock()
 	curCtx = ctx
 	ctxMu.Unlock()
@@ -362,7 +404,7 @@ func runHook(hook string, ctx *pluginCtx) bool {
 
 // ---- manifest CRUD ----
 
-func savePluginManifest(m pluginManifest, source *string) error {
+func writePluginManifest(m pluginManifest, source *string) error {
 	if strings.TrimSpace(m.ID) == "" {
 		m.ID = fmt.Sprintf("plugin-%d", time.Now().UnixNano())
 	}
@@ -386,7 +428,37 @@ func savePluginManifest(m pluginManifest, source *string) error {
 	return nil
 }
 
+// Plugin settings are persisted while holding hookMu so once a disable call
+// returns, no in-flight hook can continue using the previously enabled copy.
+func savePluginManifest(m pluginManifest, source *string) error {
+	hookMu.Lock()
+	defer hookMu.Unlock()
+	return writePluginManifest(m, source)
+}
+
+func setPluginEnabled(id string, enabled bool) error {
+	hookMu.Lock()
+	defer hookMu.Unlock()
+
+	dir := filepath.Join(pluginDataDir(), sanitizePluginID(id))
+	bs, err := os.ReadFile(pluginManifestPath(dir))
+	if err != nil {
+		return err
+	}
+	var manifest pluginManifest
+	if err := json.Unmarshal(bs, &manifest); err != nil {
+		return fmt.Errorf("解析插件清單失敗：%w", err)
+	}
+	if manifest.ID == "" {
+		manifest.ID = id
+	}
+	manifest.Enabled = enabled
+	return writePluginManifest(manifest, nil)
+}
+
 func deletePluginDir(id string) error {
+	hookMu.Lock()
+	defer hookMu.Unlock()
 	dir := filepath.Join(pluginDataDir(), sanitizePluginID(id))
 	if err := os.RemoveAll(dir); err != nil {
 		return err
@@ -440,27 +512,33 @@ func pluginSourceOf(id string) string {
 
 func pluginExports() map[string]map[string]reflect.Value {
 	return map[string]map[string]reflect.Value{
-		"mcpnet": {
-			"Direction":    reflect.ValueOf(apiDirection),
-			"Host":         reflect.ValueOf(apiHost),
-			"Path":         reflect.ValueOf(apiPath),
-			"URL":          reflect.ValueOf(apiURL),
-			"Method":       reflect.ValueOf(apiMethod),
-			"Body":         reflect.ValueOf(apiBody),
-			"SetBody":      reflect.ValueOf(apiSetBody),
-			"SetURL":       reflect.ValueOf(apiSetURL),
-			"PID":          reflect.ValueOf(apiPID),
-			"Process":      reflect.ValueOf(apiProcess),
-			"Log":          reflect.ValueOf(apiLog),
-			"HexEncode":    reflect.ValueOf(apiHexEncode),
-			"HexDecode":    reflect.ValueOf(apiHexDecode),
-			"Base64Encode": reflect.ValueOf(apiBase64Encode),
-			"Base64Decode": reflect.ValueOf(apiBase64Decode),
-			"Xor":          reflect.ValueOf(apiXor),
-			"XXTEAEncrypt": reflect.ValueOf(apiXXTEAEncrypt),
-			"XXTEADecrypt": reflect.ValueOf(apiXXTEADecrypt),
-			"XXTEAPack":    reflect.ValueOf(apiXXTEAPack),
-			"XXTEAUnpack":  reflect.ValueOf(apiXXTEAUnpack),
+		// Yaegi keys exported packages by import path/package name. A bare
+		// "mcpnet" is treated as a missing package name, so source importing
+		// "mcpnet" falls through to GOPATH lookup and fails in packaged builds.
+		"mcpnet/mcpnet": {
+			"Direction":      reflect.ValueOf(apiDirection),
+			"Host":           reflect.ValueOf(apiHost),
+			"Path":           reflect.ValueOf(apiPath),
+			"URL":            reflect.ValueOf(apiURL),
+			"Method":         reflect.ValueOf(apiMethod),
+			"Body":           reflect.ValueOf(apiBody),
+			"SetBody":        reflect.ValueOf(apiSetBody),
+			"SetWireBody":    reflect.ValueOf(apiSetWireBody),
+			"DisplayBody":    reflect.ValueOf(apiDisplayBody),
+			"SetDisplayBody": reflect.ValueOf(apiSetDisplayBody),
+			"SetURL":         reflect.ValueOf(apiSetURL),
+			"PID":            reflect.ValueOf(apiPID),
+			"Process":        reflect.ValueOf(apiProcess),
+			"Log":            reflect.ValueOf(apiLog),
+			"HexEncode":      reflect.ValueOf(apiHexEncode),
+			"HexDecode":      reflect.ValueOf(apiHexDecode),
+			"Base64Encode":   reflect.ValueOf(apiBase64Encode),
+			"Base64Decode":   reflect.ValueOf(apiBase64Decode),
+			"Xor":            reflect.ValueOf(apiXor),
+			"XXTEAEncrypt":   reflect.ValueOf(apiXXTEAEncrypt),
+			"XXTEADecrypt":   reflect.ValueOf(apiXXTEADecrypt),
+			"XXTEAPack":      reflect.ValueOf(apiXXTEAPack),
+			"XXTEAUnpack":    reflect.ValueOf(apiXXTEAUnpack),
 		},
 	}
 }
@@ -540,6 +618,42 @@ func apiSetBody(b []byte) {
 		return
 	}
 	curCtx.Body = append([]byte(nil), b...)
+	curCtx.Changed = true
+}
+
+// SetWireBody explicitly opts a plugin into changing bytes sent to the peer.
+// This is separate from display decoding, which should normally use
+// SetDisplayBody.
+func apiSetWireBody(b []byte) {
+	ctxMu.Lock()
+	defer ctxMu.Unlock()
+	if curCtx == nil {
+		return
+	}
+	curCtx.WireBody = append([]byte{}, b...)
+	curCtx.WireBodySet = true
+	curCtx.Changed = true
+}
+
+func apiDisplayBody() []byte {
+	ctxMu.Lock()
+	defer ctxMu.Unlock()
+	if curCtx == nil {
+		return nil
+	}
+	return append([]byte(nil), curCtx.DisplayBody...)
+}
+
+// SetDisplayBody changes only the body shown in McpNet. It never alters the
+// bytes sent to the peer; use SetBody in an outgoing hook to change wire data.
+func apiSetDisplayBody(b []byte) {
+	ctxMu.Lock()
+	defer ctxMu.Unlock()
+	if curCtx == nil {
+		return
+	}
+	curCtx.DisplayBody = append([]byte{}, b...)
+	curCtx.DisplayBodySet = true
 	curCtx.Changed = true
 }
 

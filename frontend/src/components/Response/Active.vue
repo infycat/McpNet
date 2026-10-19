@@ -40,6 +40,36 @@ import {CallGoDo, StrBase64Encode} from "../CallbackEventsOn.js";
 export default {
   props: ['Height'],
   watch: {
+    SendType(next, previous) {
+      const editor = this.$refs.RawText
+      if (!editor) return
+      if (!this.updatingCode) {
+        let content = editor.GetCode() || ''
+        if (previous === 'HEX' && next === 'JSON') {
+          const compactHex = content.replace(/0x/gi, '').replace(/\s+/g, '')
+          if (/^(?:[0-9a-f]{2})+$/i.test(compactHex)) {
+            const bytes = Uint8Array.from(compactHex.match(/.{2}/g), value => parseInt(value, 16))
+            content = new TextDecoder('utf-8').decode(bytes)
+          }
+          try {
+            content = JSON.stringify(JSON.parse(content), null, 2)
+          } catch (error) {
+            // Keep the current text editable so the user can repair it as JSON.
+          }
+          editor.SetCode(content)
+        } else if (previous === 'JSON' && next === 'HEX') {
+          try {
+            const compactJson = JSON.stringify(JSON.parse(content))
+            const bytes = new TextEncoder().encode(compactJson)
+            content = Array.from(bytes, value => value.toString(16).padStart(2, '0')).join(' ').toUpperCase()
+            editor.SetCode(content)
+          } catch (error) {
+            // Leave invalid JSON untouched instead of silently sending different data.
+          }
+        }
+      }
+      this.$nextTick(() => editor.SetLanguage(next === 'JSON' ? 'json' : 'plaintext'))
+    },
     Height(value) {
       this._Height = value
     },
@@ -60,7 +90,8 @@ export default {
       IsWs: false,
       IsSending: false,
       _Height: "0px",
-      SendType: "HEX",
+      SendType: "JSON",
+      updatingCode: false,
       direction: "Server",
       wsType: "Text",
       SendTypeOptions: [
@@ -79,6 +110,10 @@ export default {
         {
           value: 'UTF8',
           label: '发送类型:String(UTF8)',
+        },
+        {
+          value: 'JSON',
+          label: '发送类型:JSON',
         },
       ],
       directionOptions: [
@@ -105,7 +140,26 @@ export default {
   },
   methods: {
     SetCode(value) {
-      this.$refs.RawText.SetCode(value)
+      if (value == null) {
+        this.$refs.RawText.SetCode('')
+        return
+      }
+      const bytes = value instanceof Uint8Array ? value : Uint8Array.from(value)
+      const text = new TextDecoder('utf-8').decode(bytes)
+      let formatted = text
+      try {
+        formatted = JSON.stringify(JSON.parse(text), null, 2)
+        this.SendType = 'JSON'
+      } catch (error) {
+        this.SendType = 'HEX'
+        formatted = Array.from(bytes, item => item.toString(16).padStart(2, '0')).join(' ').toUpperCase()
+      }
+      this.updatingCode = true
+      this.$refs.RawText.SetCode(formatted)
+      this.$nextTick(() => {
+        this.$refs.RawText.SetLanguage(this.SendType === 'JSON' ? 'json' : 'plaintext')
+        this.updatingCode = false
+      })
     }, Send() {
       this.IsSending = true
       let content = StrBase64Encode(this.$refs.RawText.GetCode())
@@ -126,6 +180,7 @@ export default {
   },
   mounted() {
     this.$refs.RawText.SetReadOnly(false)
+    this.$refs.RawText.SetLanguage('json')
   },
 }
 </script>

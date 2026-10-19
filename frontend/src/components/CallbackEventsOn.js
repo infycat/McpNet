@@ -630,8 +630,10 @@ export async function EventsDo(arg) {
         }
             //主题
         {
-            window.Theme.IsDark = (Args['DarkTheme'] + "") === "1"
-            window.vm.Theme.Theme = (Args['DarkTheme'] + "") === "1"
+            const isDark = (Args['DarkTheme'] + "") === "1"
+            if (window.ApplyAppTheme) window.ApplyAppTheme(isDark)
+            else window.Theme.IsDark = isDark
+            if (window.vm.Theme) window.vm.Theme.Theme = isDark
         }
             //其他
         {

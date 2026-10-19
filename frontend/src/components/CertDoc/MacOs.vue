@@ -70,12 +70,12 @@
     <el-tag class="ml-2" type="danger">第十步</el-tag>
     <el-tag class="ml-2" type="info">在"钥匙串访问"中左侧找到"系统",右侧找到"证书"</el-tag>
     <br>
-    <el-tag class="ml-2" type="danger">如果你在这一步中找不到"SunnyNet"证书,请尝试“方法二”</el-tag>
+    <el-tag class="ml-2" type="danger">如果你在这一步中找不到"McpNet"证书,请尝试“方法二”</el-tag>
     <br>
     <img :src="Image9"/>
     <br> <br>
     <el-tag class="ml-2" type="danger">第十一步</el-tag>
-    <el-tag class="ml-2" type="info">右侧下方找到"SunnyNet"并且右键点击选择"显示简介"</el-tag>
+    <el-tag class="ml-2" type="info">右侧下方找到"McpNet"并且右键点击选择"显示简介"</el-tag>
     <br>
     <img :src="Image10"/>
     <br> <br>

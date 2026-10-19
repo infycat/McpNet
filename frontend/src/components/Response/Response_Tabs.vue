@@ -170,7 +170,7 @@ export default {
           this.$nextTick(() => {
             this.$refs.RawText.SetLanguage(language)
             this.HexViewRaw = Body
-            this.$refs.Active.SetCode(UInt8ToHex(Body, true))
+            this.$refs.Active.SetCode(Body)
             this.$refs.Json.SetCode(Body)
             this.$refs.RawText.SetCode(_Body)
           })

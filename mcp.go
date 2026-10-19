@@ -300,7 +300,7 @@ func (s *mcpServer) start() error {
 	mux.HandleFunc("/mcp", s.handleMCP)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = fmt.Fprintf(w, `{"ok":true,"name":"mcpnet","version":"1.0.0","port":%d}`, defaultMCPPort)
+		_, _ = fmt.Fprintf(w, `{"ok":true,"name":"mcpnet","version":"1.1.0","port":%d}`, defaultMCPPort)
 	})
 	s.srv = &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second}
 	s.running = true
@@ -479,7 +479,7 @@ func (s *mcpServer) handleOne(raw json.RawMessage) (any, bool) {
 			},
 			"serverInfo": map[string]any{
 				"name":    "mcpnet",
-				"version": "1.0.0",
+				"version": "1.1.0",
 			},
 		}), false
 	case "notifications/initialized", "notifications/cancelled":

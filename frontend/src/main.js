@@ -12,6 +12,9 @@ import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import * as MonacoEditor from 'monaco-editor'
+
+window.MonacoEditor = MonacoEditor
 
 // Register shared Modules globally
 ModuleRegistry.registerModules([

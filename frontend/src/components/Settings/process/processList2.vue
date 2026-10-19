@@ -1,7 +1,8 @@
 <template>
   <ag-grid-vue
       ref="agGrid"
-      style="height: 100%;"
+      :class="IsDarkTheme"
+      style="width: 100%; height: 100%;"
       :defaultColDef="defaultColDef"
       :rowData="RowData"
       :columnDefs="columns"
@@ -66,7 +67,7 @@ export default {
           }
         }
       }
-      return "example-wrapper " + (this.darkTheme ? "ag-theme-balham-dark" : "ag-theme-balham")
+      return this.darkTheme ? "ag-theme-balham-dark" : "ag-theme-balham"
     }
   },
   data() {
@@ -130,6 +131,7 @@ export default {
         {
           field: "进程名", tooltipField: '进程名',
           minWidth: 80,
+          cellRenderer: 'imageRenderer',
           // 不显示过滤器
           menuTabs: ['filterMenuTab'],
           //禁止列拖动

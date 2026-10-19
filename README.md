@@ -6,15 +6,15 @@
 
 | 最新穩定版 | 平台 | 直接下載 | 全部版本 |
 |---|---|---|---|
-| **v1.0.0** · 首個公開版本 | Windows x64 | [下載 McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [GitHub Releases](https://github.com/infycat/McpNet/releases) |
+| **v1.1.0** · 介面與插件功能更新 | Windows x64 | [下載 McpNet-v1.1.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [GitHub Releases](https://github.com/infycat/McpNet/releases) |
 
-[發布說明與 SHA-256 校驗碼](https://github.com/infycat/McpNet/releases/tag/v1.0.0) · [所有版本](https://github.com/infycat/McpNet/releases)
+[v1.1.0 更新內容與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.0) · [所有版本](https://github.com/infycat/McpNet/releases)
 
 下載成品請使用上表的 EXE 連結；GitHub 頁面上的 **Source code ZIP/TAR.GZ 是原始碼，不是安裝程式**。首次使用前請查看下方的系統需求及安全提醒。
 
 ## 專案簡介
 
-McpNet 由 Go/Wails 桌面後端、Vue 3 介面與 McpNet/SunnyNet 網路核心組成。它可檢視和處理 HTTP(S)、WebSocket、TCP、UDP 流量，並提供規則、腳本、使用者插件及本機 MCP 整合。程式啟動不會自動開始全系統攔截：流量監聽與系統代理由使用者分別控制。
+McpNet 由 Go/Wails 桌面後端、Vue 3 介面與 McpNet 網路核心組成。它可檢視和處理 HTTP(S)、WebSocket、TCP、UDP 流量，並提供規則、腳本、使用者插件及本機 MCP 整合。程式啟動不會自動開始全系統攔截：流量監聽與系統代理由使用者分別控制。
 
 | 類別 | 功能 |
 |---|---|
@@ -32,7 +32,7 @@ flowchart LR
   APP --> RULE[規則與設定]
   APP --> PLUG[Yaegi 插件 hook]
   APP --> MCP[本機 MCP HTTP 服務]
-  APP --> CORE[McpNet / SunnyNet 核心]
+  APP --> CORE[McpNet 核心]
   CORE <--> NET[Windows 驅動或代理路徑]
   NET <--> TARGET[目標應用與網路]
   MCP <--> CLIENT[本機 MCP 客戶端]
@@ -127,12 +127,15 @@ MCP 端點：`http://127.0.0.1:2026/mcp`；健康檢查：`http://127.0.0.1:2026
 
 | 版本 | 日期 | 狀態 | 平台 | 成品下載 | 發布資訊 |
 |---|---|---|---|---|---|
-| **v1.0.0** | 2026-10-19 | 最新／首個公開版 | Windows x64 | [McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.1.0** | 2026-10-20 | 最新版／介面與插件功能更新 | Windows x64 | [McpNet-v1.1.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
+| **v1.0.0** | 2026-10-19 | 首個公開版 | Windows x64 | [McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-**v1.0.0 成品資訊**：91,674,112 bytes（約 87.4 MiB）；SHA-256：`30C7A398560D47EFD6C288A9D9C9E6F0C8F89F2DCA42E12BCEFF7D9D7F369B9A`。下載後可在 PowerShell 執行：
+**v1.1.0 更新摘要**：整理主介面表格尺寸與欄寬縮放、擴充配色主題、改善進程圖標與附近應用列表，並修正本機插件啟停和 HTTP／WebSocket／UDP 編解碼顯示流程。個人插件仍只在本機使用。
+
+**v1.1.0 成品資訊**：91,793,408 bytes（約 87.5 MiB）；SHA-256：`B4ACE65F887F56D4B03B74570952D71AB999353E4D3F31AC3F6FB546EB882A22`。下載後可在 PowerShell 執行：
 
 ```powershell
-Get-FileHash .\McpNet-v1.0.0-windows-x64.exe -Algorithm SHA256
+Get-FileHash .\McpNet-v1.1.0-windows-x64.exe -Algorithm SHA256
 ```
 
 版本號採 `MAJOR.MINOR.PATCH`；本頁版本表以最新版本在前，並集中記錄各版日期、平台、下載成品與發布說明。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
@@ -194,11 +197,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | 最新稳定版 | 平台 | 直接下载 | 全部版本 |
 |---|---|---|---|
-| **v1.0.0** · 首个公开版本 | Windows x64 | [下载 McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [GitHub Releases](https://github.com/infycat/McpNet/releases) |
+| **v1.1.0** · 界面与插件功能更新 | Windows x64 | [下载 McpNet-v1.1.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [GitHub Releases](https://github.com/infycat/McpNet/releases) |
 
-[发布说明与 SHA-256 校验码](https://github.com/infycat/McpNet/releases/tag/v1.0.0) · [所有版本](https://github.com/infycat/McpNet/releases)
+[v1.1.0 更新内容与 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.0) · [所有版本](https://github.com/infycat/McpNet/releases)
 
-McpNet 是 Windows 桌面网络分析与协议调试工具，由 Go/Wails 后端、Vue 3 界面和 McpNet/SunnyNet 核心组成。它支持 HTTP(S)、WebSocket、TCP、UDP 流量查看与规则处理，并提供脚本、用户插件和本机 MCP。启动应用不会自动开启全系统流量拦截；监听与系统代理由用户分别控制。
+McpNet 是 Windows 桌面网络分析与协议调试工具，由 Go/Wails 后端、Vue 3 界面和 McpNet 核心组成。它支持 HTTP(S)、WebSocket、TCP、UDP 流量查看与规则处理，并提供脚本、用户插件和本机 MCP。启动应用不会自动开启全系统流量拦截；监听与系统代理由用户分别控制。
 
 | 类别 | 功能 |
 |---|---|
@@ -216,7 +219,7 @@ flowchart LR
   APP --> RULE[规则与配置]
   APP --> PLUG[Yaegi 插件 hook]
   APP --> MCP[本机 MCP HTTP 服务]
-  APP --> CORE[McpNet / SunnyNet 核心]
+  APP --> CORE[McpNet 核心]
   CORE <--> NET[Windows 驱动或代理路径]
   NET <--> TARGET[目标应用与网络]
   MCP <--> CLIENT[本机 MCP 客户端]
@@ -285,9 +288,12 @@ MCP 地址为 `http://127.0.0.1:2026/mcp`，健康检查为 `/health`。工具�
 
 | 版本 | 日期 | 状态 | 平台 | 成品下载 | 发布信息 |
 |---|---|---|---|---|---|
-| **v1.0.0** | 2026-10-19 | 最新／首个公开版 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.1.0** | 2026-10-20 | 最新版／界面与插件功能更新 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
+| **v1.0.0** | 2026-10-19 | 首个公开版 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-文件大小 91,674,112 bytes（约 87.4 MiB）；SHA-256：`30C7A398560D47EFD6C288A9D9C9E6F0C8F89F2DCA42E12BCEFF7D9D7F369B9A`。请从 [Releases](https://github.com/infycat/McpNet/releases) 获取正式成品；GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。各版本的日期、平台、成品和变更摘要均集中列于本页。
+**v1.1.0 更新摘要：** 优化主界面表格尺寸和列宽缩放、扩展主题配色、改善进程图标与附近应用列表，并修复本机插件启停及 HTTP／WebSocket／UDP 编解码显示流程。正式文件大小 91,793,408 bytes，SHA-256：`B4ACE65F887F56D4B03B74570952D71AB999353E4D3F31AC3F6FB546EB882A22`。个人插件仍仅保存在本机。
+
+请从 [Releases](https://github.com/infycat/McpNet/releases) 获取正式成品；GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。各版本的日期、平台、成品和变更摘要均集中列于本页。
 
 ### 安装、插件与安全
 
@@ -317,11 +323,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | Latest stable | Platform | Direct download | All versions |
 |---|---|---|---|
-| **v1.0.0** · First public release | Windows x64 | [Download McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [GitHub Releases](https://github.com/infycat/McpNet/releases) |
+| **v1.1.0** · UI and plugin improvements | Windows x64 | [Download McpNet-v1.1.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [GitHub Releases](https://github.com/infycat/McpNet/releases) |
 
-[Release notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0) · [All versions](https://github.com/infycat/McpNet/releases)
+[v1.1.0 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.0) · [All versions](https://github.com/infycat/McpNet/releases)
 
-McpNet is a Windows desktop network analysis and protocol debugging tool built with a Go/Wails backend, Vue 3 UI, and the McpNet/SunnyNet core. It inspects and processes HTTP(S), WebSocket, TCP, and UDP traffic, with rules, scripts, user plugins, and a local MCP service. Launching the app does **not** enable system-wide interception; capture and system-proxy controls are separate.
+McpNet is a Windows desktop network analysis and protocol debugging tool built with a Go/Wails backend, Vue 3 UI, and the McpNet core. It inspects and processes HTTP(S), WebSocket, TCP, and UDP traffic, with rules, scripts, user plugins, and a local MCP service. Launching the app does **not** enable system-wide interception; capture and system-proxy controls are separate.
 
 | Area | Capabilities |
 |---|---|
@@ -339,7 +345,7 @@ flowchart LR
   APP --> RULE[Rules and config]
   APP --> PLUG[Yaegi plugin hooks]
   APP --> MCP[Local MCP HTTP service]
-  APP --> CORE[McpNet / SunnyNet core]
+  APP --> CORE[McpNet core]
   CORE <--> NET[Windows driver or proxy path]
   NET <--> TARGET[Target app and network]
   MCP <--> CLIENT[Local MCP client]
@@ -408,9 +414,12 @@ MCP endpoints: `http://127.0.0.1:2026/mcp` and `/health`. Tools cover status, ca
 
 | Version | Date | Status | Platform | Download | Release info |
 |---|---|---|---|---|---|
-| **v1.0.0** | 2026-10-19 | Latest / first public release | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.1.0** | 2026-10-20 | Latest / UI and plugin update | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
+| **v1.0.0** | 2026-10-19 | First public release | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-The file is 91,674,112 bytes (about 87.4 MiB). SHA-256: `30C7A398560D47EFD6C288A9D9C9E6F0C8F89F2DCA42E12BCEFF7D9D7F369B9A`. Download official binaries from [Releases](https://github.com/infycat/McpNet/releases); GitHub's automatically generated source archives are not executable builds. Version dates, platforms, downloads, and summaries are maintained on this page.
+**v1.1.0 highlights:** Refined the main traffic table and responsive column sizing, expanded themes, improved process icons and nearby-app listing, and fixed local plugin enable/disable plus HTTP/WebSocket/UDP codec display paths. The official file is 91,793,408 bytes with SHA-256 `B4ACE65F887F56D4B03B74570952D71AB999353E4D3F31AC3F6FB546EB882A22`. Personal plugins remain local-only.
+
+Download official binaries from [Releases](https://github.com/infycat/McpNet/releases); GitHub's automatically generated source archives are not executable builds. Version dates, platforms, downloads, and summaries are maintained on this page.
 
 ### Setup, plugins, and safety
 

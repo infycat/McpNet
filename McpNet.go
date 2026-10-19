@@ -25,6 +25,16 @@ func CallJs(command string, Args any) {
 	app.CallDo(&Command{Command: command, Args: Args})
 }
 
+func socketDisplayType(body []byte, decoded bool) string {
+	if json.Valid(bytes.TrimSpace(body)) {
+		return "JSON"
+	}
+	if decoded {
+		return "Text"
+	}
+	return "Binary"
+}
+
 type AlertMsg struct {
 	MessageText string `json:"msg"`
 	Title       string `json:"title"`
@@ -754,6 +764,13 @@ func WSCallback(Conn *McpNet.WsConn) {
 				} else {
 					_Type = "Text"
 				}
+			} else if json.Valid(bytes.TrimSpace(Body)) {
+				_Type = "JSON"
+				if len(Body) > 200 {
+					BodyHash = string(Body[:200]) + "..."
+				} else {
+					BodyHash = string(Body)
+				}
 			}
 			if Conn.Type == public.WebsocketServerSend {
 				Ico = "下行"
@@ -1035,8 +1052,19 @@ func UdpCallback(Conn *McpNet.UDPConn) {
 		Body := Conn.Data
 		decodedUDP := false
 		{
-			uctx := &pluginCtx{Direction: "both", PID: Conn.Pid, Process: CommAnd.GetPidName(Conn.Pid), Body: append([]byte(nil), Body...)}
-			if runHook("OnUDP", uctx) && len(uctx.Body) > 0 {
+			direction := "out"
+			if Conn.Type == public.McpNetUDPTypeReceive {
+				direction = "in"
+			}
+			uctx := &pluginCtx{Direction: direction, PID: Conn.Pid, Process: CommAnd.GetPidName(Conn.Pid), Body: append([]byte(nil), Body...)}
+			changed := runHook("OnUDP", uctx)
+			if uctx.WireBodySet {
+				Conn.Data = append([]byte(nil), uctx.WireBody...)
+			}
+			if uctx.DisplayBodySet {
+				Body = uctx.DisplayBody
+				decodedUDP = true
+			} else if changed && len(uctx.Body) > 0 && !bytes.Equal(uctx.Body, Conn.Data) {
 				Body = uctx.Body
 				decodedUDP = true
 			}
@@ -1073,6 +1101,7 @@ func UdpCallback(Conn *McpNet.UDPConn) {
 				BodyHash: BodyHash,
 				Length:   len(Body),
 				Time:     time.Now().Format("15:04:05.000"),
+				WsType:   socketDisplayType(Body, decodedUDP),
 			},
 		}
 		HashMap.SetSocketData(Theology, _update, Conn.Type == public.McpNetUDPTypeSend, len(Body))

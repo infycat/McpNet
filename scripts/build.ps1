@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 
@@ -11,6 +11,15 @@ if ($windres) {
     if ($LASTEXITCODE -ne 0) { throw "windres failed with exit code $LASTEXITCODE" }
 } else {
     Write-Warning 'windres not found; using the checked-in app.syso (icon ID 3 + manifest).'
+}
+
+# Keep the runtime UI-injection bundles available to the embedded frontend.
+$snSrc = Join-Path $root 'frontend\public\assets'
+$snDst = Join-Path $root 'frontend\dist\assets'
+if (Test-Path $snSrc) {
+    if (-not (Test-Path $snDst)) { New-Item -ItemType Directory -Path $snDst -Force | Out-Null }
+    Copy-Item (Join-Path $snSrc 'sn-mcp.1.js') $snDst -Force -ErrorAction SilentlyContinue
+    Copy-Item (Join-Path $snSrc 'sn-i18n.396.js') $snDst -Force -ErrorAction SilentlyContinue
 }
 
 # Build to a temporary name first; only replace the official exe after success.

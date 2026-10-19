@@ -1,5 +1,5 @@
 <template>
-  <div class="ag-header-group-cell-label" :style="backStyle">
+  <div class="app-status-bar" :style="backStyle">
     <ListenerState/>
     <PartitionOperator/>
     <SetIEProxy/>
@@ -9,9 +9,7 @@
     <HookState2/>
     <PartitionOperator/>
     <span ref="eLabel">{{ Title }}</span>
-    <div class="ag-header-cell-resize" style="position:absolute;height: 20px;width: 20px"></div>
-
-    <SwitchTheme style="right: 6px;position:absolute;cursor:pointer;top:2px"/>
+    <SwitchTheme class="app-status-theme"/>
   </div>
 </template>
 
@@ -33,13 +31,7 @@ export default {
   },
   computed: {
     backStyle() {
-      let c = "height: 30px;background-color: #202020;position: fixed;left: 0;right: 0;bottom: 0;z-index: 999999;"
-      if (!this.theme) {
-        c += "background-color: #f0f0f0;"
-      } else {
-        c += ""
-      }
-      return c
+      return { backgroundColor: 'var(--app-header, #202020)', color: 'var(--app-text, #f5f5f5)', borderTop: '1px solid var(--app-border, #424242)' }
     }
   },
   data() {
@@ -55,9 +47,44 @@ export default {
   }, methods: {},
   mounted() {
     window.vm["Footer"] = this
-    document.body.appendChild(this.$el)
   }
 }
 </script>
 <style scoped>
+.app-status-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  z-index: 2147483000;
+  box-sizing: border-box;
+  height: 30px;
+  padding: 0 10px 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 13px;
+  line-height: 1;
+  background-color: #202020;
+}
+
+.app-status-bar :deep(img) {
+  height: 14px !important;
+  width: auto;
+}
+
+.app-status-bar :deep(svg) {
+  transform: scale(.8);
+  transform-origin: center;
+}
+
+.app-status-bar :deep(.app-status-theme) {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin-left: auto;
+}
 </style>

@@ -105,7 +105,9 @@ func (w *WsConn) GetMessageType() int             { return w.wsConn.MessageType(
 func init() {
 	//使用全部-1个CPU性能,例如你电脑CPU是4核心 那么就使用4-1 使用3核心的的CPU性能
 	runtime.GOMAXPROCS(runtime.NumCPU() - 1)
-	CrossCompiled.SetNetworkConnectNumber()
+	// Do not change machine-wide TCP dynamic-port ranges during package
+	// initialization. This legacy netsh call requires elevation and changes
+	// networking for every application before the UI is available.
 }
 
 // TargetInfo 请求连接信息

@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"context"
@@ -106,6 +106,7 @@ func main() {
 				runtime.WindowShow(ctx)
 				time.Sleep(2 * time.Second)
 				runtime.WindowSetAlwaysOnTop(ctx, false)
+				fitWindowToWorkArea()
 				log.Printf("Main window raised")
 			}()
 			markReady()

@@ -33,7 +33,7 @@
   <img :src="Image23"/>
   <br> <br>
   <el-tag class="ml-2" type="danger">第八步</el-tag>
-  <el-tag class="ml-2" type="info">打开"设置"->"通用"->"VPN与设备管理" 点击"SunnyNet"</el-tag>
+  <el-tag class="ml-2" type="info">打开"设置"->"通用"->"VPN与设备管理" 点击"McpNet"</el-tag>
   <br>
   <img :src="Image24"/>
   <br> <br>
@@ -46,7 +46,7 @@
   <el-tag class="ml-2" type="info">打开"设置"->"通用"->"关于本机" 最下方点击"证书信任设置"</el-tag>
   <br> <br>
   <el-tag class="ml-2" type="danger">第十一步</el-tag>
-  <el-tag class="ml-2" type="info">找到"SunnyNet"</el-tag>
+  <el-tag class="ml-2" type="info">找到"McpNet"</el-tag>
   <br>
   <img :src="Image26"/>
   <br> <br>

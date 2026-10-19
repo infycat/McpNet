@@ -284,14 +284,31 @@ func event(command string, args *JSON.SyJson) any {
 		return pluginInfo()
 	case "插件源码":
 		return pluginSourceOf(args.GetData("Id"))
+	case "设置插件状态":
+		if err := setPluginEnabled(args.GetData("Id"), args.GetData("Enabled") == "true"); err != nil {
+			return map[string]any{"error": err.Error()}
+		}
+		return pluginInfo()
 	case "保存插件":
-		var m pluginManifest
-		if err := json.Unmarshal([]byte(args.GetData("Manifest")), &m); err != nil {
+		argMap := args.GetMap()
+		manifestValue, ok := argMap["Manifest"]
+		if !ok {
+			manifestValue = args.GetData("Manifest")
+		}
+		m, err := parsePluginManifest(manifestValue)
+		if err != nil {
 			return map[string]any{"error": err.Error()}
 		}
 		var src *string
-		if args.GetData("WithSource") == "true" {
-			s := args.GetData("Source")
+		withSource := args.GetData("WithSource") == "true"
+		if value, ok := argMap["WithSource"].(bool); ok {
+			withSource = value
+		}
+		if withSource {
+			s, ok := argMap["Source"].(string)
+			if !ok {
+				s = args.GetData("Source")
+			}
 			src = &s
 		}
 		if err := savePluginManifest(m, src); err != nil {
@@ -814,11 +831,16 @@ func event(command string, args *JSON.SyJson) any {
 				return false
 			}
 			MessageType := 2
-			if wsType == "Text" {
+			switch wsType {
+			case "Text", "JSON":
+				MessageType = 1
+			}
+			switch SendType {
+			case "JSON", "Text", "UTF8", "GBK":
 				MessageType = 1
 			}
 			WireBytes := _Bytes
-			if direction == "Server" {
+			{
 				var encoded []byte
 				var mt int
 				var ok bool
@@ -838,7 +860,7 @@ func event(command string, args *JSON.SyJson) any {
 			if direction == "Server" {
 				SendBool = h.WsConn.SendToServer(MessageType, WireBytes)
 			} else {
-				SendBool = h.WsConn.SendToClient(MessageType, _Bytes)
+				SendBool = h.WsConn.SendToClient(MessageType, WireBytes)
 			}
 			if SendBool {
 				CallJs("弹出成功提示", "发送成功")

@@ -21,6 +21,7 @@
 # Local build and test outputs (keep app.syso and frontend/dist: both are build inputs)
 /McpNet.exe
 /McpNet.build.exe
+/McpNet-v*-windows-x64.exe
 /build/bin/
 /frontend/node_modules/
 /frontend/dist.rebuilt/

@@ -1,7 +1,8 @@
 <template>
   <ag-grid-vue
       ref="agGrid"
-      style="height: 100%;"
+      :class="IsDarkTheme"
+      style="width: 100%; height: 100%;"
       :defaultColDef="defaultColDef"
       :rowData="RowData"
       :columnDefs="columns"
@@ -35,6 +36,11 @@ export default {
     'ag-grid-vue': AgGridVue,
   },
   computed: {
+    IsDarkTheme() {
+      const event = new Event('darkThemeChange');
+      window.dispatchEvent(event);
+      return window.Theme.IsDark ? "ag-theme-balham-dark" : "ag-theme-balham"
+    },
     LineSelected() {
       if (this.ReadOnly) {
         this.MenuItems[0].visible = false

@@ -160,6 +160,8 @@ func init() {
 	Symbols["github.com/qtgolang/McpNet/src/public/public"] = map[string]reflect.Value{
 		"Free": reflect.ValueOf(public.Free),
 	}
+	// The bundled script checker and legacy user scripts import the original
+	// renamed to McpNet.
 	Symbols["github.com/qtgolang/McpNet/src/RSA/RSA"] = map[string]reflect.Value{
 		"PubKeyIO": reflect.ValueOf(RSA.PubKeyIO),
 	}

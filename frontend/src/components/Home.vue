@@ -21,6 +21,82 @@ window.Theme = reactive({
   IsDark: true,
   GOOS: Window.GOOS,
 });
+// Keep global framework styles in lockstep with the reactive theme used by the
+// grids and the rest of the app. In particular, `.dark` and `.light` must
+// never coexist on <html> (Element Plus uses `.dark` as its theme scope).
+window.ApplyAppTheme = (isDark) => {
+  const dark = !!isDark;
+  window.Theme.IsDark = dark;
+  const root = document.documentElement;
+  root.classList.toggle('dark', dark);
+  root.classList.toggle('light', !dark);
+  window.dispatchEvent(new Event('darkThemeChange'));
+};
+// Optional full palette supplied by the theme chooser. Without one, preserve
+// the app's original Balham dark/light defaults.
+window.ApplyAppPalette = (palette) => {
+  const root = document.documentElement;
+  if (!palette) {
+    root.removeAttribute('data-app-palette');
+    ['--app-surface', '--app-surface-raised', '--app-surface-muted', '--app-header', '--app-border', '--app-text', '--app-muted-text', '--app-accent', '--app-row-hover', '--app-row-selected', '--app-gradient'].forEach((key) => root.style.removeProperty(key));
+    return;
+  }
+  const dark = !!palette.dark;
+  const surface = palette.surface || (dark ? '#202020' : '#f0f2ef');
+  const text = palette.text || (dark ? '#eeeeee' : '#232b26');
+  const accent = palette.accent || (dark ? '#8bcfee' : '#2a8a6e');
+  const bgData = Array.isArray(palette.bgData) ? palette.bgData : [];
+  const tint = (color, ratio) => `color-mix(in srgb, ${color} ${Math.round(ratio * 100)}%, ${surface})`;
+  let gradient = `linear-gradient(145deg, ${surface}, ${surface})`;
+  if (palette.bgKind === 'linear' && bgData.length >= 2) {
+    gradient = `linear-gradient(132deg, ${tint(bgData[0], 0.68)} 0%, ${surface} 48%, ${tint(bgData[bgData.length - 1], 0.60)} 100%)`;
+  } else if (palette.bgKind === 'radial' && bgData.length >= 2) {
+    gradient = `radial-gradient(ellipse at 12% 4%, ${tint(bgData[0], 0.68)} 0%, transparent 58%), linear-gradient(150deg, ${surface}, ${tint(bgData[bgData.length - 1], 0.54)})`;
+  } else if (palette.bgKind === 'mesh' && bgData.length >= 3) {
+    gradient = `radial-gradient(ellipse at 8% 4%, ${tint(bgData[0], 0.66)} 0%, transparent 50%), radial-gradient(ellipse at 92% 12%, ${tint(bgData[1], 0.58)} 0%, transparent 48%), radial-gradient(ellipse at 48% 100%, ${tint(bgData[2], 0.52)} 0%, transparent 55%), ${surface}`;
+  }
+  const mix = (a, b, ratio) => {
+    const x = a.match(/[\da-f]{2}/gi).map((v) => parseInt(v, 16));
+    const y = b.match(/[\da-f]{2}/gi).map((v) => parseInt(v, 16));
+    return '#' + x.map((v, i) => Math.round(v * (1 - ratio) + y[i] * ratio).toString(16).padStart(2, '0')).join('');
+  };
+  root.dataset.appPalette = palette.key || 'custom';
+  const vars = {
+    '--app-surface': surface,
+    '--app-surface-raised': mix(surface, text, dark ? 0.09 : 0.035),
+    '--app-surface-muted': mix(surface, text, dark ? 0.15 : 0.075),
+    '--app-header': mix(surface, text, dark ? 0.2 : 0.1),
+    '--app-border': mix(surface, text, dark ? 0.28 : 0.18),
+    '--app-text': text,
+    '--app-muted-text': mix(text, surface, 0.28),
+    '--app-accent': accent,
+    '--app-row-hover': mix(surface, accent, 0.18),
+    '--app-row-selected': mix(surface, accent, 0.3),
+    '--app-gradient': gradient,
+    '--el-bg-color': surface,
+    '--el-bg-color-page': surface,
+    '--el-bg-color-overlay': surface,
+    '--el-text-color-primary': text,
+    '--el-text-color-regular': text,
+    '--el-text-color-secondary': mix(text, surface, 0.28),
+    '--el-color-primary': accent,
+    '--el-fill-color-blank': surface,
+    '--el-text-color-placeholder': mix(text, surface, 0.4),
+    '--el-border-color': mix(surface, text, dark ? 0.28 : 0.18),
+    '--el-border-color-light': mix(surface, text, dark ? 0.19 : 0.11),
+    '--el-fill-color-light': mix(surface, text, dark ? 0.13 : 0.055),
+    '--el-fill-color-lighter': mix(surface, text, dark ? 0.08 : 0.03),
+    '--el-mask-color': dark ? 'rgba(0, 0, 0, 0.65)' : 'rgba(23, 42, 35, 0.35)',
+    '--ag-input-border-color': mix(surface, text, dark ? 0.34 : 0.23),
+    '--ag-input-focus-border-color': accent,
+    '--ag-checkbox-checked-color': accent,
+    '--ag-range-selection-border-color': accent,
+    '--ag-range-selection-background-color': mix(surface, accent, 0.2)
+  };
+  Object.keys(vars).forEach((key) => root.style.setProperty(key, vars[key]));
+  document.body.style.background = gradient;
+  document.body.style.color = text;
+};
 window.Socket = reactive({
   Line: null,
   Data: null
@@ -95,6 +171,8 @@ export default {
         cellClass: 'no-border',
       },
       gridOptions: {
+        headerHeight: 34,
+        rowHeight: 28,
         getRowId: (params) => params.data.Theology,
         //rowSelection: 'multiple',
         onRangeSelectionChanged: this.onRangeSelectionChanged,
@@ -113,7 +191,8 @@ export default {
       columns: [
         {
           field: "序号", tooltipField: '序号',
-          minWidth: 80,
+          flex: 0.55,
+          minWidth: 48,
           width: 80,
           maxWidth: 100,
           sortable: true,
@@ -122,13 +201,15 @@ export default {
         },
         {
           field: "方式", tooltipField: '方式',
-          minWidth: 90,
+          flex: 1.1,
+          minWidth: 58,
           width: 90,
-          maxWidth: 90, cellStyle: {'text-align': 'left'}
+          maxWidth: 180, cellStyle: {'text-align': 'left'}
         },
         {
           field: "状态", tooltipField: '状态',
-          minWidth: 80,
+          flex: 0.7,
+          minWidth: 55,
           width: 80,
           maxWidth: 80, cellStyle: {'text-align': 'left'}
         },
@@ -141,19 +222,27 @@ export default {
           maxWidth: 2000, cellStyle: {'text-align': 'left'}
         },
         {
-          field: "请求地址", width: 200, minWidth: 200, tooltipField: '请求地址',
+          field: "请求地址", width: 200, tooltipField: '请求地址',
+          flex: 2.4,
+          minWidth: 100,
           maxWidth: 2000, cellStyle: {'text-align': 'left'}
         },
         {
-          field: "响应长度", width: 120, minWidth: 120, tooltipField: '响应长度',
+          field: "响应长度", width: 120, tooltipField: '响应长度',
+          flex: 0.7,
+          minWidth: 68,
           maxWidth: 120, cellStyle: {'text-align': 'left'}
         },
         {
-          field: "响应类型", width: 120, minWidth: 120, tooltipField: '响应类型',
+          field: "响应类型", width: 120, tooltipField: '响应类型',
+          flex: 0.7,
+          minWidth: 70,
           maxWidth: 120, cellStyle: {'text-align': 'left'}
         },
         {
-          field: "进程", width: 100, minWidth: 100, tooltipField: '进程',
+          field: "进程", width: 100, tooltipField: '进程',
+          flex: 0.7,
+          minWidth: 70,
           maxWidth: 500, cellStyle: {'text-align': 'left'}
         },
         {
@@ -169,11 +258,15 @@ export default {
           maxWidth: 2000, cellStyle: {'text-align': 'left'}
         },
         {
-          field: "注释", width: 200, minWidth: 200, tooltipField: '注释', editable: true,
+          field: "注释", width: 200, tooltipField: '注释', editable: true,
+          flex: 0.55,
+          minWidth: 60,
           maxWidth: 2000, cellStyle: {'text-align': 'left'}
         },
         {
-          field: "来源地址", width: 150, minWidth: 150, tooltipField: '来源地址',
+          field: "来源地址", width: 150, tooltipField: '来源地址',
+          flex: 0.55,
+          minWidth: 70,
           maxWidth: 200,
         },
       ],
@@ -1168,14 +1261,14 @@ function getMenuItems(Items) {
 </script>
 
 <template>
-  <div class="no-select" STYLE="width: 100%;height: 100%">
+  <div class="no-select" STYLE="width: 100%;height: calc(100% - 30px)">
     <div :class="IsDarkTheme">
       <div class="inner-col">
         <AgHeaderGroup/>
         <div class="inner-col2">
           <ag-grid-vue
               ref="agGrid"
-              style="height: calc(100% - 30px);"
+              style="height: 100%; min-height: 0;"
               :defaultColDef="defaultColDef"
               :rowData="RowData"
               :columnDefs="columns"
@@ -1232,13 +1325,18 @@ function getMenuItems(Items) {
 }
 
 .inner-col {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   height: 100%;
+  min-height: 0;
 }
 
 .inner-col2 {
+  flex: 1 1 0;
   width: 100%;
-  height: calc(100% - 60px);
+  height: auto;
+  min-height: 0;
 }
 
 
@@ -1251,10 +1349,62 @@ function getMenuItems(Items) {
 }
 
 .ag-theme-balham {
-  --ag-row-hover-color: #024d6c;
+  --ag-background-color: transparent;
+  --ag-control-panel-background-color: var(--app-surface, #f5f7f7);
+  --ag-foreground-color: var(--app-text, #181d1f);
+  --ag-disabled-foreground-color: var(--app-muted-text, #66727a);
+  --ag-secondary-foreground-color: var(--app-text, #181d1f);
+  --ag-header-background-color: var(--app-header, #f0f0f0);
+  --ag-odd-row-background-color: color-mix(in srgb, var(--app-surface, #f8f8f8) 84%, transparent);
+  --ag-border-color: var(--app-border, #d1d5d8);
+  --ag-row-hover-color: var(--app-row-hover, #e8f2f6);
+  --ag-selected-row-background-color: var(--app-row-selected, #d9e9f1);
 }
 
 .ag-theme-balham-dark {
-  --ag-row-hover-color: rgb(139, 207, 238);
+  --ag-background-color: transparent;
+  --ag-control-panel-background-color: var(--app-surface, #202020);
+  --ag-foreground-color: var(--app-text, #eeeeee);
+  --ag-disabled-foreground-color: var(--app-muted-text, #aeb8bb);
+  --ag-secondary-foreground-color: var(--app-text, #eeeeee);
+  --ag-header-background-color: var(--app-header, #1c1c1c);
+  --ag-odd-row-background-color: color-mix(in srgb, var(--app-surface, #222628) 84%, transparent);
+  --ag-border-color: var(--app-border, #424242);
+  --ag-row-hover-color: var(--app-row-hover, #39464a);
+  --ag-selected-row-background-color: var(--app-row-selected, #344f5d);
+}
+
+.example-wrapper,
+.example-wrapper .inner-col,
+.example-wrapper .inner-col2 {
+  color: var(--app-text);
+  background-color: transparent;
+  background-image: var(--app-gradient);
+  background-attachment: fixed;
+}
+
+.example-wrapper .ag-root-wrapper,
+.example-wrapper .ag-root,
+.example-wrapper .ag-body-viewport,
+.example-wrapper .ag-center-cols-viewport,
+.example-wrapper .ag-center-cols-container {
+  background-color: transparent;
+}
+
+.example-wrapper .ag-row-odd {
+  background-color: color-mix(in srgb, var(--app-surface) 84%, transparent);
+}
+
+.example-wrapper .ag-header-cell-text,
+.example-wrapper .ag-cell-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.example-wrapper .ag-header-cell,
+.example-wrapper .ag-cell {
+  font-size: 12px;
 }
 </style>

@@ -17,14 +17,23 @@ func wsLookLikeJSON(b []byte) bool {
 }
 
 func wsDecodeMessage(wsURL string, typ int, body []byte) ([]byte, int, bool) {
+	// Both sides can send encrypted frames. Decode for display in both cases;
+	// the caller preserves the original wire bytes unless a script explicitly
+	// changes the decoded payload.
 	if (typ != 2 && typ != 3) || len(body) == 0 {
 		return body, 0, false
 	}
 	if wsLookLikeJSON(body) {
 		return body, 0, false
 	}
+	// "in" means decode/decrypt to plugin codecs; the frame's actual network
+	// direction is still preserved by typ and by the caller's wire-body logic.
 	ctx := &pluginCtx{Direction: "in", URL: wsURL, Host: wsHostOf(wsURL), Body: append([]byte(nil), body...)}
-	if runHook("OnWebSocket", ctx) && len(ctx.Body) > 0 {
+	changed := runHook("OnWebSocket", ctx)
+	if ctx.DisplayBodySet && len(ctx.DisplayBody) > 0 {
+		return ctx.DisplayBody, 1, true
+	}
+	if changed && len(ctx.Body) > 0 && !bytes.Equal(ctx.Body, body) {
 		return ctx.Body, 1, true
 	}
 	return body, 0, false
@@ -35,10 +44,39 @@ func wsEncodeMessage(wsURL string, typ int, body []byte) ([]byte, int, bool) {
 		return body, 0, false
 	}
 	ctx := &pluginCtx{Direction: "out", URL: wsURL, Host: wsHostOf(wsURL), Body: append([]byte(nil), body...)}
-	if runHook("OnWebSocket", ctx) && len(ctx.Body) > 0 {
+	changed := runHook("OnWebSocket", ctx)
+	if ctx.WireBodySet && len(ctx.WireBody) > 0 {
+		return ctx.WireBody, 2, true
+	}
+	if changed && len(ctx.Body) > 0 && !bytes.Equal(ctx.Body, body) {
 		return ctx.Body, 2, true
 	}
 	return body, 0, false
+}
+
+// wsProcessWithoutScript still needs to run local codecs. The UI script hook
+// is optional; omitting it must not disable plugin-based decode/encode.
+func wsProcessWithoutScript(wsURL string, typ int, body []byte) (wireBody, displayBody []byte, messageType int, wireChanged bool) {
+	wireBody = append([]byte(nil), body...)
+	if decoded, _, ok := wsDecodeMessage(wsURL, typ, body); ok {
+		displayBody = decoded
+	}
+	if encoded, mt, ok := wsEncodeMessage(wsURL, typ, body); ok {
+		wireBody = encoded
+		displayBody = append([]byte(nil), body...)
+		messageType = mt
+		wireChanged = true
+	}
+	return wireBody, displayBody, messageType, wireChanged
+}
+
+// A plugin's decoded body is a presentation value. If the optional script
+// returns it unchanged, keep the original frame bytes on the wire.
+func wsKeepWireBodyForDisplayDecode(wireBody, decodedBody, scriptBody []byte) []byte {
+	if bytes.Equal(decodedBody, scriptBody) {
+		return wireBody
+	}
+	return scriptBody
 }
 
 // ---- XXTEA ----
@@ -409,7 +447,11 @@ func wsEncodeTextMessage(wsURL string, typ int, body []byte) ([]byte, int, bool)
 		return body, 0, false
 	}
 	ctx := &pluginCtx{Direction: "out", URL: wsURL, Host: wsHostOf(wsURL), Body: append([]byte(nil), body...)}
-	if runHook("OnWebSocket", ctx) && len(ctx.Body) > 0 {
+	changed := runHook("OnWebSocket", ctx)
+	if ctx.WireBodySet && len(ctx.WireBody) > 0 {
+		return ctx.WireBody, 2, true
+	}
+	if changed && len(ctx.Body) > 0 && !bytes.Equal(ctx.Body, body) {
 		return ctx.Body, 2, true
 	}
 	return body, 0, false

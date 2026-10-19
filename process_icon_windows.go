@@ -16,7 +16,6 @@ import (
 	"sync"
 	"syscall"
 	"unsafe"
-
 )
 
 const (
@@ -62,22 +61,22 @@ var (
 	shell32DLL  = syscall.NewLazyDLL("shell32.dll")
 	kernel32DLL = syscall.NewLazyDLL("kernel32.dll")
 
-	procOpenProcess                 = kernel32DLL.NewProc("OpenProcess")
-	procQueryFullProcessImageNameW  = kernel32DLL.NewProc("QueryFullProcessImageNameW")
-	procCloseHandle                 = kernel32DLL.NewProc("CloseHandle")
-	procSHGetFileInfoW              = shell32DLL.NewProc("SHGetFileInfoW")
-	procGetDC                       = user32DLL.NewProc("GetDC")
-	procReleaseDC                   = user32DLL.NewProc("ReleaseDC")
-	procDestroyIcon                 = user32DLL.NewProc("DestroyIcon")
-	procEnumWindows              = user32DLL.NewProc("EnumWindows")
-	procIsWindowVisible          = user32DLL.NewProc("IsWindowVisible")
-	procGetWindowTextW           = user32DLL.NewProc("GetWindowTextW")
-	procGetWindowThreadProcessId = user32DLL.NewProc("GetWindowThreadProcessId")
-	procGetWindowLongW           = user32DLL.NewProc("GetWindowLongW")
-	procGetWindowLongPtrW        = user32DLL.NewProc("GetWindowLongPtrW")
-	procGetObjectW                  = gdi32DLL.NewProc("GetObjectW")
-	procGetDIBits                   = gdi32DLL.NewProc("GetDIBits")
-	procDeleteObject                = gdi32DLL.NewProc("DeleteObject")
+	procOpenProcess                = kernel32DLL.NewProc("OpenProcess")
+	procQueryFullProcessImageNameW = kernel32DLL.NewProc("QueryFullProcessImageNameW")
+	procCloseHandle                = kernel32DLL.NewProc("CloseHandle")
+	procSHGetFileInfoW             = shell32DLL.NewProc("SHGetFileInfoW")
+	procGetDC                      = user32DLL.NewProc("GetDC")
+	procReleaseDC                  = user32DLL.NewProc("ReleaseDC")
+	procDestroyIcon                = user32DLL.NewProc("DestroyIcon")
+	procEnumWindows                = user32DLL.NewProc("EnumWindows")
+	procIsWindowVisible            = user32DLL.NewProc("IsWindowVisible")
+	procGetWindowTextW             = user32DLL.NewProc("GetWindowTextW")
+	procGetWindowThreadProcessId   = user32DLL.NewProc("GetWindowThreadProcessId")
+	procGetWindowLongW             = user32DLL.NewProc("GetWindowLongW")
+	procGetWindowLongPtrW          = user32DLL.NewProc("GetWindowLongPtrW")
+	procGetObjectW                 = gdi32DLL.NewProc("GetObjectW")
+	procGetDIBits                  = gdi32DLL.NewProc("GetDIBits")
+	procDeleteObject               = gdi32DLL.NewProc("DeleteObject")
 
 	iconCacheMu sync.Mutex
 	iconCache   = map[string]string{}
@@ -283,14 +282,26 @@ func enumWindowsProc(hwnd uintptr, _ uintptr) uintptr {
 func enumerateProcessIcons() map[string]any {
 	appWindowList = nil
 	procEnumWindows.Call(syscall.NewCallback(enumWindowsProc), 0)
-	out := make(map[string]any, len(appWindowList))
+	titles := make(map[int]string, len(appWindowList))
 	for _, w := range appWindowList {
-		path := processImagePath(w.Pid)
+		titles[w.Pid] = w.Name
+	}
+	// In application mode, show only processes that own a visible, titled,
+	// non-tool window, similar to Task Manager's Applications section.
+	procs := CommAnd.EnumerateProcesses()
+	out := make(map[string]any, len(titles))
+	for pid, title := range titles {
+		name, ok := procs[pid]
+		if !ok {
+			continue
+		}
+		path := processImagePath(pid)
 		ico := iconForPath(path)
-		out[strconv.Itoa(w.Pid)] = map[string]any{
-			"name": filepath.Base(path),
-			"title": w.Name,
-			"ico":  ico,
+		base := processBaseName(path, name)
+		out[strconv.Itoa(pid)] = map[string]any{
+			"name":  base,
+			"title": title,
+			"ico":   ico,
 		}
 	}
 	return out
@@ -302,11 +313,22 @@ func enumerateAllProcessIcons() map[string]any {
 	for pid, name := range procs {
 		path := processImagePath(pid)
 		out[strconv.Itoa(pid)] = map[string]any{
-			"name": name,
+			"name": processBaseName(path, name),
 			"ico":  iconForPath(path),
 		}
 	}
 	return out
+}
+
+func processBaseName(path, fallback string) string {
+	if path == "" {
+		return fallback
+	}
+	base := filepath.Base(path)
+	if base == "" || base == "." || base == string(filepath.Separator) {
+		return fallback
+	}
+	return base
 }
 
 func iconForPath(path string) string {
