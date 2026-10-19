@@ -4,6 +4,20 @@
 
 **繁體中文（預設）** · [简体中文](docs/ARCHITECTURE.md#简体中文) · [English](docs/ARCHITECTURE.md#english)
 
+## 下載與版本
+
+**目前穩定版：v1.0.0**（首個公開版本，Windows x64）
+
+- [下載 McpNet v1.0.0（Windows x64）](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe)
+- [查看 v1.0.0 發布說明與校驗碼](https://github.com/infycat/McpNet/releases/tag/v1.0.0)
+- [瀏覽所有版本與歷史下載](https://github.com/infycat/McpNet/releases)
+
+| 版本 | 發布日期 | 平台 | 下載 | 說明 |
+|---|---|---|---|---|
+| **v1.0.0**（最新） | 2026-10-19 | Windows x64 | [EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | 首個公開版本；功能與限制見[發布說明](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+
+下載後可在 PowerShell 使用 `Get-FileHash .\McpNet-v1.0.0-windows-x64.exe -Algorithm SHA256` 核對檔案雜湊。請只從本專案的 Releases 頁面下載；新版本發布後，版本表會保留歷史版本並標示最新版本。
+
 GitHub 專案根目錄請使用本資料夾 `deliverable/source/`；不要從整個工作區根目錄發布，因為上層另含逆向研究中間產物與封存檔。
 
 McpNet 由 Go/Wails 桌面後端、Vue 3 前端與 SunnyNet 核心組成，可在明確啟動監聽後檢視和處理 HTTP(S)、WebSocket、TCP、UDP 流量。MCP 服務僅綁定本機回環位址；插件由使用者資料目錄載入，GitHub 範例目錄不放個人完成品插件。
@@ -59,5 +73,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 提交前確認 `.gitignore` 規則有效；`plugins/` 中僅保留 `plugins/examples/`。個人 XXTEA/XOR、URL 顯示與 UDP 解碼插件位於本機使用者資料目錄，不在 GitHub 源碼樹中。請勿將個人插件、用戶設定、日誌、私有憑證、抓包資料或發布用二進位檔加入索引。範例插件預設停用，匯入前請先檢閱程式碼。
 
 授權條款請見 [LICENSE](LICENSE)。
+
+版本紀錄與版本號規則見 [CHANGELOG.md](CHANGELOG.md)。每個正式版本均提供獨立 Release 頁面、變更摘要、平台／相容性資訊和下載成品；原始碼 ZIP 由 GitHub 自動提供，並非已編譯的應用程式。
 
 核心與前端依賴包含第三方元件；其各自授權與版權聲明仍適用，請一併保留第三方授權檔。
