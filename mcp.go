@@ -10,6 +10,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -303,7 +304,7 @@ func (s *mcpServer) start() error {
 	mux.HandleFunc("/mcp", s.handleMCP)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = fmt.Fprintf(w, `{"ok":true,"name":"mcpnet","version":"1.2.0","port":%d}`, defaultMCPPort)
+		_, _ = fmt.Fprintf(w, `{"ok":true,"name":"mcpnet","version":"1.2.1","port":%d}`, defaultMCPPort)
 	})
 	s.srv = &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second}
 	s.running = true
@@ -482,7 +483,7 @@ func (s *mcpServer) handleOne(raw json.RawMessage) (any, bool) {
 			},
 			"serverInfo": map[string]any{
 				"name":    "mcpnet",
-				"version": "1.2.0",
+				"version": "1.2.1",
 			},
 		}), false
 	case "notifications/initialized", "notifications/cancelled":
@@ -591,12 +592,37 @@ func boundedBase64(body []byte) (string, bool) {
 
 func captureMetadata(c MapHash.CaptureSnapshot) map[string]any {
 	return map[string]any{
-		"capture_id": c.ID, "protocol": c.Protocol, "method": c.Method, "url": c.URL,
+		"capture_id": c.ID, "protocol": c.Protocol, "method": c.Method, "url": redactCaptureURL(c.URL),
 		"pid": c.PID, "client_ip": c.ClientIP, "status_code": c.StatusCode,
 		"request_time": c.RequestAt, "response_time": c.ResponseAt,
 		"request_body_length": len(c.RequestBody), "response_body_length": len(c.ResponseBody),
 		"sent_bytes": c.SentBytes, "received_bytes": c.RecvBytes, "message_count": len(c.Messages),
 	}
+}
+
+// redactCaptureURL keeps query parameter names useful for debugging but never
+// exposes their values through the metadata-only MCP capture tools.
+func redactCaptureURL(raw string) string {
+	parsed, err := url.Parse(raw)
+	if err != nil {
+		return "[invalid URL omitted]"
+	}
+	if parsed.User != nil {
+		parsed.User = url.User("REDACTED")
+	}
+	if query := parsed.Query(); len(query) > 0 {
+		for key, values := range query {
+			for i := range values {
+				values[i] = "REDACTED"
+			}
+			query[key] = values
+		}
+		parsed.RawQuery = query.Encode()
+	}
+	if parsed.Fragment != "" {
+		parsed.Fragment = "REDACTED"
+	}
+	return parsed.String()
 }
 
 func hasCaptureAfter(captures []MapHash.CaptureSnapshot, id int, protocol string) bool {
@@ -751,12 +777,12 @@ func mcpTools() []mcpTool {
 	return []mcpTool{
 		{
 			Name:        "mcpnet_list_captures",
-			Description: "List captured HTTP/HTTPS, WebSocket, TCP, and UDP sessions. Returns metadata only; no headers or payloads.",
+			Description: "List captured HTTP/HTTPS, WebSocket, TCP, and UDP sessions. Returns metadata only; no headers or payloads. URL query values, user info, and fragments are redacted.",
 			InputSchema: obj(map[string]any{"after_id": map[string]any{"type": "integer", "minimum": 0}, "limit": map[string]any{"type": "integer", "minimum": 1, "maximum": 200}, "protocol": map[string]any{"type": "string", "description": "Optional HTTP, WebSocket, TCP, or UDP filter."}}, nil),
 		},
 		{
 			Name:        "mcpnet_get_capture",
-			Description: "Get one captured session's metadata. Set include_body=true to include headers and request/response payloads (base64, capped at 64 KiB each); these may contain credentials or personal data.",
+			Description: "Get one captured session's metadata. URL query values, user info, and fragments are always redacted. Set include_body=true to include headers and request/response payloads (base64, capped at 64 KiB each); these may contain credentials or personal data.",
 			InputSchema: obj(map[string]any{"capture_id": map[string]any{"type": "integer", "minimum": 0}, "include_body": map[string]any{"type": "boolean", "default": false}}, []string{"capture_id"}),
 		},
 		{

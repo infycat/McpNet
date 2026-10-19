@@ -6,9 +6,20 @@
 
 | 版本 | 日期 | 狀態 | 平台 | 檔案 | 發布說明 |
 |---|---|---|---|---|---|
+| [v1.2.1](https://github.com/infycat/McpNet/releases/tag/v1.2.1) | 2026-10-20 | MCP URL 隱私修正 | Windows x64 | `McpNet-v1.2.1-windows-x64.exe` | [下載與校驗碼](https://github.com/infycat/McpNet/releases/tag/v1.2.1) |
 | [v1.2.0](https://github.com/infycat/McpNet/releases/tag/v1.2.0) | 2026-10-20 | MCP 捕獲監控更新 | Windows x64 | `McpNet-v1.2.0-windows-x64.exe` | [下載與校驗碼](https://github.com/infycat/McpNet/releases/tag/v1.2.0) |
 | [v1.1.0](https://github.com/infycat/McpNet/releases/tag/v1.1.0) | 2026-10-20 | 最新版／介面與插件功能更新 | Windows x64 | `McpNet-v1.1.0-windows-x64.exe` | [下載與校驗碼](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 | [v1.0.0](https://github.com/infycat/McpNet/releases/tag/v1.0.0) | 2026-10-19 | 首個公開版 | Windows x64 | `McpNet-v1.0.0-windows-x64.exe` | [下載與校驗碼](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+
+## v1.2.1 — 2026-10-20
+
+安全修正：MCP 捕獲清單與詳情中的 URL 會遮蔽所有查詢參數值、使用者資訊及片段，避免認證 token 等資料隨中繼資料回傳。封包標頭與本文仍僅在客戶端明確設定 `include_body=true` 時提供。
+
+- **平台：** Windows x64
+- **檔案：** `McpNet-v1.2.1-windows-x64.exe`
+- **檔案大小：** 91,819,520 bytes（約 87.6 MiB）
+- **SHA-256：** `0B30D2D66E2F336E8CA9133807F9E95CC1E05975F9967ECF6354000A17790676`
+- **下載：** [GitHub Release 成品](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe)
 
 ## v1.2.0 — 2026-10-20
 

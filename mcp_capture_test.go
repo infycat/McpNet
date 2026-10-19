@@ -2,17 +2,45 @@ package main
 
 import (
 	"encoding/base64"
+	"net/url"
 	"testing"
 
 	"changeme/MapHash"
 	"github.com/qtgolang/McpNet/src/http"
 )
 
+func TestRedactCaptureURLHidesQueryAndUserInfo(t *testing.T) {
+	got := redactCaptureURL("https://alice:secret@example.test/path?token=abc&lang=2&apiid=42#frag-secret")
+	parsed, err := url.Parse(got)
+	if err != nil {
+		t.Fatalf("redacted URL is invalid: %q: %v", got, err)
+	}
+	if parsed.User.Username() != "REDACTED" {
+		t.Fatalf("userinfo was not redacted: %q", got)
+	}
+	for key, values := range parsed.Query() {
+		for _, value := range values {
+			if value != "REDACTED" {
+				t.Fatalf("query value leaked for %q: %q", key, value)
+			}
+		}
+	}
+	if parsed.Fragment != "REDACTED" {
+		t.Fatalf("fragment was not redacted: %q", got)
+	}
+}
+
+func TestRedactCaptureURLOmitsUnparseableInput(t *testing.T) {
+	if got := redactCaptureURL("http://[invalid"); got != "[invalid URL omitted]" {
+		t.Fatalf("unexpected invalid URL representation: %q", got)
+	}
+}
+
 func TestMCPCaptureToolsDefaultToMetadata(t *testing.T) {
 	old := HashMap
 	HashMap = MapHash.NewHashMap()
 	t.Cleanup(func() { HashMap = old })
-	r := &MapHash.Request{Display: true, Way: "HTTP", Method: "POST", URL: "http://example.test/submit", Body: []byte("secret"), SendNum: 6}
+	r := &MapHash.Request{Display: true, Way: "HTTP", Method: "POST", URL: "http://example.test/submit?token=secret&uid=42", Body: []byte("secret"), SendNum: 6}
 	r.Header = http.Header{"Authorization": []string{"secret-token"}}
 	HashMap.SetRequest(11, r)
 	s := &mcpServer{}
@@ -31,6 +59,9 @@ func TestMCPCaptureToolsDefaultToMetadata(t *testing.T) {
 	}
 	if _, ok := row["request_headers"]; ok {
 		t.Fatal("capture listing exposed headers")
+	}
+	if row["url"] != "http://example.test/submit?token=REDACTED&uid=REDACTED" {
+		t.Fatalf("capture listing did not redact URL values: %#v", row["url"])
 	}
 
 	got, err = s.callTool("mcpnet_get_capture", map[string]any{"capture_id": 11})
