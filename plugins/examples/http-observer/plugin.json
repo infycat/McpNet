@@ -1,0 +1,9 @@
+{
+  "id": "http-observer-example",
+  "name": "HTTP observer example",
+  "version": "1.0.0",
+  "author": "McpNet examples",
+  "description": "Read-only starter showing the HTTP request hook; no payload changes.",
+  "enabled": false,
+  "order": 100
+}

@@ -1,0 +1,35 @@
+# Personal/runtime plugins: only reviewed public examples may be committed.
+/plugins/**
+!/plugins/examples/
+/plugins/examples/**
+!/plugins/examples/README.md
+!/plugins/examples/http-observer/
+!/plugins/examples/http-observer/**
+
+# User data, credentials, captures and diagnostics
+*.log
+/logs/
+*.pcap
+*.pcapng
+/Config.json
+/mcp.json
+/mcp-settings.json
+/ws-codec.json
+/captures/
+/local-secrets/
+
+# Local build and test outputs (keep app.syso and frontend/dist: both are build inputs)
+/McpNet.exe
+/McpNet.build.exe
+/build/bin/
+/frontend/node_modules/
+/frontend/dist.rebuilt/
+/McpNet_test*.exe
+/McpNet_icontest*.exe
+/McpNet_*check.exe
+
+# IDE and OS noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
