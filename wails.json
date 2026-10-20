@@ -8,7 +8,7 @@
   "frontend:dev:serverUrl": "auto",
   "author": {
     "name": "McpNet",
-    "email": "": "123456@qq.com"
+    "email": "123456@qq.com"
   },
   "windows": {
     "admin": true,
@@ -20,7 +20,7 @@
   "info": {
     "companyName": "McpNet",
     "productName": "McpNet",
-    "productVersion": "1.0.0",
+    "productVersion": "1.1.0",
     "copyright": "MIT License",
     "comments": "McpNet"
   }

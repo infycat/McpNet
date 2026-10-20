@@ -8,9 +8,9 @@
 
 | 最新穩定版 | 平台 | 直接下載 | 全部版本 |
 |---|---|---|---|
-| **v1.0.0** · 首個正式版本（主題底板與全屏設定視窗修復、品牌圖示更新） | Windows x64 | [下載 McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.1.0** · 第二版（修復全屏設定視窗邊界、補充功能截圖） | Windows x64 | [下載 McpNet-v1.1.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 
-[v1.0.0 更新內容與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0)
+[v1.1.0 更新內容與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.0)
 
 下載成品請使用上表的 EXE 連結；GitHub 頁面上的 **Source code ZIP/TAR.GZ 是原始碼，不是安裝程式**。首次使用前請查看下方的系統需求及安全提醒。
 
@@ -153,15 +153,16 @@ MCP 端點：`http://127.0.0.1:2026/mcp`；健康檢查：`http://127.0.0.1:2026
 
 ## 版本與下載
 
-目前正式下載版本為 v1.0.0；舊版可執行成品已從 Releases 移除。原始碼提交歷史仍保留於 GitHub。
+目前正式下載版本為 v1.1.0；v1.0.0 保留為首版。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
 
 | 版本 | 日期 | 狀態 | 平台 | 成品下載 | 發布資訊 |
 |---|---|---|---|---|---|
-| **v1.0.0** | 2026-10-20 | 首個正式版本；修復主題底板與全屏設定視窗、更新圖示與作者頁 | Windows x64 | [McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.1.0** | 2026-10-20 | 第二版；調整全屏設定視窗上下邊界、補充功能截圖 | Windows x64 | [McpNet-v1.1.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
+| **v1.0.0** | 2026-10-20 | 首個正式版本；主題底板、全屏設定視窗、圖示與作者頁更新 | Windows x64 | [McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-本版重點：統一更新 Windows／應用程式圖示；修復主題切換後部分視窗底板透明，以及程式設定全屏時遮住工具列、底部未貼齊而露出主介面與捲軸的問題；並將「打賞作者」頁籤改為「作者」、使用新的作者頁圖片。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
+本版修正程式設定最大化時頂部覆蓋主視窗工具列、右上控制按鈕重疊、底部未延伸至視窗邊緣而露出主介面及捲軸的問題；並整理 README 功能截圖，使其出現在腦圖之前。首版 v1.0.0 的主題與品牌更新詳見其 Release。
 
-成品大小：91,961,856 bytes；SHA-256：`BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`。
+v1.1.0 成品大小：91,961,856 bytes；SHA-256：`6939D6EB999FE8869E0C89B987FE22C5EBC01446874429746B8D03F57F2E93CD`。v1.0.0 SHA-256：`BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`。
 
 ## 安裝與使用
 
@@ -339,11 +340,12 @@ MCP 地址为 `http://127.0.0.1:2026/mcp`，健康检查为 `/health`。`mcpnet_
 
 | 版本 | 日期 | 状态 | 平台 | 成品下载 | 发布信息 |
 |---|---|---|---|---|---|
+| **v1.1.0** | 2026-10-20 | 第二版；调整全屏设置窗口边界、补充功能截图 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 | **v1.0.0** | 2026-10-20 | 首个正式版本；修复主题底板与全屏设置窗口、更新图标与作者页 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-当前正式下载版本为 v1.0.0；旧版可执行文件已从 Releases 移除，源码提交历史仍保留于 GitHub。新版修复主题底板透明及全屏设置窗口遮挡工具栏、底部露出主界面的问题，更新应用图标，并将“打赏作者”改为“作者”及替换作者页图片。GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。
+当前正式下载版本为 v1.1.0，v1.0.0 保留为首版。本版修复程序设置最大化时覆盖主窗口工具栏、右上角控制按钮重叠，以及底部未延伸至窗口边缘而露出主界面和滚动条的问题；并将功能截图放在脑图之前。GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。
 
-文件大小：91,961,856 bytes；SHA-256：`BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`。
+v1.1.0 文件大小：91,961,856 bytes；SHA-256：`6939D6EB999FE8869E0C89B987FE22C5EBC01446874429746B8D03F57F2E93CD`。v1.0.0 SHA-256：`BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`。
 
 ### 安装、插件与安全
 
@@ -373,9 +375,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | Latest stable | Platform | Direct download | All versions |
 |---|---|---|---|
-| **v1.0.0** · Initial stable release (themed surfaces, maximized settings, and refreshed branding) | Windows x64 | [Download McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.1.0** · Second release (maximized settings bounds fixed; feature screenshots added) | Windows x64 | [Download McpNet-v1.1.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 
-[v1.0.0 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0)
+[v1.1.0 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.0)
 
 McpNet is a Windows desktop network analysis and protocol debugging tool built with a Go/Wails backend, Vue 3 UI, and the McpNet core. It inspects and processes HTTP(S), WebSocket, TCP, and UDP traffic, with rules, scripts, user plugins, and a local MCP service. Launching the app does **not** enable system-wide interception; capture and system-proxy controls are separate.
 
@@ -492,11 +494,12 @@ MCP endpoints: `http://127.0.0.1:2026/mcp` and `/health`. `mcpnet_list_captures`
 
 | Version | Date | Status | Platform | Download | Release info |
 |---|---|---|---|---|---|
-| **v1.0.0** | 2026-10-20 | Initial stable release; themed panels and maximized settings fixed, icon and author page refreshed | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.1.0** | 2026-10-20 | Second release; maximized settings bounds fixed and feature screenshots added | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
+| **v1.0.0** | 2026-10-20 | Initial stable release; themed panels, maximized settings, icon, and author page updated | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-The current official download is v1.0.0. Older executable assets are removed from Releases while source commit history remains on GitHub. This build fixes transparent themed panels and maximized settings covering the toolbar or exposing the underlying footer, refreshes the app icon, and renames the author tab and replaces its image. GitHub's automatically generated source archives are not executable builds.
+The current official download is v1.1.0, with v1.0.0 retained as the initial release. This version fixes maximized settings covering the main toolbar, overlapping the top-right window controls, and leaving underlying content or scrollbars visible at the bottom. Feature screenshots are also placed before the README mind maps. GitHub's automatically generated source archives are not executable builds.
 
-File size: 91,961,856 bytes; SHA-256: `BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`.
+v1.1.0 file size: 91,961,856 bytes; SHA-256: `6939D6EB999FE8869E0C89B987FE22C5EBC01446874429746B8D03F57F2E93CD`. v1.0.0 SHA-256: `BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`.
 
 ### Setup, plugins, and safety
 
