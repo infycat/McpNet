@@ -8,7 +8,7 @@
 
 | 最新穩定版 | 平台 | 直接下載 | 全部版本 |
 |---|---|---|---|
-| **v1.1.0** · 第二版（修復全屏設定視窗邊界、補充功能截圖） | Windows x64 | [下載 McpNet-v1.1.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
+| **v1.1.0** · 第二版（修復全屏設定視窗邊界、補充功能截圖） | Windows x64 | [下載 McpNet-v1.1.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
 
 [v1.1.0 更新內容與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.0)
 
@@ -221,9 +221,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | 最新稳定版 | 平台 | 直接下载 | 全部版本 |
 |---|---|---|---|
-| **v1.0.0** · 首个正式版本（主题底板与全屏设置窗口修复、品牌图标更新） | Windows x64 | [下载 McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.1.0** · 第二版（修复全屏设置窗口边界、补充功能截图） | Windows x64 | [下载 McpNet-v1.1.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
 
-[v1.0.0 更新内容与 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0)
+[v1.1.0 更新内容与 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.0)
 
 McpNet 是 Windows 桌面网络分析与协议调试工具，由 Go/Wails 后端、Vue 3 界面和 McpNet 核心组成。它支持 HTTP(S)、WebSocket、TCP、UDP 流量查看与规则处理，并提供脚本、用户插件和本机 MCP。启动应用不会自动开启全系统流量拦截；监听与系统代理由用户分别控制。
 
@@ -375,7 +375,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | Latest stable | Platform | Direct download | All versions |
 |---|---|---|---|
-| **v1.1.0** · Second release (maximized settings bounds fixed; feature screenshots added) | Windows x64 | [Download McpNet-v1.1.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
+| **v1.1.0** · Second release (maximized settings bounds fixed; feature screenshots added) | Windows x64 | [Download McpNet-v1.1.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [All releases](https://github.com/infycat/McpNet/releases) |
 
 [v1.1.0 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.0)
 
