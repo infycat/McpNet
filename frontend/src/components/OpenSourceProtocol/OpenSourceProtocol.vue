@@ -38,7 +38,7 @@
                          <SDK/>
                         </div>
                         <div v-if="activeName==='作者'" class="author-profile-panel">
-                          <img src="/author-profile.png" alt="McpNet 作者 GitHub 個人頁面" class="author-profile-image" width="425" height="481" loading="lazy">
+                          <img src="/author-profile.png" alt="McpNet 作者 GitHub 個人頁面" class="author-profile-image" width="320" height="362" loading="lazy">
                         </div> 
                       </el-main>
                     </el-container>
@@ -452,7 +452,8 @@ export default {
 
 .author-profile-image {
   display: block;
-  width: min(425px, 100%);
+  width: min(320px, 100%);
+  max-height: 362px;
   height: auto;
   object-fit: contain;
   border-radius: 8px;

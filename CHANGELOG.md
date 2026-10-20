@@ -1,6 +1,27 @@
 # Release Notes / 版本紀錄
 
-Current stable release / 目前正式版本：**v1.1.0**. The first release, v1.0.0, remains available. GitHub's automatically generated source archives are source code, not executable builds. / 首版 v1.0.0 仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+Current stable release / 目前正式版本：**v1.1.1**. The first release, v1.0.0, remains available. GitHub's automatically generated source archives are source code, not executable builds. / 首版 v1.0.0 仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+
+## v1.1.1 — 2026-10-20 — Patch Release / 修補版
+
+### 繁體中文
+
+- 源碼頁整理為單一 GitHub 入口，集中提供源碼、SDK 與文件。
+- 將舊 QQ 群資訊替換為 Discord 社群邀請連結。
+- 縮小「作者」頁的個人資料圖片，改善視窗中的顯示比例。
+- 公開版本不包含個人本機插件或使用者設定。
+
+### English
+
+- Consolidated the source, SDK, and documentation links into one GitHub entry.
+- Replaced the old QQ group details with the Discord community invite.
+- Reduced the profile image size on the Author tab for a better fit in the window.
+- Personal local plugins and user settings are not included in the public build.
+
+- **Platform / 平台:** Windows x64
+- **File / 檔案:** `McpNet-v1.1.1-windows-x64.exe`
+- **Release / 發布:** [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.1.1)
+- File size and SHA-256 are added to the release after the automated Windows build completes. / 自動 Windows 建置完成後，會將檔案大小與 SHA-256 寫入 Release。
 
 ## v1.1.0 — 2026-10-20 — Second Release / 第二版
 

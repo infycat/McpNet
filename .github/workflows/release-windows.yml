@@ -1,0 +1,106 @@
+name: Build and attach Windows release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows-release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  build-windows-x64:
+    name: Build Windows x64 executable
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out the release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Stage embedded static assets
+        shell: pwsh
+        run: |
+          $root = $env:GITHUB_WORKSPACE
+          $dist = Join-Path $root 'frontend\dist'
+          $vsSource = Join-Path $root 'frontend\src\assets\vs'
+          $vsTarget = Join-Path $dist 'vs'
+          $assetTarget = Join-Path $dist 'assets'
+          New-Item -ItemType Directory -Path $vsTarget, $assetTarget -Force | Out-Null
+          Copy-Item -Path (Join-Path $vsSource '*') -Destination $vsTarget -Recurse -Force
+          Copy-Item -LiteralPath (Join-Path $root 'frontend\src\assets\author-profile.png') -Destination $dist -Force
+          Copy-Item -LiteralPath (Join-Path $root 'frontend\public\assets\sn-mcp.1.js'), (Join-Path $root 'frontend\public\assets\sn-i18n.396.js') -Destination $assetTarget -Force
+
+      - name: Build executable
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          $exeName = "McpNet-$env:RELEASE_TAG-windows-x64.exe"
+          go build -a -buildvcs=false -tags 'desktop,production,wv2runtime.download' -ldflags '-H windowsgui -s -w' -o $exeName .
+          if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $exeName)) {
+            throw 'Windows x64 build failed.'
+          }
+          $file = Get-Item -LiteralPath $exeName
+          $sha256 = (Get-FileHash -LiteralPath $exeName -Algorithm SHA256).Hash
+          "RELEASE_EXE=$((Resolve-Path -LiteralPath $exeName).Path)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "RELEASE_SIZE=$($file.Length)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "RELEASE_SHA256=$sha256" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Upload executable and record checksum
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          gh release upload $env:RELEASE_TAG $env:RELEASE_EXE --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Uploading the executable failed.' }
+
+          $body = (& gh release view $env:RELEASE_TAG --json body --jq '.body' | Out-String).TrimEnd()
+          if ($LASTEXITCODE -ne 0) { throw 'Could not read the release description.' }
+          $marker = '<!-- McpNet generated Windows asset metadata -->'
+          $markerIndex = $body.IndexOf($marker)
+          if ($markerIndex -ge 0) { $body = $body.Substring(0, $markerIndex).TrimEnd() }
+          $exeLeaf = Split-Path -Leaf $env:RELEASE_EXE
+
+          $metadata = @"
+          $marker
+          ### 成品資訊 / Build artifact
+
+          - 平台：Windows x64
+          - 檔案：$exeLeaf
+          - 大小：$env:RELEASE_SIZE bytes
+          - SHA-256：$env:RELEASE_SHA256
+
+          - Platform: Windows x64
+          - File: $exeLeaf
+          - Size: $env:RELEASE_SIZE bytes
+          - SHA-256: $env:RELEASE_SHA256
+          "@
+          $notesPath = Join-Path $env:RUNNER_TEMP 'release-notes.md'
+          [System.IO.File]::WriteAllText($notesPath, ($body + "`n`n" + $metadata.Trim()), [System.Text.UTF8Encoding]::new($false))
+          gh release edit $env:RELEASE_TAG --notes-file $notesPath
+          if ($LASTEXITCODE -ne 0) { throw 'Updating the release description with the checksum failed.' }
