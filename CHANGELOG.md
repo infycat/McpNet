@@ -2,6 +2,10 @@
 
 本專案採用 `MAJOR.MINOR.PATCH` 版本號。正式版依時間由新到舊列出；每個版本的實際成品、校驗碼與完整說明以連結的 GitHub Release 頁面為準。GitHub 自動產生的 Source code ZIP/TAR.GZ 是原始碼，不是可執行成品。
 
+## 品牌圖示更新 — 2026-10-20
+
+統一更新應用程式與 Windows 建置圖示：新版以透明方形構圖將「Net」字樣、封包路徑和 MCP 連接節點整合，採青綠漸層、白色連接點、黃色訊號段及深色描邊，提升小尺寸下的辨識度。`build/appicon.png` 為預覽來源；`build/appicon.ico`、`build/appicon-focused.ico` 與 `build/windows/icon.ico` 同步使用此設計。本次僅更新品牌資源與文件，不改變版本號或網路功能；重新建置後，EXE 才會帶入新圖示。
+
 ## 正式版本
 
 | 版本 | 日期 | 狀態 | 平台 | 檔案 | 發布說明 |

@@ -113,6 +113,10 @@ repository root/
 
 Keep these module-relative paths stable: `main.go` embeds `frontend/dist`; `go.mod` replaces `github.com/qtgolang/McpNet` with `./third_party/recovered-McpNet`; build scripts locate the module root relative to `scripts/`. Moving any of these requires updating the embed directive, `replace`, and scripts together. User configuration and installed plugins belong under `%USERPROFILE%\McpNet_new\`, never in the repository.
 
+### 品牌圖示與 Windows 資源
+
+`build/appicon.png` 是目前品牌圖示的透明底預覽來源；Windows/Wails 使用的 `build/appicon.ico`、`build/appicon-focused.ico` 與 `build/windows/icon.ico` 由相同圖稿同步產生，`app.rc` 將 `build/appicon.ico` 編入 `app.syso`。新版把「Net」字樣、封包路徑與 MCP 連接節點整合，並以青綠漸層、白色連接點和黃色訊號段強化辨識。更新圖稿後需重新產生 Windows 資源並重新建置，既有 EXE 不會自動變更。
+
 ### 協定與支援功能
 
 | 協定／介面 | 已實作能力 | 條件與備註 |
@@ -209,7 +213,7 @@ flowchart TB
 
 ### 目录、协议与发布
 
-主要目录：Go/Wails 文件位于仓库根目录；`CommAnd/` 为命令分发，`MapHash/` 为请求会话辅助，`Resource/` 为嵌入脚本模板；`frontend/src` 为 Vue 源码，`frontend/dist` 为 Go embed 构建输入；`third_party/recovered-McpNet` 是 `go.mod` 的本地 replace 核心；`build/` 放 Windows 图标和资源，`scripts/` 放构建脚本，`docs/` 放项目文档，`plugins/examples/` 仅放公开示例。请勿随意移动 `frontend/dist`、第三方核心或 `scripts`，否则要同步更新 embed、replace 和脚本路径。
+主要目录：Go/Wails 文件位于仓库根目录；`CommAnd/` 为命令分发，`MapHash/` 为请求会话辅助，`Resource/` 为嵌入脚本模板；`frontend/src` 为 Vue 源码，`frontend/dist` 为 Go embed 构建输入；`third_party/recovered-McpNet` 是 `go.mod` 的本地 replace 核心；`build/` 放 Windows 图标和资源，当前透明方形图标将“Net”字样与数据包路径及 MCP 连接节点结合，PNG/ICO 资源保持一致；`scripts/` 放构建脚本，`docs/` 放项目文档，`plugins/examples/` 仅放公开示例。请勿随意移动 `frontend/dist`、第三方核心或 `scripts`，否则要同步更新 embed、replace 和脚本路径。
 
 | 协议／接口 | 功能与限制 |
 |---|---|
@@ -296,7 +300,7 @@ flowchart TB
 
 ### Repository layout and supported protocols
 
-The repository root contains the Go/Wails app. `CommAnd/` dispatches UI commands; `MapHash/` contains request/session helpers; `Resource/` holds embedded script templates. `frontend/src` is the Vue source and `frontend/dist` is the Go embed input. `third_party/recovered-McpNet` is the local module selected by `go.mod`; `build/` contains Windows resources, `scripts/` contains build scripts, `docs/` contains project documentation, and `plugins/examples/` contains public sample plugins only. Keep the embed, local `replace`, and build-script paths in sync if any of these directories move.
+The repository root contains the Go/Wails app. `CommAnd/` dispatches UI commands; `MapHash/` contains request/session helpers; `Resource/` holds embedded script templates. `frontend/src` is the Vue source and `frontend/dist` is the Go embed input. `third_party/recovered-McpNet` is the local module selected by `go.mod`; `build/` contains Windows resources and the current transparent square icon, which integrates the “Net” lettering with packet paths and MCP connection nodes; `scripts/` contains build scripts, `docs/` contains project documentation, and `plugins/examples/` contains public sample plugins only. Keep the embed, local `replace`, and build-script paths in sync if any of these directories move.
 
 | Protocol / interface | Implemented capability | Conditions |
 |---|---|---|

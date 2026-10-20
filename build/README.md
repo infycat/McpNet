@@ -34,6 +34,9 @@ build with `wails build`.
 - `icon.ico` - The icon used for the application. This is used when building using `wails build`. If you wish to
   use a different icon, simply replace this file with your own. If it is missing, a new `icon.ico` file
   will be created using the `appicon.png` file in the build directory.
+- `appicon.png` and `appicon.ico` - The current McpNet brand artwork: a transparent square mark combining the
+  “Net” lettering with packet paths and MCP connection nodes. The checked-in ICO resources are generated from this
+  artwork so the executable and Windows UI use a consistent icon.
 - `installer/*` - The files used to create the Windows installer. These are used when building using `wails build`.
 - `info.json` - Application details used for Windows builds. The data here will be used by the Windows installer,
   as well as the application itself (right click the exe -> properties -> details)

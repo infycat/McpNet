@@ -1,5 +1,7 @@
 # McpNet
 
+<p align="center"><img src="build/appicon.png" width="176" alt="McpNet icon combining Net lettering, packet paths, and MCP connection nodes" /></p>
+
 > Windows 桌面網路分析與協定除錯工具，整合封包檢視、規則處理、插件擴充與本機 MCP 服務。
 
 **繁體中文（預設）** · [简体中文](#简体中文) · [English](#english)
@@ -15,6 +17,10 @@
 ## 專案簡介
 
 McpNet 由 Go/Wails 桌面後端、Vue 3 介面與 McpNet 網路核心組成。它可檢視和處理 HTTP(S)、WebSocket、TCP、UDP 流量，並提供規則、腳本、使用者插件及本機 MCP 整合。程式啟動不會自動開始全系統攔截：流量監聽與系統代理由使用者分別控制。
+
+### 品牌圖示
+
+新版採用方形透明底圖示，將「Net」字樣直接融入封包路徑與 MCP 連接節點；青綠漸層為主色，搭配白色連接點、黃色訊號段與深色描邊，讓網路抓包與 MCP 元素更清晰易辨。`build/appicon.png` 是預覽來源，Windows/Wails 使用的 `.ico` 資源同步更新為同一設計。
 
 | 類別 | 功能 |
 |---|---|
@@ -205,6 +211,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 McpNet 是 Windows 桌面网络分析与协议调试工具，由 Go/Wails 后端、Vue 3 界面和 McpNet 核心组成。它支持 HTTP(S)、WebSocket、TCP、UDP 流量查看与规则处理，并提供脚本、用户插件和本机 MCP。启动应用不会自动开启全系统流量拦截；监听与系统代理由用户分别控制。
 
+### 品牌图标
+
+新版采用方形透明底图标，将“Net”字样直接融入数据包路径与 MCP 连接节点；以青绿渐变为主色，搭配白色连接点、黄色信号段和深色描边，让网络抓包与 MCP 元素更清晰易辨。`build/appicon.png` 是预览源图，Windows/Wails 使用的 `.ico` 资源同步更新为同一设计。
+
 | 类别 | 功能 |
 |---|---|
 | 流量分析 | HTTP/HTTPS 请求与响应、WebSocket 消息、TCP/UDP 连接与数据 |
@@ -332,6 +342,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 [v1.2.1 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.1) · [All versions](https://github.com/infycat/McpNet/releases)
 
 McpNet is a Windows desktop network analysis and protocol debugging tool built with a Go/Wails backend, Vue 3 UI, and the McpNet core. It inspects and processes HTTP(S), WebSocket, TCP, and UDP traffic, with rules, scripts, user plugins, and a local MCP service. Launching the app does **not** enable system-wide interception; capture and system-proxy controls are separate.
+
+### App icon
+
+The refreshed square icon uses a transparent background and integrates the “Net” lettering with packet paths and MCP connection nodes. A cyan-to-mint gradient, white connector rings, yellow signal accents, and a dark outline make both network capture and MCP immediately recognizable. `build/appicon.png` is the preview source; the Windows/Wails `.ico` resources use the same artwork.
 
 | Area | Capabilities |
 |---|---|
