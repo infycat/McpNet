@@ -1,7 +1,37 @@
+:root {
+    --app-surface: #202426;
+    --app-surface-raised: #292f31;
+    --app-surface-muted: #30383a;
+    --app-header: #1b1d1e;
+    --app-border: #42484a;
+    --app-text: #eeeeee;
+    --app-muted-text: #b3bdc0;
+    --app-accent: #8bcfee;
+    --app-row-hover: #39464a;
+    --app-row-selected: #344f5d;
+    --app-gradient: linear-gradient(145deg, #202426, #202426);
+    color-scheme: dark;
+}
+
+:root.light {
+    --app-surface: #f0f2ef;
+    --app-surface-raised: #f8f9f7;
+    --app-surface-muted: #e7ebe7;
+    --app-header: #e1e6e2;
+    --app-border: #c4ceca;
+    --app-text: #232b26;
+    --app-muted-text: #56635c;
+    --app-accent: #2a8a6e;
+    --app-row-hover: #e2eee8;
+    --app-row-selected: #d5e8de;
+    --app-gradient: linear-gradient(145deg, #f0f2ef, #f0f2ef);
+    color-scheme: light;
+}
+
 html {
-    background-color: rgba(27, 38, 54, 1);
+    background-color: var(--app-surface);
     text-align: center;
-    color: white;
+    color: var(--app-text);
     height: 100%;
     margin: 0;
     padding: 0;
@@ -13,7 +43,8 @@ body {
     padding: 0;
     height: 100vh;
     overflow: hidden;
-    color: white;
+    color: var(--app-text);
+    background: var(--app-gradient);
     font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
     "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
@@ -51,6 +82,34 @@ body {
     width: 100vw;
     overflow: hidden;
     text-align: center;
+    background: transparent;
+}
+
+/* Dialogs are mounted above Home's transparent grid surfaces. Give every
+   floating window its own opaque, theme-aware panel so the main view cannot
+   bleed through when a modal is opened or repainted. */
+.top-component .ag-default-panel,
+.top-component .ag-panel {
+    color: var(--app-text);
+    background-color: var(--app-surface-raised);
+    border-color: var(--app-border);
+}
+
+.top-component .ag-panel-title-bar {
+    color: var(--app-text);
+    background-color: var(--app-header);
+    border-color: var(--app-border);
+}
+
+.top-component .ag-panel-content-wrapper,
+.top-component .ag-chart,
+.top-component .ag-chart-components-wrapper,
+.top-component .ag-chart-empty-text,
+.top-component .el-container,
+.top-component .el-main {
+    color: var(--app-text);
+    background-color: var(--app-surface);
+    background-image: var(--app-gradient);
 }
 
 

@@ -8,9 +8,9 @@
 
 | 最新穩定版 | 平台 | 直接下載 | 全部版本 |
 |---|---|---|---|
-| **v1.2.1** · MCP URL 隱私修正 | Windows x64 | [下載 McpNet-v1.2.1-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe) | [GitHub Releases](https://github.com/infycat/McpNet/releases) |
+| **v1.0.0** · 首個正式版本（介面底板修復與品牌圖示更新） | Windows x64 | [下載 McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-[v1.2.1 更新內容與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.1) · [所有版本](https://github.com/infycat/McpNet/releases)
+[v1.0.0 更新內容與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0)
 
 下載成品請使用上表的 EXE 連結；GitHub 頁面上的 **Source code ZIP/TAR.GZ 是原始碼，不是安裝程式**。首次使用前請查看下方的系統需求及安全提醒。
 
@@ -129,24 +129,15 @@ MCP 端點：`http://127.0.0.1:2026/mcp`；健康檢查：`http://127.0.0.1:2026
 
 ## 版本與下載
 
-請從 GitHub Releases 取得正式成品。版本表列出最新版本，歷史版本與各版發布說明保留於 [Releases 頁面](https://github.com/infycat/McpNet/releases)。
+目前正式下載版本為 v1.0.0；舊版可執行成品已從 Releases 移除。原始碼提交歷史仍保留於 GitHub。
 
 | 版本 | 日期 | 狀態 | 平台 | 成品下載 | 發布資訊 |
 |---|---|---|---|---|---|
-| **v1.2.1** | 2026-10-20 | 最新版／MCP URL 隱私修正 | Windows x64 | [McpNet-v1.2.1-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.1) |
-| **v1.2.0** | 2026-10-20 | MCP 捕獲監控更新 | Windows x64 | [McpNet-v1.2.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.0) |
-| **v1.1.0** | 2026-10-20 | 介面與插件功能更新 | Windows x64 | [McpNet-v1.1.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
-| **v1.0.0** | 2026-10-19 | 首個公開版 | Windows x64 | [McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.0.0** | 2026-10-20 | 首個正式版本；修復主題底板、更新圖示與作者頁 | Windows x64 | [McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-**v1.2.1 更新摘要**：MCP 會遮蔽會話 URL 中的查詢值、使用者資訊和片段，避免 token 等憑證隨中繼資料回傳。成品 91,819,520 bytes；SHA-256：`0B30D2D66E2F336E8CA9133807F9E95CC1E05975F9967ECF6354000A17790676`。封包內容仍需明確要求。詳見 [v1.2.1 Release](https://github.com/infycat/McpNet/releases/tag/v1.2.1)。
+本版重點：統一更新 Windows／應用程式圖示，修復主題切換後部分視窗底板透明、底層介面透出的問題，並將「打賞作者」頁籤改為「作者」、使用新的作者頁圖片。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
 
-**v1.1.0 成品資訊**：91,793,408 bytes（約 87.5 MiB）；SHA-256：`B4ACE65F887F56D4B03B74570952D71AB999353E4D3F31AC3F6FB546EB882A22`。下載後可在 PowerShell 執行：
-
-```powershell
-Get-FileHash .\McpNet-v1.1.0-windows-x64.exe -Algorithm SHA256
-```
-
-版本號採 `MAJOR.MINOR.PATCH`；本頁版本表以最新版本在前，並集中記錄各版日期、平台、下載成品與發布說明。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
+成品大小：91,961,856 bytes；SHA-256：`1B8246FB3EF16AE77BC55656C37CB5C4F7C5DF3E6F04841F2300AAD51D895C41`。
 
 ## 安裝與使用
 
@@ -205,9 +196,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | 最新稳定版 | 平台 | 直接下载 | 全部版本 |
 |---|---|---|---|
-| **v1.2.1** · MCP URL 隐私修复 | Windows x64 | [下载 McpNet-v1.2.1-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe) | [GitHub Releases](https://github.com/infycat/McpNet/releases) |
+| **v1.0.0** · 首个正式版本（界面底板修复与品牌图标更新） | Windows x64 | [下载 McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-[v1.2.1 更新内容与 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.1) · [所有版本](https://github.com/infycat/McpNet/releases)
+[v1.0.0 更新内容与 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0)
 
 McpNet 是 Windows 桌面网络分析与协议调试工具，由 Go/Wails 后端、Vue 3 界面和 McpNet 核心组成。它支持 HTTP(S)、WebSocket、TCP、UDP 流量查看与规则处理，并提供脚本、用户插件和本机 MCP。启动应用不会自动开启全系统流量拦截；监听与系统代理由用户分别控制。
 
@@ -300,14 +291,11 @@ MCP 地址为 `http://127.0.0.1:2026/mcp`，健康检查为 `/health`。`mcpnet_
 
 | 版本 | 日期 | 状态 | 平台 | 成品下载 | 发布信息 |
 |---|---|---|---|---|---|
-| **v1.2.1** | 2026-10-20 | 最新版／MCP URL 隐私修复 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.2.1) |
-| **v1.2.0** | 2026-10-20 | MCP 捕获监控更新 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.2.0) |
-| **v1.1.0** | 2026-10-20 | 界面与插件功能更新 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
-| **v1.0.0** | 2026-10-19 | 首个公开版 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.0.0** | 2026-10-20 | 首个正式版本；修复主题底板、更新图标与作者页 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-**v1.2.1 更新摘要：** MCP 会遮蔽会话 URL 中的查询值、用户信息及片段，避免 token 等凭据随元数据返回。正式文件大小为 91,819,520 bytes，SHA-256：`0B30D2D66E2F336E8CA9133807F9E95CC1E05975F9967ECF6354000A17790676`。封包内容仍需显式请求。详见 [v1.2.1 Release](https://github.com/infycat/McpNet/releases/tag/v1.2.1)。
+当前正式下载版本为 v1.0.0；旧版可执行文件已从 Releases 移除，源码提交历史仍保留于 GitHub。新版修复主题底板透明、更新应用图标，并将“打赏作者”改为“作者”及替换作者页图片。GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。
 
-请从 [Releases](https://github.com/infycat/McpNet/releases) 获取正式成品；GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。各版本的日期、平台、成品和变更摘要均集中列于本页。
+文件大小：91,961,856 bytes；SHA-256：`1B8246FB3EF16AE77BC55656C37CB5C4F7C5DF3E6F04841F2300AAD51D895C41`。
 
 ### 安装、插件与安全
 
@@ -337,9 +325,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | Latest stable | Platform | Direct download | All versions |
 |---|---|---|---|
-| **v1.2.1** · MCP URL privacy fix | Windows x64 | [Download McpNet-v1.2.1-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe) | [GitHub Releases](https://github.com/infycat/McpNet/releases) |
+| **v1.0.0** · Initial stable release (panel background fix and refreshed branding) | Windows x64 | [Download McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-[v1.2.1 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.1) · [All versions](https://github.com/infycat/McpNet/releases)
+[v1.0.0 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0)
 
 McpNet is a Windows desktop network analysis and protocol debugging tool built with a Go/Wails backend, Vue 3 UI, and the McpNet core. It inspects and processes HTTP(S), WebSocket, TCP, and UDP traffic, with rules, scripts, user plugins, and a local MCP service. Launching the app does **not** enable system-wide interception; capture and system-proxy controls are separate.
 
@@ -432,14 +420,11 @@ MCP endpoints: `http://127.0.0.1:2026/mcp` and `/health`. `mcpnet_list_captures`
 
 | Version | Date | Status | Platform | Download | Release info |
 |---|---|---|---|---|---|
-| **v1.2.1** | 2026-10-20 | Latest / MCP URL privacy fix | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.2.1) |
-| **v1.2.0** | 2026-10-20 | MCP capture monitoring | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.2.0) |
-| **v1.1.0** | 2026-10-20 | UI and plugin update | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
-| **v1.0.0** | 2026-10-19 | First public release | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.0.0** | 2026-10-20 | Initial stable release; themed panels fixed, icon and author page refreshed | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-**v1.2.1 highlights:** MCP capture URLs now redact query values, user info, and fragments to prevent credentials such as tokens from appearing in metadata. Payload access remains opt-in. The official EXE is 91,819,520 bytes; SHA-256: `0B30D2D66E2F336E8CA9133807F9E95CC1E05975F9967ECF6354000A17790676`. See the [v1.2.1 release](https://github.com/infycat/McpNet/releases/tag/v1.2.1).
+The current official download is v1.0.0. Older executable assets are removed from Releases while source commit history remains on GitHub. This build fixes transparent themed panels, refreshes the app icon, and renames the author tab and replaces its image. GitHub's automatically generated source archives are not executable builds.
 
-Download official binaries from [Releases](https://github.com/infycat/McpNet/releases); GitHub's automatically generated source archives are not executable builds. Version dates, platforms, downloads, and summaries are maintained on this page.
+File size: 91,961,856 bytes; SHA-256: `1B8246FB3EF16AE77BC55656C37CB5C4F7C5DF3E6F04841F2300AAD51D895C41`.
 
 ### Setup, plugins, and safety
 

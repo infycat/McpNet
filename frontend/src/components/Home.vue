@@ -38,10 +38,22 @@ window.ApplyAppPalette = (palette) => {
   const root = document.documentElement;
   if (!palette) {
     root.removeAttribute('data-app-palette');
-    ['--app-surface', '--app-surface-raised', '--app-surface-muted', '--app-header', '--app-border', '--app-text', '--app-muted-text', '--app-accent', '--app-row-hover', '--app-row-selected', '--app-gradient'].forEach((key) => root.style.removeProperty(key));
+    [
+      '--app-surface', '--app-surface-raised', '--app-surface-muted', '--app-header', '--app-border',
+      '--app-text', '--app-muted-text', '--app-accent', '--app-row-hover', '--app-row-selected', '--app-gradient',
+      '--el-bg-color', '--el-bg-color-page', '--el-bg-color-overlay', '--el-text-color-primary',
+      '--el-text-color-regular', '--el-text-color-secondary', '--el-color-primary', '--el-fill-color-blank',
+      '--el-text-color-placeholder', '--el-border-color', '--el-border-color-light', '--el-fill-color-light',
+      '--el-fill-color-lighter', '--el-mask-color', '--ag-input-border-color', '--ag-input-focus-border-color',
+      '--ag-checkbox-checked-color', '--ag-range-selection-border-color', '--ag-range-selection-background-color',
+    ].forEach((key) => root.style.removeProperty(key));
+    document.body.style.background = '';
+    document.body.style.color = '';
+    window.ApplyAppTheme(window.Theme.IsDark);
     return;
   }
   const dark = !!palette.dark;
+  window.ApplyAppTheme(dark);
   const surface = palette.surface || (dark ? '#202020' : '#f0f2ef');
   const text = palette.text || (dark ? '#eeeeee' : '#232b26');
   const accent = palette.accent || (dark ? '#8bcfee' : '#2a8a6e');
