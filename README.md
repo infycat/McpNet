@@ -8,7 +8,7 @@
 
 | 最新穩定版 | 平台 | 直接下載 | 全部版本 |
 |---|---|---|---|
-| **v1.0.0** · 首個正式版本（介面底板修復與品牌圖示更新） | Windows x64 | [下載 McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.0.0** · 首個正式版本（主題底板與全屏設定視窗修復、品牌圖示更新） | Windows x64 | [下載 McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
 [v1.0.0 更新內容與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0)
 
@@ -162,11 +162,11 @@ MCP 端點：`http://127.0.0.1:2026/mcp`；健康檢查：`http://127.0.0.1:2026
 
 | 版本 | 日期 | 狀態 | 平台 | 成品下載 | 發布資訊 |
 |---|---|---|---|---|---|
-| **v1.0.0** | 2026-10-20 | 首個正式版本；修復主題底板、更新圖示與作者頁 | Windows x64 | [McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.0.0** | 2026-10-20 | 首個正式版本；修復主題底板與全屏設定視窗、更新圖示與作者頁 | Windows x64 | [McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-本版重點：統一更新 Windows／應用程式圖示，修復主題切換後部分視窗底板透明、底層介面透出的問題，並將「打賞作者」頁籤改為「作者」、使用新的作者頁圖片。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
+本版重點：統一更新 Windows／應用程式圖示；修復主題切換後部分視窗底板透明，以及程式設定全屏時遮住工具列、底部未貼齊而露出主介面與捲軸的問題；並將「打賞作者」頁籤改為「作者」、使用新的作者頁圖片。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
 
-成品大小：91,961,856 bytes；SHA-256：`1B8246FB3EF16AE77BC55656C37CB5C4F7C5DF3E6F04841F2300AAD51D895C41`。
+成品大小：91,961,856 bytes；SHA-256：`BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`。
 
 ## 安裝與使用
 
@@ -225,7 +225,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | 最新稳定版 | 平台 | 直接下载 | 全部版本 |
 |---|---|---|---|
-| **v1.0.0** · 首个正式版本（界面底板修复与品牌图标更新） | Windows x64 | [下载 McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.0.0** · 首个正式版本（主题底板与全屏设置窗口修复、品牌图标更新） | Windows x64 | [下载 McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
 [v1.0.0 更新内容与 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0)
 
@@ -349,11 +349,11 @@ MCP 地址为 `http://127.0.0.1:2026/mcp`，健康检查为 `/health`。`mcpnet_
 
 | 版本 | 日期 | 状态 | 平台 | 成品下载 | 发布信息 |
 |---|---|---|---|---|---|
-| **v1.0.0** | 2026-10-20 | 首个正式版本；修复主题底板、更新图标与作者页 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.0.0** | 2026-10-20 | 首个正式版本；修复主题底板与全屏设置窗口、更新图标与作者页 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-当前正式下载版本为 v1.0.0；旧版可执行文件已从 Releases 移除，源码提交历史仍保留于 GitHub。新版修复主题底板透明、更新应用图标，并将“打赏作者”改为“作者”及替换作者页图片。GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。
+当前正式下载版本为 v1.0.0；旧版可执行文件已从 Releases 移除，源码提交历史仍保留于 GitHub。新版修复主题底板透明及全屏设置窗口遮挡工具栏、底部露出主界面的问题，更新应用图标，并将“打赏作者”改为“作者”及替换作者页图片。GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。
 
-文件大小：91,961,856 bytes；SHA-256：`1B8246FB3EF16AE77BC55656C37CB5C4F7C5DF3E6F04841F2300AAD51D895C41`。
+文件大小：91,961,856 bytes；SHA-256：`BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`。
 
 ### 安装、插件与安全
 
@@ -383,7 +383,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | Latest stable | Platform | Direct download | All versions |
 |---|---|---|---|
-| **v1.0.0** · Initial stable release (panel background fix and refreshed branding) | Windows x64 | [Download McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.0.0** · Initial stable release (themed surfaces, maximized settings, and refreshed branding) | Windows x64 | [Download McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
 [v1.0.0 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0)
 
@@ -507,11 +507,11 @@ MCP endpoints: `http://127.0.0.1:2026/mcp` and `/health`. `mcpnet_list_captures`
 
 | Version | Date | Status | Platform | Download | Release info |
 |---|---|---|---|---|---|
-| **v1.0.0** | 2026-10-20 | Initial stable release; themed panels fixed, icon and author page refreshed | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
+| **v1.0.0** | 2026-10-20 | Initial stable release; themed panels and maximized settings fixed, icon and author page refreshed | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-The current official download is v1.0.0. Older executable assets are removed from Releases while source commit history remains on GitHub. This build fixes transparent themed panels, refreshes the app icon, and renames the author tab and replaces its image. GitHub's automatically generated source archives are not executable builds.
+The current official download is v1.0.0. Older executable assets are removed from Releases while source commit history remains on GitHub. This build fixes transparent themed panels and maximized settings covering the toolbar or exposing the underlying footer, refreshes the app icon, and renames the author tab and replaces its image. GitHub's automatically generated source archives are not executable builds.
 
-File size: 91,961,856 bytes; SHA-256: `1B8246FB3EF16AE77BC55656C37CB5C4F7C5DF3E6F04841F2300AAD51D895C41`.
+File size: 91,961,856 bytes; SHA-256: `BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`.
 
 ### Setup, plugins, and safety
 

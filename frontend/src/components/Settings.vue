@@ -208,6 +208,8 @@ function pxToInt(E) {
 const WindowName = "Settings"
 const ClassMinName = "ag-icon ag-icon-minimize ag-panel-title-bar-button-icon"
 const ClassMaxName = "ag-icon ag-icon-maximize ag-panel-title-bar-button-icon"
+// Keep the in-app window toolbar reachable when this panel is maximized.
+const APP_HEADER_HEIGHT = 30
 export default {
   props: ['show'],
   watch: {
@@ -220,11 +222,10 @@ export default {
         window.SetUILevel(WindowName)
         const h = document.documentElement.clientHeight
         const w = document.documentElement.clientWidth
-        let _top = h - this.thisWindowHeight
-        if (_top <= 60) {
-          _top = 0
-        } else {
-          _top = _top / 2
+        const availableHeight = Math.max(0, h - APP_HEADER_HEIGHT)
+        let _top = APP_HEADER_HEIGHT + (availableHeight - this.thisWindowHeight) / 2
+        if (_top < APP_HEADER_HEIGHT) {
+          _top = APP_HEADER_HEIGHT
         }
         let _left = w - this.thisWindowWidth
         if (_left < 0) {
@@ -419,7 +420,7 @@ export default {
     },
     handleResize(event) {
       if (this.MaxSize) {
-        this.setWindowSize(0, 0, document.documentElement.clientWidth, document.documentElement.clientHeight - 60)
+        this.setMaximizedSize()
       }
     },
     Close() {
@@ -432,6 +433,14 @@ export default {
       t = t.replaceAll("pxpx;", "px;")
       this.WindowStyle = t
     },
+    setMaximizedSize() {
+      const viewportWidth = document.documentElement.clientWidth
+      const viewportHeight = document.documentElement.clientHeight
+      const top = Math.min(APP_HEADER_HEIGHT, viewportHeight)
+      // Extend to the bottom edge so the main view's half-width scrollbar and
+      // footer cannot remain exposed beneath the maximized settings panel.
+      this.setWindowSize(top, 0, viewportWidth, Math.max(0, viewportHeight - top))
+    },
     SetSize() {
       if (this.MaxSize === false) {
         this.iconClass = ClassMinName
@@ -440,7 +449,7 @@ export default {
         const width = pxToInt(this.$refs.Window.style.width)
         const height = pxToInt(this.$refs.Window.style.height)
         this.RawSize = "top: " + top + "px; left: " + left + "px; width: " + width + "px; max-width: " + width + "px; min-width: " + width + "px; height: " + height + "px; max-height: " + height + "px; min-height: " + height + "px;"
-        this.setWindowSize(0, 0, document.documentElement.clientWidth, document.documentElement.clientHeight - 60)
+        this.setMaximizedSize()
         this.MaxSize = true
       } else {
         this.iconClass = ClassMaxName
@@ -671,6 +680,10 @@ export default {
 <style scoped>
 .top-component {
   color: var(--app-text, var(--ag-foreground-color, #f5f5f5));
+}
+
+:deep(.ag-dialog) {
+  box-sizing: border-box;
 }
 
 :deep(.ag-default-panel) {
