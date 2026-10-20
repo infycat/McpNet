@@ -3,12 +3,18 @@ name: Build and attach Windows release
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing published release tag to build and attach
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 concurrency:
-  group: windows-release-${{ github.event.release.tag_name }}
+  group: windows-release-${{ github.event.release.tag_name || inputs.release_tag }}
   cancel-in-progress: false
 
 jobs:
@@ -20,12 +26,12 @@ jobs:
       - name: Check out the release tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ github.event.release.tag_name || inputs.release_tag }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version: 1.24.9
           cache: true
 
       - name: Set up Node.js
@@ -57,7 +63,7 @@ jobs:
       - name: Build executable
         shell: pwsh
         env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
         run: |
           $exeName = "McpNet-$env:RELEASE_TAG-windows-x64.exe"
           go build -a -buildvcs=false -tags 'desktop,production,wv2runtime.download' -ldflags '-H windowsgui -s -w' -o $exeName .
@@ -74,7 +80,7 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
         run: |
           gh release upload $env:RELEASE_TAG $env:RELEASE_EXE --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Uploading the executable failed.' }
