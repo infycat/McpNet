@@ -30,6 +30,35 @@ McpNet 由 Go/Wails 桌面後端、Vue 3 介面與 McpNet 網路核心組成。�
 | MCP 整合 | 本機 HTTP MCP、狀態查詢、監聽控制、系統代理及 UI 命令工具 |
 | 桌面介面 | Windows、Wails v2、Vue 3、WebView2；繁體中文、簡體中文與英文 |
 
+### 介面截圖
+
+以下截圖展示進程攔截、設定與主題、插件編輯器及 MCP 設定。展開後可點擊圖片查看原尺寸。
+
+<details>
+<summary>展開介面截圖（5 張）</summary>
+
+**進程攔截與附近應用清單**
+
+<img src="docs/screenshots/process-interception.png" width="900" alt="進程攔截設定與可選擇的進程清單" />
+
+**程式設定與語言選擇**
+
+<img src="docs/screenshots/settings-overview.png" width="900" alt="程式設定總覽及繁體中文語言選項" />
+
+**多色系主題**
+
+<img src="docs/screenshots/theme-gallery.png" width="900" alt="深色、淺色與漸層介面主題選擇" />
+
+**本機 Go 插件編輯器**
+
+<img src="docs/screenshots/plugin-editor.png" width="900" alt="插件程式碼編輯器與 McpNet hook API 說明" />
+
+**本機 MCP 服務設定**
+
+<img src="docs/screenshots/mcp-settings.png" width="900" alt="本機 MCP 服務狀態、端點與客戶端設定 JSON" />
+
+</details>
+
 ## 架構與資料流程
 
 ```mermaid
@@ -214,6 +243,35 @@ McpNet 是 Windows 桌面网络分析与协议调试工具，由 Go/Wails 后端
 | MCP | 本机 HTTP MCP、状态查询、监听控制、系统代理及 UI 命令 |
 | 桌面端 | Windows、Wails v2、Vue 3、WebView2；繁中、简中和英文 |
 
+### 界面截图
+
+以下截图展示进程拦截、设置与主题、插件编辑器及 MCP 设置。展开后可点击图片查看原尺寸。
+
+<details>
+<summary>展开界面截图（5 张）</summary>
+
+**进程拦截与附近应用列表**
+
+<img src="docs/screenshots/process-interception.png" width="900" alt="进程拦截设置与可选进程列表" />
+
+**程序设置与语言选择**
+
+<img src="docs/screenshots/settings-overview.png" width="900" alt="程序设置总览及繁体中文语言选项" />
+
+**多色系主题**
+
+<img src="docs/screenshots/theme-gallery.png" width="900" alt="深色、浅色与渐变界面主题选择" />
+
+**本地 Go 插件编辑器**
+
+<img src="docs/screenshots/plugin-editor.png" width="900" alt="插件代码编辑器与 McpNet hook API 说明" />
+
+**本机 MCP 服务设置**
+
+<img src="docs/screenshots/mcp-settings.png" width="900" alt="本机 MCP 服务状态、端点与客户端设置 JSON" />
+
+</details>
+
 ### 架构与流程
 
 ```mermaid
@@ -342,6 +400,35 @@ The refreshed square icon uses a transparent background and integrates the “Ne
 | Extensions | Yaegi Go plugins, script templates, protocol-processing hooks |
 | MCP | Local HTTP MCP, status, capture controls, system proxy, and UI-command tools |
 | Desktop | Windows, Wails v2, Vue 3, WebView2; Traditional Chinese, Simplified Chinese, and English |
+
+### Screenshots
+
+These screenshots show process interception, settings and themes, the plugin editor, and local MCP configuration. Expand the gallery and click an image to view it at full size.
+
+<details>
+<summary>View interface screenshots (5)</summary>
+
+**Process interception and nearby-process list**
+
+<img src="docs/screenshots/process-interception.png" width="900" alt="Process interception settings and selectable process list" />
+
+**Application settings and language selection**
+
+<img src="docs/screenshots/settings-overview.png" width="900" alt="Application settings overview with Traditional Chinese selected" />
+
+**Multi-color themes**
+
+<img src="docs/screenshots/theme-gallery.png" width="900" alt="Dark, light, and gradient interface theme selection" />
+
+**Local Go plugin editor**
+
+<img src="docs/screenshots/plugin-editor.png" width="900" alt="Plugin code editor and McpNet hook API reference" />
+
+**Local MCP service settings**
+
+<img src="docs/screenshots/mcp-settings.png" width="900" alt="Local MCP service status, endpoint, and client configuration JSON" />
+
+</details>
 
 ### Architecture and flow
 
