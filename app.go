@@ -39,7 +39,7 @@ type Command struct {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
-	log.Printf("Wails OnStartup reached")
+	log.Printf("Wails OnStartup reached; initializing application services")
 	cleanupStaleSystemProxy()
 	if pid, name, ok := findOriginalMcpNet(); ok {
 		log.Printf("Detected original McpNet process: pid=%d name=%s", pid, name)
@@ -50,6 +50,7 @@ func (a *App) startup(ctx context.Context) {
 		a.startMCPServer()
 	}()
 	go a.mcpWatchdog()
+	log.Printf("Wails OnStartup initialization completed")
 }
 
 func (a *App) startListener() error {

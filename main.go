@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -25,51 +26,49 @@ func main() {
 	if startupLogFile != nil {
 		defer startupLogFile.Close()
 	}
+	if startupLogError != nil && startupLogFile == nil {
+		log.Printf("Unable to create startup diagnostic log at %s: %v", startupLogPath, startupLogError)
+	}
 	// Create an instance of the app structure
 	Size := GlobalConfig.Size
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Printf("Unable to find user home directory: %v", err)
-		showStartupError("Cannot find user home directory: " + err.Error())
+		showStartupError(startupFailureMessage("Cannot find user home directory", err))
 		return
 	}
 	webviewDataPath := filepath.Join(homeDir, mcpDataDirectory, "WebView2")
+	log.Printf("Creating WebView2 user data directory: %s", webviewDataPath)
 	if err := os.MkdirAll(webviewDataPath, 0700); err != nil {
+		log.Printf("Unable to create primary WebView2 data directory: %v", err)
 		webviewDataPath = filepath.Join(os.TempDir(), mcpDataDirectory, "WebView2")
+		log.Printf("Trying fallback WebView2 user data directory: %s", webviewDataPath)
 		if fallbackErr := os.MkdirAll(webviewDataPath, 0700); fallbackErr != nil {
 			log.Printf("Unable to create WebView2 data directory: %v; fallback: %v", err, fallbackErr)
-			showStartupError("Cannot create WebView2 data directory: " + fallbackErr.Error())
+			showStartupError(startupFailureMessage("Cannot create WebView2 data directory", fallbackErr))
 			return
 		}
 	}
 	logPath := startupLogPath
 	var wailsLogger logger.Logger
-	if logPath == "" {
-		logPath = filepath.Join(filepath.Dir(webviewDataPath), "startup.log")
-		if logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600); err == nil {
-			log.SetOutput(logFile)
-			log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
-			defer logFile.Close()
-		} else {
-			log.Printf("Unable to open startup log: %v", err)
-			logPath = ""
-		}
-	}
-	if logPath != "" {
+	if startupLogFile != nil {
 		wailsLogger = logger.NewFileLogger(logPath)
 	}
-	log.Printf("Startup begins; WebView2 data path: %s", webviewDataPath)
+	log.Printf("Startup continues; WebView2 data path: %s", webviewDataPath)
 	ready := make(chan struct{})
 	var readyOnce sync.Once
 	markReady := func() { readyOnce.Do(func() { close(ready) }) }
 	go func() {
-		select {
-		case <-ready:
-		case <-time.After(2 * time.Minute):
-			// WebView2 can take longer on first launch or slower machines while it
-			// creates its profile. Do not show a blocking failure dialog: the UI
-			// may still finish loading and raise the window afterwards.
-			log.Printf("WebView2 DOM is still not ready after 2 minutes; continuing to wait")
+		started := time.Now()
+		ticker := time.NewTicker(20 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ready:
+				return
+			case <-ticker.C:
+				log.Printf("Still waiting for Wails WebView DOM ready; elapsed=%s", time.Since(started).Round(time.Second))
+			}
 		}
 	}()
 	// Create application with options
@@ -93,9 +92,11 @@ func main() {
 		OnStartup:        app.startup,
 		OnDomReady: func(ctx context.Context) {
 			log.Printf("Wails DOM ready")
+			log.Printf("Showing and centering main window")
 			runtime.WindowUnminimise(ctx)
 			runtime.WindowCenter(ctx)
 			runtime.WindowShow(ctx)
+			log.Printf("Main window show requested")
 			// Windows foreground-lock rules can leave a freshly started GUI
 			// behind the window that launched it. A short always-on-top pulse
 			// raises the main window without leaving it permanently pinned.
@@ -121,6 +122,17 @@ func main() {
 
 	log.Printf("wails.Run returned: %v", err)
 	if err != nil {
-		showStartupError("McpNet startup failed: " + err.Error() + "\nLog: " + logPath)
+		showStartupError(startupFailureMessage("McpNet startup failed", err))
 	}
+}
+
+func startupFailureMessage(summary string, cause error) string {
+	message := fmt.Sprintf("%s: %v", summary, cause)
+	if startupLogFile != nil && startupLogPath != "" {
+		return message + "\n\nStartup log: " + startupLogPath
+	}
+	if startupLogPath != "" {
+		return message + "\n\nCould not create the startup log at: " + startupLogPath + "\n" + fmt.Sprint(startupLogError)
+	}
+	return message + "\n\nCould not determine a startup log path: " + fmt.Sprint(startupLogError)
 }

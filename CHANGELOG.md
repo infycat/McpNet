@@ -9,12 +9,14 @@ Current stable release / 目前正式版本：**v1.1.2**. Previous releases rema
 - 加快啟動：將大型 Monaco 程式碼編輯器改為延後載入，不再阻塞主介面與後端初始化。
 - 修正啟動初始化與編輯器載入競速時，設定中的程式碼可能未套用的問題。
 - 移除 30 秒即跳出的誤報錯誤視窗；首次建立 WebView2 資料或較慢電腦可繼續等待，並保留啟動日誌供診斷。
+- 啟動診斷日誌固定寫入 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup.log`；無法寫入時改用使用者設定目錄或 `%TEMP%`。日誌記錄 WebView2 啟動等待、主視窗顯示流程及前端 JavaScript 錯誤。
 
 ### English
 
 - Improved startup by deferring the large Monaco code-editor bundle so it no longer blocks the main UI and backend initialization.
 - Preserved configured editor contents when startup initialization races with the editor loading.
 - Removed the false failure dialog after 30 seconds. First-run WebView2 profile creation and slower PCs can continue waiting, with startup diagnostics retained in the log.
+- Startup diagnostics are written to `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup.log`, with user-config and `%TEMP%` fallbacks. The log records WebView2 startup wait progress, main-window display milestones, and frontend JavaScript errors.
 
 - **Platform / 平台:** Windows x64
 - **File / 檔案:** `McpNet-v1.1.2-windows-x64.exe`

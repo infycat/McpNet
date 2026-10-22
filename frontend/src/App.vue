@@ -2,6 +2,7 @@
 import Home from './components/Home.vue'
 import {CallGoDo} from "./components/CallbackEventsOn.js";
 import {ElNotification} from "element-plus";
+import {LogError, LogInfo} from "../wailsjs/runtime/runtime";
 
 window.vm = {
   Footer: null,
@@ -30,10 +31,12 @@ export default {
     return {}
   },
   mounted() {
+    LogInfo('Vue root component mounted');
     // Native startup does not need to wait for the large code-editor bundle.
     // Child components (including Header's event subscription) are mounted
     // before this parent hook runs.
     CallGoDo("init", null).then(() => {
+      LogInfo('Frontend initialization completed');
       ElNotification({
         title: '免责申明',
         dangerouslyUseHTMLString: true,
@@ -54,9 +57,10 @@ export default {
       }, 1000)
     }).catch((error) => {
       console.error('McpNet initialization failed', error)
+      LogError(`Frontend initialization failed: ${error?.stack || error}`)
       ElNotification({
         title: '啟動失敗 / Startup failed',
-        message: '應用程式初始化失敗，請查看 McpNet_new_startup.log。',
+        message: '應用程式初始化失敗，請查看 %LOCALAPPDATA%\\McpNet_new\\logs\\McpNet_startup.log。',
         type: 'error',
         duration: 0,
       })

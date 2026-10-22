@@ -153,7 +153,7 @@ MCP 端點：`http://127.0.0.1:2026/mcp`；健康檢查：`http://127.0.0.1:2026
 
 ## 版本與下載
 
-目前正式下載版本為 v1.1.2；v1.1.1、v1.1.0 與 v1.0.0 保留為舊版。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
+目前正式下載版本為 v1.1.2；v1.1.1、v1.1.0 與 v1.0.0 保留為舊版。v1.1.2 啟動診斷日誌位於 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup.log`，並包含 WebView2 等待進度與前端錯誤。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
 
 | 版本 | 日期 | 狀態 | 平台 | 成品下載 | 發布資訊 |
 |---|---|---|---|---|---|
@@ -162,7 +162,7 @@ MCP 端點：`http://127.0.0.1:2026/mcp`；健康檢查：`http://127.0.0.1:2026
 | **v1.1.0** | 2026-10-20 | 第二版；調整全屏設定視窗上下邊界、補充功能截圖 | Windows x64 | [McpNet-v1.1.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 | **v1.0.0** | 2026-10-20 | 首個正式版本；主題底板、全屏設定視窗、圖示與作者頁更新 | Windows x64 | [McpNet-v1.0.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-v1.1.2 延後載入大型 Monaco 編輯器、避免編輯器阻塞主介面與啟動初始化，並移除 30 秒逾時誤報；首次 WebView2 資料建立可繼續等待。每次發布 GitHub Release 後，GitHub Actions 會自動建置 Windows x64 EXE、上傳成品並補上檔案大小與 SHA-256。v1.1.1 的源碼入口、Discord 社群與作者頁更新詳見其 Release。
+v1.1.2 延後載入大型 Monaco 編輯器、避免編輯器阻塞主介面與啟動初始化，並移除 30 秒逾時誤報；啟動診斷日誌固定寫入 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup.log`，記錄 WebView2 等待及前端錯誤，無法寫入時使用設定目錄或 `%TEMP%`。每次發布 GitHub Release 後，GitHub Actions 會自動建置 Windows x64 EXE、上傳成品並補上檔案大小與 SHA-256。v1.1.1 的源碼入口、Discord 社群與作者頁更新詳見其 Release。
 
 v1.1.0 成品大小：91,961,856 bytes；SHA-256：`6939D6EB999FE8869E0C89B987FE22C5EBC01446874429746B8D03F57F2E93CD`。v1.0.0 SHA-256：`BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`。v1.1.2 的檔案資訊會在自動建置完成後顯示於 Release。
 
@@ -173,6 +173,7 @@ v1.1.0 成品大小：91,961,856 bytes；SHA-256：`6939D6EB999FE8869E0C89B987FE
 - **監聽：** 開啟程式不等於開始全系統抓包；在介面中自行啟動監聽，並按需要分別設定系統代理。
 - **HTTPS：** 解密可能需要安裝並信任本機 CA；憑證釘選等應用程式保護可能阻止解密。
 - **資料位置：** 設定、WebView2 資料及插件位於 `%USERPROFILE%\McpNet_new\`。
+- **啟動診斷：** 若視窗未出現，請提供 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup.log`；若該位置不可寫，程式會改存使用者設定目錄，最後使用 `%TEMP%\McpNet_new\logs\McpNet_startup.log`。
 
 只在你有權分析的裝置及流量上使用本工具。修改系統代理或安裝 CA 會影響本機網路行為，使用前請理解其影響。
 
@@ -347,7 +348,7 @@ MCP 地址为 `http://127.0.0.1:2026/mcp`，健康检查为 `/health`。`mcpnet_
 | **v1.1.0** | 2026-10-20 | 第二版；调整全屏设置窗口边界、补充功能截图 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 | **v1.0.0** | 2026-10-20 | 首个正式版本；修复主题底板与全屏设置窗口、更新图标与作者页 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-当前正式下载版本为 v1.1.2，v1.1.1、v1.1.0 和 v1.0.0 保留为旧版。v1.1.2 延后加载大型 Monaco 编辑器、避免阻塞主界面与启动初始化，并移除 30 秒超时误报。每次发布 GitHub Release 后，GitHub Actions 会自动构建 Windows x64 EXE、上传成品并补充文件大小与 SHA-256。GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。
+当前正式下载版本为 v1.1.2，v1.1.1、v1.1.0 和 v1.0.0 保留为旧版。v1.1.2 延后加载大型 Monaco 编辑器、避免阻塞主界面与启动初始化，并移除 30 秒超时误报；启动诊断日志位于 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup.log`，记录 WebView2 等待进度和前端错误。每次发布 GitHub Release 后，GitHub Actions 会自动构建 Windows x64 EXE、上传成品并补充文件大小与 SHA-256。GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。
 
 v1.1.0 文件大小：91,961,856 bytes；SHA-256：`6939D6EB999FE8869E0C89B987FE22C5EBC01446874429746B8D03F57F2E93CD`。v1.0.0 SHA-256：`BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`。
 
@@ -357,6 +358,7 @@ v1.1.0 文件大小：91,961,856 bytes；SHA-256：`6939D6EB999FE8869E0C89B987FE
 - 启动应用不会自动开启全系统抓包；请在界面中自行启动监听，并按需单独设置系统代理。
 - HTTPS 解密可能需要安装并信任本机 CA；证书固定等机制可能阻止解密。仅分析你有权检查的设备与流量。
 - 配置、WebView2 数据和用户插件位于 `%USERPROFILE%\McpNet_new\`。插件从 `plugins\<plugin-id>\` 加载，能处理甚至修改流量，只安装可信代码。
+- 如果启动后没有出现窗口，请提供 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup.log`；该目录不可写时会回退到用户配置目录，最后使用 `%TEMP%\McpNet_new\logs\McpNet_startup.log`。
 - 个人协议插件只保留在本机；GitHub 仓库仅包含 `plugins/examples/` 的通用示例，不发布个人插件、密钥、抓包或 EXE。
 
 ### 源码构建与目录
@@ -503,7 +505,7 @@ MCP endpoints: `http://127.0.0.1:2026/mcp` and `/health`. `mcpnet_list_captures`
 | **v1.1.0** | 2026-10-20 | Second release; maximized settings bounds fixed and feature screenshots added | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 | **v1.0.0** | 2026-10-20 | Initial stable release; themed panels, maximized settings, icon, and author page updated | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-The current official download is v1.1.2, with v1.1.1, v1.1.0, and v1.0.0 retained as previous releases. This startup fix defers the large Monaco editor bundle, avoids blocking the main UI and backend initialization, and removes the false 30-second timeout dialog. Publishing a GitHub Release triggers GitHub Actions to build and upload the Windows x64 executable and add its file size and SHA-256. GitHub's automatically generated source archives are not executable builds.
+The current official download is v1.1.2, with v1.1.1, v1.1.0, and v1.0.0 retained as previous releases. This startup fix defers the large Monaco editor bundle, avoids blocking the main UI and backend initialization, and removes the false 30-second timeout dialog. Startup diagnostics, including WebView2 wait progress and frontend errors, are written to `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup.log` with config-directory and `%TEMP%` fallbacks. Publishing a GitHub Release triggers GitHub Actions to build and upload the Windows x64 executable and add its file size and SHA-256. GitHub's automatically generated source archives are not executable builds.
 
 v1.1.0 file size: 91,961,856 bytes; SHA-256: `6939D6EB999FE8869E0C89B987FE22C5EBC01446874429746B8D03F57F2E93CD`. v1.0.0 SHA-256: `BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`.
 
@@ -513,6 +515,7 @@ v1.1.0 file size: 91,961,856 bytes; SHA-256: `6939D6EB999FE8869E0C89B987FE22C5EB
 - Launching the app does not enable system-wide capture. Start capture in the UI and configure the system proxy separately as needed.
 - HTTPS decryption may require trusting a local CA; certificate pinning may prevent decryption. Use only with devices and traffic you are authorized to inspect.
 - User settings, WebView2 data, and plugins live under `%USERPROFILE%\McpNet_new\`. Plugins load from `plugins\<plugin-id>\` and may modify traffic; install only trusted code.
+- If the window does not appear at startup, provide `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup.log`. If that location is not writable, the app falls back to the user config directory and then `%TEMP%\McpNet_new\logs\McpNet_startup.log`.
 - Personal protocol plugins remain on the developer's machine. The GitHub repository contains only generic `plugins/examples/`; personal plugins, keys, captures, and the built EXE are not committed.
 
 ### Build from source and layout

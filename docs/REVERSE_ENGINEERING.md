@@ -273,7 +273,7 @@ v1.0.0**（从代理取得的 zip）比对，目录级差异是 v1.0.3 多出两
   `panic: unsupported version: 2`，故以 Wails CLI 对应的桌面/production 标签和 GUI linker
   参数直接构建。最终 exe 的 Go 构建信息已确认含正确标签。
 - 修复了两份 manifest 冲突：最终 PE 资源树只有一个数字类型 24 的 manifest，内容要求管理员权限；需用户确认 UAC。实际管理员环境中的主窗体、抓包及驱动功能尚待用户端复测。
-- 启动诊断优先写入 EXE 旁边的 `McpNet_new_startup.log`；该目录不可写时回退到 `%USERPROFILE%\McpNet_new\startup.log`。WebView2 在 30 秒内未就绪会弹出诊断窗口。
+- 启动诊断写入 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup.log`；不可写时依次回退到用户配置目录和 `%TEMP%\McpNet_new\logs\McpNet_startup.log`。日志包含 Wails/WebView2 DOM 就绪等待进度、主窗体显示阶段及前端 JavaScript 错误；启动不会因 30 秒未就绪而提前报错。
 
 ---
 

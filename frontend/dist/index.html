@@ -4,8 +4,38 @@
     <meta charset="UTF-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>McpNet</title>
-  <script type="module" crossorigin src="/assets/index.26bd55b8.js"></script>
-  <link rel="stylesheet" href="/assets/index.394cd763.css">
+    <script>
+      (() => {
+        const pending = [];
+        const maxMessageLength = 12000;
+        const report = (message) => {
+          pending.push(String(message).slice(0, maxMessageLength));
+          flush();
+        };
+        const flush = () => {
+          const runtime = window.runtime;
+          if (!runtime || typeof runtime.LogError !== 'function') return;
+          while (pending.length) runtime.LogError(`[startup-ui] ${pending.shift()}`);
+          clearInterval(flushTimer);
+        };
+
+        window.addEventListener('error', (event) => {
+          const stack = event.error && event.error.stack ? `\n${event.error.stack}` : '';
+          report(`JavaScript error: ${event.message || event.type}${stack}`);
+        });
+        window.addEventListener('unhandledrejection', (event) => {
+          const reason = event.reason && event.reason.stack ? event.reason.stack : String(event.reason);
+          report(`Unhandled promise rejection: ${reason}`);
+        });
+        document.addEventListener('DOMContentLoaded', () => report('HTML DOMContentLoaded'));
+        window.addEventListener('load', () => report('Browser load event'));
+
+        const flushTimer = setInterval(flush, 250);
+        setTimeout(() => clearInterval(flushTimer), 10 * 60 * 1000);
+      })();
+    </script>
+  <script type="module" crossorigin src="/assets/index.d235f7dc.js"></script>
+  <link rel="stylesheet" href="/assets/index.551490e7.css">
 </head>
 <body>
 <div id="app"></div>
