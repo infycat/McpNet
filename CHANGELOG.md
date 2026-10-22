@@ -2,21 +2,23 @@
 
 Current stable release / 目前正式版本：**v1.1.2**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
 
-## v1.1.2 — 2026-10-23 — Startup Fix / 啟動修復
+## v1.1.2 — 2026-10-23 — Startup Compatibility Fix / 啟動相容性修正
 
 ### 繁體中文
 
-- 加快啟動：將大型 Monaco 程式碼編輯器改為延後載入，不再阻塞主介面與後端初始化。
-- 修正啟動初始化與編輯器載入競速時，設定中的程式碼可能未套用的問題。
-- 移除 30 秒即跳出的誤報錯誤視窗；首次建立 WebView2 資料或較慢電腦可繼續等待，並保留啟動日誌供診斷。
-- 啟動診斷日誌固定寫入 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup.log`；無法寫入時改用使用者設定目錄或 `%TEMP%`。日誌記錄 WebView2 啟動等待、主視窗顯示流程及前端 JavaScript 錯誤。
+- 以已驗證可啟動的 v1.1.1 初始化路徑為基礎，恢復 Monaco 編輯器的原始載入順序，移除可能令部分環境啟動競速或把啟動轉送到隱藏程序的改動。
+- 啟動超過 30 秒時只記錄等待進度，不再提前顯示錯誤；首次建立 WebView2 資料或較慢電腦可繼續等待。
+- 每次啟動建立帶時間與 PID 的診斷日誌，保留最近 50 份；優先使用 `%LOCALAPPDATA%\McpNet_new\logs\`，無法寫入時回退至使用者設定目錄或 `%TEMP%`。
+- 記錄 WebView2 執行階段、資料目錄、Wails/前端初始化與主視窗顯示狀態，方便追查「程序存在但 UI 未出現」的情況。
+- Windows 發布成品內嵌 WebView2 Evergreen bootstrapper；缺少執行環境時可選擇安裝，下載 Runtime 本身仍需網路連線。
 
 ### English
 
-- Improved startup by deferring the large Monaco code-editor bundle so it no longer blocks the main UI and backend initialization.
-- Preserved configured editor contents when startup initialization races with the editor loading.
-- Removed the false failure dialog after 30 seconds. First-run WebView2 profile creation and slower PCs can continue waiting, with startup diagnostics retained in the log.
-- Startup diagnostics are written to `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup.log`, with user-config and `%TEMP%` fallbacks. The log records WebView2 startup wait progress, main-window display milestones, and frontend JavaScript errors.
+- Restored the Monaco editor initialization order from the known-working v1.1.1 startup path and removed changes that could race startup or redirect a launch to a hidden process on some systems.
+- After 30 seconds, startup now logs continued progress instead of showing a premature failure dialog; first-run WebView2 profile creation and slower PCs can continue waiting.
+- Each launch gets a timestamped, PID-specific diagnostic log; only the newest 50 are retained. Logs use `%LOCALAPPDATA%\McpNet_new\logs\` first, then the user config directory or `%TEMP%` if needed.
+- Logs record the WebView2 runtime and profile path, Wails/frontend initialization, and main-window display state to diagnose cases where a process exists but the UI does not appear.
+- Windows release builds embed the WebView2 Evergreen bootstrapper and can offer to install a missing runtime; downloading the runtime itself still requires internet access.
 
 - **Platform / 平台:** Windows x64
 - **File / 檔案:** `McpNet-v1.1.2-windows-x64.exe`

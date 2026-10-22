@@ -6,7 +6,7 @@
   ></div>
 </template>
 <script>
-import {loadMonaco} from '../monacoLoader.js'
+import * as monaco from 'monaco-editor'
 
 function IsRemoveMenu(value, zd) {
 
@@ -27,7 +27,6 @@ function IsRemoveMenu(value, zd) {
 export default {
   data() {
     return {
-      pendingCode: null,
       // 主要配置
       defaultOpts: {
         value: '', // 编辑器的值
@@ -64,12 +63,10 @@ export default {
     }
   },
   mounted() {
-    this.init().catch((error) => console.error('Failed to load code editor', error))
+    this.init()
   },
   methods: {
-    async init() {
-      const monaco = await loadMonaco()
-      if (!this.$refs.container) return
+    init() {
       // 初始化container的内容，销毁之前生成的编辑器
       this.$refs.container.innerHTML = ''
       // 生成 diff-editor 对象
@@ -191,7 +188,7 @@ export default {
         editor.setValue(newContent);
         editor.setScrollTop(0);
       }
-      if (this.pendingCode !== null) this.Function.setValue(this.pendingCode)
+      window.VsCodeEdit.JavaScriptEdit = true
       // 监听内容变化事件
       editor.getModel().onDidChangeContent(() => {
       });
@@ -241,7 +238,6 @@ export default {
       this.Function.Save = v
     },
     SetCode(newContent) {
-      this.pendingCode = newContent
       if (this.Function.setValue) {
         this.Function.setValue(newContent)
 

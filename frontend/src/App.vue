@@ -23,6 +23,8 @@ window.vm = {
   IEProxy: null,
   ListenerState: null,
 }
+window.VsCodeEdit = {JavaScriptEdit: false}
+let Interval = 0;
 export default {
   components: {
     Home
@@ -32,39 +34,47 @@ export default {
   },
   mounted() {
     LogInfo('Vue root component mounted');
-    // Native startup does not need to wait for the large code-editor bundle.
-    // Child components (including Header's event subscription) are mounted
-    // before this parent hook runs.
-    CallGoDo("init", null).then(() => {
-      LogInfo('Frontend initialization completed');
-      ElNotification({
-        title: '免责申明',
-        dangerouslyUseHTMLString: true,
-        duration: 10000,
-        position: "bottom-right",
-        offset: 25,
-        message: '<span  style="color: red">本工具仅限 学术交流 技术探讨使用</span><br><span style="color: red">禁止用于一切非法用途</span><br><span style="color: red">否则造成的一切后果自负</span>',
-      })
-      setTimeout(() => {
+    Interval = setInterval(function () {
+      let ready = true
+      for (const fieldName in window.VsCodeEdit) {
+        if (window.VsCodeEdit[fieldName] !== true) {
+          ready = false
+          break
+        }
+      }
+      if (!ready) return
+      clearInterval(Interval)
+      CallGoDo("init", null).then(() => {
+        LogInfo('Frontend initialization completed');
         ElNotification({
-          title: '证书安装',
+          title: '免责申明',
           dangerouslyUseHTMLString: true,
-          duration: 5000,
+          duration: 10000,
           position: "bottom-right",
           offset: 25,
-          message: '<span  style="color: #3ccbff">若是第一次使用,请查看"证书安装教程"</span>',
+          message: '<span  style="color: red">本工具仅限 学术交流 技术探讨使用</span><br><span style="color: red">禁止用于一切非法用途</span><br><span style="color: red">否则造成的一切后果自负</span>',
         })
-      }, 1000)
-    }).catch((error) => {
-      console.error('McpNet initialization failed', error)
-      LogError(`Frontend initialization failed: ${error?.stack || error}`)
-      ElNotification({
-        title: '啟動失敗 / Startup failed',
-        message: '應用程式初始化失敗，請查看 %LOCALAPPDATA%\\McpNet_new\\logs\\McpNet_startup.log。',
-        type: 'error',
-        duration: 0,
+        setTimeout(() => {
+          ElNotification({
+            title: '证书安装',
+            dangerouslyUseHTMLString: true,
+            duration: 5000,
+            position: "bottom-right",
+            offset: 25,
+            message: '<span  style="color: #3ccbff">若是第一次使用,请查看"证书安装教程"</span>',
+          })
+        }, 1000)
+      }).catch((error) => {
+        console.error('McpNet initialization failed', error)
+        LogError(`Frontend initialization failed: ${error?.stack || error}`)
+        ElNotification({
+          title: '啟動失敗 / Startup failed',
+          message: '應用程式初始化失敗，請查看 %LOCALAPPDATA%\\McpNet_new\\logs\\McpNet_startup.log。',
+          type: 'error',
+          duration: 0,
+        })
       })
-    })
+    }, 200)
   }
 }
 

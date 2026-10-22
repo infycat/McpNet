@@ -8,7 +8,7 @@
   ></div>
 </template>
 <script>
-import {loadMonaco} from '../../monacoLoader.js'
+import * as monaco from 'monaco-editor'
 
 export default {
   data() {
@@ -36,7 +36,7 @@ export default {
   },
   watch: {},
   mounted() {
-    this.init().catch((error) => console.error('Failed to load code editor', error))
+    this.init()
   },
   computed: {
     getTheme() {
@@ -48,9 +48,7 @@ export default {
     }
   },
   methods: {
-    async init() {
-      const monaco = await loadMonaco()
-      if (!this.$refs.container) return
+    init() {
       // 初始化container的内容，销毁之前生成的编辑器
       this.$refs.container.innerHTML = ''
       // 生成 diff-editor 对象

@@ -1,6 +1,6 @@
 # Release process / 發布流程
 
-All McpNet releases—patch, minor, or major—use the same bilingual GitHub release process. Publishing a GitHub Release automatically starts the Windows x64 build workflow, which builds the frontend and executable from the release tag, uploads `McpNet-<tag>-windows-x64.exe`, and appends its byte size and SHA-256 to the release description. If a build needs to be retried, run the workflow manually with the already-published release tag.
+All McpNet releases—patch, minor, or major—use the same bilingual GitHub release process. Publishing a GitHub Release automatically starts the Windows x64 build workflow, which builds the frontend and executable from the release tag, embeds Wails' WebView2 Evergreen bootstrapper, uploads `McpNet-<tag>-windows-x64.exe`, and appends its byte size and SHA-256 to the release description. If a clean Windows machine has no WebView2 Runtime, the user can approve its installation; downloading the runtime itself still requires internet access.
 
 ## Before publishing
 
@@ -11,5 +11,3 @@ All McpNet releases—patch, minor, or major—use the same bilingual GitHub rel
 5. Verify the Actions run succeeds, then confirm the release has one Windows x64 EXE asset and a bilingual description with size and SHA-256.
 
 Do not publish a release from a tag before its source commit and bilingual notes have been pushed. Keep prior published releases intact unless their removal is explicitly requested.
-
-The workflow uses Go 1.24.9 for Windows builds. It can also be run manually from GitHub Actions by selecting the existing release tag; this is useful for retrying a failed build without recreating the release.

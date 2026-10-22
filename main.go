@@ -5,8 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"log"
-	"os"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -31,23 +29,11 @@ func main() {
 	}
 	// Create an instance of the app structure
 	Size := GlobalConfig.Size
-	homeDir, err := os.UserHomeDir()
+	webviewDataPath, err := prepareWebviewDataPath()
 	if err != nil {
-		log.Printf("Unable to find user home directory: %v", err)
-		showStartupError(startupFailureMessage("Cannot find user home directory", err))
+		log.Printf("Unable to prepare WebView2 user data directory: %v", err)
+		showStartupError(startupFailureMessage("Cannot prepare WebView2 data directory", err))
 		return
-	}
-	webviewDataPath := filepath.Join(homeDir, mcpDataDirectory, "WebView2")
-	log.Printf("Creating WebView2 user data directory: %s", webviewDataPath)
-	if err := os.MkdirAll(webviewDataPath, 0700); err != nil {
-		log.Printf("Unable to create primary WebView2 data directory: %v", err)
-		webviewDataPath = filepath.Join(os.TempDir(), mcpDataDirectory, "WebView2")
-		log.Printf("Trying fallback WebView2 user data directory: %s", webviewDataPath)
-		if fallbackErr := os.MkdirAll(webviewDataPath, 0700); fallbackErr != nil {
-			log.Printf("Unable to create WebView2 data directory: %v; fallback: %v", err, fallbackErr)
-			showStartupError(startupFailureMessage("Cannot create WebView2 data directory", fallbackErr))
-			return
-		}
 	}
 	logPath := startupLogPath
 	var wailsLogger logger.Logger
@@ -55,19 +41,20 @@ func main() {
 		wailsLogger = logger.NewFileLogger(logPath)
 	}
 	log.Printf("Startup continues; WebView2 data path: %s", webviewDataPath)
+	logWebView2Runtime()
 	ready := make(chan struct{})
 	var readyOnce sync.Once
 	markReady := func() { readyOnce.Do(func() { close(ready) }) }
 	go func() {
 		started := time.Now()
-		ticker := time.NewTicker(20 * time.Second)
+		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
 		for {
 			select {
 			case <-ready:
 				return
 			case <-ticker.C:
-				log.Printf("Still waiting for Wails WebView DOM ready; elapsed=%s", time.Since(started).Round(time.Second))
+				log.Printf("Startup is still in progress; WebView2 DOM is not ready; elapsed=%s", time.Since(started).Round(time.Second))
 			}
 		}
 	}()
@@ -84,7 +71,7 @@ func main() {
 			WebviewUserDataPath: webviewDataPath,
 		},
 		Logger:             wailsLogger,
-		LogLevelProduction: logger.DEBUG,
+		LogLevelProduction: logger.INFO,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
