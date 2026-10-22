@@ -22,8 +22,6 @@ window.vm = {
   IEProxy: null,
   ListenerState: null,
 }
-window.VsCodeEdit = {JavaScriptEdit: false}
-let Interval = 0;
 export default {
   components: {
     Home
@@ -32,38 +30,37 @@ export default {
     return {}
   },
   mounted() {
-    Interval = setInterval(function () {
-      let b = true
-      for (const fieldName in window.VsCodeEdit) {
-        if (window.VsCodeEdit[fieldName] !== true) {
-          b = false
-          break
-        }
-      }
-      if (b) {
-        clearTimeout(Interval);
-        CallGoDo("init", null).then(res => {
-          ElNotification({
-            title: '免责申明',
-            dangerouslyUseHTMLString: true,
-            duration: 10000,
-            position: "bottom-right",
-            offset: 25,
-            message: '<span  style="color: red">本工具仅限 学术交流 技术探讨使用</span><br><span style="color: red">禁止用于一切非法用途</span><br><span style="color: red">否则造成的一切后果自负</span>',
-          })
-          setTimeout(() => {
-            ElNotification({
-              title: '证书安装',
-              dangerouslyUseHTMLString: true,
-              duration: 5000,
-              position: "bottom-right",
-              offset: 25,
-              message: '<span  style="color: #3ccbff">若是第一次使用,请查看"证书安装教程"</span>',
-            })
-          }, 1000)
+    // Native startup does not need to wait for the large code-editor bundle.
+    // Child components (including Header's event subscription) are mounted
+    // before this parent hook runs.
+    CallGoDo("init", null).then(() => {
+      ElNotification({
+        title: '免责申明',
+        dangerouslyUseHTMLString: true,
+        duration: 10000,
+        position: "bottom-right",
+        offset: 25,
+        message: '<span  style="color: red">本工具仅限 学术交流 技术探讨使用</span><br><span style="color: red">禁止用于一切非法用途</span><br><span style="color: red">否则造成的一切后果自负</span>',
+      })
+      setTimeout(() => {
+        ElNotification({
+          title: '证书安装',
+          dangerouslyUseHTMLString: true,
+          duration: 5000,
+          position: "bottom-right",
+          offset: 25,
+          message: '<span  style="color: #3ccbff">若是第一次使用,请查看"证书安装教程"</span>',
         })
-      }
-    }, 200)
+      }, 1000)
+    }).catch((error) => {
+      console.error('McpNet initialization failed', error)
+      ElNotification({
+        title: '啟動失敗 / Startup failed',
+        message: '應用程式初始化失敗，請查看 McpNet_new_startup.log。',
+        type: 'error',
+        duration: 0,
+      })
+    })
   }
 }
 

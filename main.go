@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"context"
@@ -20,7 +20,6 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 var app = NewApp()
-
 
 func main() {
 	if startupLogFile != nil {
@@ -66,9 +65,11 @@ func main() {
 	go func() {
 		select {
 		case <-ready:
-		case <-time.After(30 * time.Second):
-			log.Printf("WebView2 DOM not ready after 30 seconds")
-			showStartupError("McpNet window did not open within 30 seconds. See " + logPath)
+		case <-time.After(2 * time.Minute):
+			// WebView2 can take longer on first launch or slower machines while it
+			// creates its profile. Do not show a blocking failure dialog: the UI
+			// may still finish loading and raise the window afterwards.
+			log.Printf("WebView2 DOM is still not ready after 2 minutes; continuing to wait")
 		}
 	}()
 	// Create application with options
@@ -76,10 +77,10 @@ func main() {
 	err = wails.Run(&options.App{
 		Frameless: true,
 		Title:     "McpNet",
-		Width:            Size.Width,
-		Height:           Size.Height,
-		MinWidth:         823,
-		MinHeight:        388,
+		Width:     Size.Width,
+		Height:    Size.Height,
+		MinWidth:  823,
+		MinHeight: 388,
 		Windows: &windows.Options{
 			WebviewUserDataPath: webviewDataPath,
 		},

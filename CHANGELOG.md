@@ -1,6 +1,24 @@
 # Release Notes / 版本紀錄
 
-Current stable release / 目前正式版本：**v1.1.1**. The first release, v1.0.0, remains available. GitHub's automatically generated source archives are source code, not executable builds. / 首版 v1.0.0 仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+Current stable release / 目前正式版本：**v1.1.2**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+
+## v1.1.2 — 2026-10-23 — Startup Fix / 啟動修復
+
+### 繁體中文
+
+- 加快啟動：將大型 Monaco 程式碼編輯器改為延後載入，不再阻塞主介面與後端初始化。
+- 修正啟動初始化與編輯器載入競速時，設定中的程式碼可能未套用的問題。
+- 移除 30 秒即跳出的誤報錯誤視窗；首次建立 WebView2 資料或較慢電腦可繼續等待，並保留啟動日誌供診斷。
+
+### English
+
+- Improved startup by deferring the large Monaco code-editor bundle so it no longer blocks the main UI and backend initialization.
+- Preserved configured editor contents when startup initialization races with the editor loading.
+- Removed the false failure dialog after 30 seconds. First-run WebView2 profile creation and slower PCs can continue waiting, with startup diagnostics retained in the log.
+
+- **Platform / 平台:** Windows x64
+- **File / 檔案:** `McpNet-v1.1.2-windows-x64.exe`
+- **Release / 發布:** [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.1.2)
 
 ## v1.1.1 — 2026-10-20 — Patch Release / 修補版
 
