@@ -27,8 +27,9 @@ $tmp = Join-Path $root 'McpNet.build.exe'
 if (Test-Path $tmp) { Remove-Item $tmp -Force }
 go build -a -buildvcs=false -tags "desktop,production,wv2runtime.download" `
     -ldflags "-H windowsgui -s -w" -o $tmp .
-if (-not (Test-Path $tmp)) {
-    throw 'Build did not produce McpNet.build.exe'
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $tmp)) {
+    if (Test-Path -LiteralPath $tmp) { Remove-Item -LiteralPath $tmp -Force }
+    throw "Build failed with exit code $LASTEXITCODE; the official executable was not changed."
 }
 Move-Item $tmp "$root\McpNet.exe" -Force
 

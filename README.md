@@ -8,9 +8,9 @@
 
 | 最新穩定版 | 平台 | 直接下載 | 全部版本 |
 |---|---|---|---|
-| **v1.1.2** · 啟動相容性修正（恢復穩定初始化、補強日誌） | Windows x64 | [下載 McpNet-v1.1.2-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.2/McpNet-v1.1.2-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
+| **v1.1.3** · 完整修正啟動崩潰（SunnyNet 舊匯入路徑） | Windows x64 | [下載 McpNet-v1.1.3-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.3/McpNet-v1.1.3-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
 
-[v1.1.2 更新內容與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.2)
+[v1.1.3 更新內容與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.3)
 
 下載成品請使用上表的 EXE 連結；GitHub 頁面上的 **Source code ZIP/TAR.GZ 是原始碼，不是安裝程式**。首次使用前請查看下方的系統需求及安全提醒。
 
@@ -153,10 +153,11 @@ MCP 端點：`http://127.0.0.1:2026/mcp`；健康檢查：`http://127.0.0.1:2026
 
 ## 版本與下載
 
-目前正式下載版本為 v1.1.2；v1.1.1、v1.1.0 與 v1.0.0 保留為舊版。v1.1.2 回復至已驗證的 v1.1.1 編輯器初始化順序，並補強 WebView2 與視窗啟動診斷；每次啟動日誌位於 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup_*.log`，最近 50 份會保留。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
+目前正式下載版本為 v1.1.3；v1.1.2、v1.1.1、v1.1.0 與 v1.0.0 保留為舊版。v1.1.3 修正內建腳本檢查器缺少舊版 SunnyNet 匯入路徑映射而造成的啟動崩潰；修正版已在本機確認主視窗正常顯示。每次啟動日誌位於 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup_*.log`，最近 50 份會保留。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
 
 | 版本 | 日期 | 狀態 | 平台 | 成品下載 | 發布資訊 |
 |---|---|---|---|---|---|
+| **v1.1.3** | 2026-10-23 | 完整修正已確認的 SunnyNet 舊匯入路徑啟動崩潰 | Windows x64 | [McpNet-v1.1.3-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.3/McpNet-v1.1.3-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.3) |
 | **v1.1.2** | 2026-10-23 | 啟動相容性修正；恢復穩定編輯器初始化並補強日誌 | Windows x64 | [McpNet-v1.1.2-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.2/McpNet-v1.1.2-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.2) |
 | **v1.1.1** | 2026-10-20 | 修補版；整理源碼入口、Discord 社群與作者頁圖片尺寸 | Windows x64 | [McpNet-v1.1.1-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.1/McpNet-v1.1.1-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.1) |
 | **v1.1.0** | 2026-10-20 | 第二版；調整全屏設定視窗上下邊界、補充功能截圖 | Windows x64 | [McpNet-v1.1.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
@@ -224,9 +225,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | 最新稳定版 | 平台 | 直接下载 | 全部版本 |
 |---|---|---|---|
-| **v1.1.2** · 启动修复（加快主界面加载、修正超时误报） | Windows x64 | [下载 McpNet-v1.1.2-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.2/McpNet-v1.1.2-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
+| **v1.1.3** · 完整修复启动崩溃（SunnyNet 旧导入路径） | Windows x64 | [下载 McpNet-v1.1.3-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.3/McpNet-v1.1.3-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
 
-[v1.1.2 更新内容与 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.2)
+[v1.1.3 更新内容与 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.3)
 
 McpNet 是 Windows 桌面网络分析与协议调试工具，由 Go/Wails 后端、Vue 3 界面和 McpNet 核心组成。它支持 HTTP(S)、WebSocket、TCP、UDP 流量查看与规则处理，并提供脚本、用户插件和本机 MCP。启动应用不会自动开启全系统流量拦截；监听与系统代理由用户分别控制。
 
@@ -343,12 +344,13 @@ MCP 地址为 `http://127.0.0.1:2026/mcp`，健康检查为 `/health`。`mcpnet_
 
 | 版本 | 日期 | 状态 | 平台 | 成品下载 | 发布信息 |
 |---|---|---|---|---|---|
+| **v1.1.3** | 2026-10-23 | 完整修复已确认的 SunnyNet 旧导入路径启动崩溃 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.3/McpNet-v1.1.3-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.3) |
 | **v1.1.2** | 2026-10-23 | 启动修复；延后加载编辑器并修正超时误报 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.2/McpNet-v1.1.2-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.2) |
 | **v1.1.1** | 2026-10-20 | 修补版；整理源码入口、Discord 社群与作者页图片尺寸 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.1/McpNet-v1.1.1-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.1) |
 | **v1.1.0** | 2026-10-20 | 第二版；调整全屏设置窗口边界、补充功能截图 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 | **v1.0.0** | 2026-10-20 | 首个正式版本；修复主题底板与全屏设置窗口、更新图标与作者页 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-当前正式下载版本为 v1.1.2，v1.1.1、v1.1.0 和 v1.0.0 保留为旧版。v1.1.2 恢复到已验证可启动的 v1.1.1 编辑器初始化顺序，移除可能将重复启动转送到隐藏进程的行为，并将 30 秒超时改为持续记录进度。每次启动会在 `%LOCALAPPDATA%\McpNet_new\logs\` 写入带时间和 PID 的诊断日志，保留最近 50 份；无法写入时回退到用户配置目录或 `%TEMP%`。每次发布 GitHub Release 后，GitHub Actions 会自动构建 Windows x64 EXE、上传成品并补充文件大小与 SHA-256。GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。
+当前正式下载版本为 v1.1.3，v1.1.2、v1.1.1、v1.1.0 和 v1.0.0 保留为旧版。v1.1.3 完整修复了已确认的启动根因：内置脚本检查器缺少 SunnyNet 旧导入路径映射，导致 UI 出现前崩溃；修正版已在本机确认主窗口正常显示。每次启动会在 `%LOCALAPPDATA%\McpNet_new\logs\` 写入带时间和 PID 的诊断日志，保留最近 50 份；无法写入时回退到用户配置目录或 `%TEMP%`。每次发布 GitHub Release 后，GitHub Actions 会自动构建 Windows x64 EXE、上传成品并补充文件大小与 SHA-256。GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。
 
 v1.1.0 文件大小：91,961,856 bytes；SHA-256：`6939D6EB999FE8869E0C89B987FE22C5EBC01446874429746B8D03F57F2E93CD`。v1.0.0 SHA-256：`BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`。
 
@@ -381,9 +383,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | Latest stable | Platform | Direct download | All versions |
 |---|---|---|---|
-| **v1.1.2** · Startup fix (faster initial UI, no false timeout) | Windows x64 | [Download McpNet-v1.1.2-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.2/McpNet-v1.1.2-windows-x64.exe) | [All releases](https://github.com/infycat/McpNet/releases) |
+| **v1.1.3** · Fully fixes startup crash (legacy SunnyNet imports) | Windows x64 | [Download McpNet-v1.1.3-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.3/McpNet-v1.1.3-windows-x64.exe) | [All releases](https://github.com/infycat/McpNet/releases) |
 
-[v1.1.2 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.2)
+[v1.1.3 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.3)
 
 McpNet is a Windows desktop network analysis and protocol debugging tool built with a Go/Wails backend, Vue 3 UI, and the McpNet core. It inspects and processes HTTP(S), WebSocket, TCP, and UDP traffic, with rules, scripts, user plugins, and a local MCP service. Launching the app does **not** enable system-wide interception; capture and system-proxy controls are separate.
 
@@ -500,12 +502,13 @@ MCP endpoints: `http://127.0.0.1:2026/mcp` and `/health`. `mcpnet_list_captures`
 
 | Version | Date | Status | Platform | Download | Release info |
 |---|---|---|---|---|---|
+| **v1.1.3** | 2026-10-23 | Fully fixes confirmed startup crash from legacy SunnyNet imports | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.3/McpNet-v1.1.3-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.3) |
 | **v1.1.2** | 2026-10-23 | Startup compatibility fix; restore editor initialization and improve diagnostics | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.2/McpNet-v1.1.2-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.2) |
 | **v1.1.1** | 2026-10-20 | Patch; consolidated source links, Discord community, smaller author image | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.1/McpNet-v1.1.1-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.1) |
 | **v1.1.0** | 2026-10-20 | Second release; maximized settings bounds fixed and feature screenshots added | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 | **v1.0.0** | 2026-10-20 | Initial stable release; themed panels, maximized settings, icon, and author page updated | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-The current official download is v1.1.2, with v1.1.1, v1.1.0, and v1.0.0 retained as previous releases. This startup compatibility update restores the editor initialization order from the known-working v1.1.1 path, removes launch redirection to a possibly hidden process, and replaces the premature 30-second failure dialog with continued progress logging. Each launch writes a timestamped diagnostic log under `%LOCALAPPDATA%\McpNet_new\logs\` (with config-directory and `%TEMP%` fallbacks); the newest 50 are retained. Publishing a GitHub Release triggers GitHub Actions to build and upload the Windows x64 executable and add its file size and SHA-256. GitHub's automatically generated source archives are not executable builds.
+The current official download is v1.1.3, with v1.1.2, v1.1.1, v1.1.0, and v1.0.0 retained as previous releases. This version fully fixes the confirmed startup crash: the bundled script checker lacked legacy SunnyNet import-path mappings and panicked before the UI appeared. The corrected build was confirmed to display its main window on the development machine. Each launch writes a timestamped diagnostic log under `%LOCALAPPDATA%\McpNet_new\logs\` (with config-directory and `%TEMP%` fallbacks); the newest 50 are retained. Publishing a GitHub Release triggers GitHub Actions to build and upload the Windows x64 executable and add its file size and SHA-256. GitHub's automatically generated source archives are not executable builds.
 
 v1.1.0 file size: 91,961,856 bytes; SHA-256: `6939D6EB999FE8869E0C89B987FE22C5EBC01446874429746B8D03F57F2E93CD`. v1.0.0 SHA-256: `BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`.
 

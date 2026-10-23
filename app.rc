@@ -2,8 +2,8 @@
 1 24 "McpNet.manifest"
 
 1 VERSIONINFO
- FILEVERSION 1,1,2,0
- PRODUCTVERSION 1,1,2,0
+ FILEVERSION 1,1,3,0
+ PRODUCTVERSION 1,1,3,0
  FILEFLAGSMASK 0x3fL
  FILEFLAGS 0x0L
  FILEOS 0x40004L
@@ -16,11 +16,11 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "infycat\0"
       VALUE "FileDescription", "McpNet network analysis tool\0"
-      VALUE "FileVersion", "1.1.2\0"
+      VALUE "FileVersion", "1.1.3\0"
       VALUE "InternalName", "McpNet\0"
-      VALUE "OriginalFilename", "McpNet-v1.1.2-windows-x64.exe\0"
+      VALUE "OriginalFilename", "McpNet-v1.1.3-windows-x64.exe\0"
       VALUE "ProductName", "McpNet\0"
-      VALUE "ProductVersion", "1.1.2\0"
+      VALUE "ProductVersion", "1.1.3\0"
       VALUE "LegalCopyright", "Copyright (C) 2026 infycat\0"
     END
   END

@@ -1,6 +1,24 @@
 # Release Notes / 版本紀錄
 
-Current stable release / 目前正式版本：**v1.1.2**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+Current stable release / 目前正式版本：**v1.1.3**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+
+## v1.1.3 — 2026-10-23 — Startup Fix / 啟動修復
+
+### 繁體中文
+
+- 完整修正已確認的啟動失敗根因：為內建腳本檢查器補上舊版 SunnyNet `public` 與 `RSA` 匯入路徑相容映射，避免程式初始化時因找不到模組而在 UI 顯示前崩潰。
+- 修正版已在本機以正式 GUI 模式啟動並確認主視窗正常顯示；啟動診斷日誌仍會記錄初始化流程，方便排查其他電腦特定環境問題。
+- 本版本適用 Windows x64；首次啟動仍可能需要 WebView2 Runtime。此修正解決本次確認的程式碼相容性問題，但不代表已在所有 Windows 裝置組合上完成測試。
+
+### English
+
+- Fully fixes the confirmed startup failure root cause: the bundled script checker now maps legacy SunnyNet `public` and `RSA` import paths, preventing a missing-module panic before the UI appears.
+- The corrected build was launched in GUI mode on the development machine and its main window was confirmed visible. Startup diagnostics remain available to investigate any machine-specific environment issue.
+- For Windows x64. WebView2 Runtime may still be required on first launch. This resolves the confirmed code-compatibility failure; it does not claim testing across every Windows device configuration.
+
+- **Platform / 平台:** Windows x64
+- **File / 檔案:** `McpNet-v1.1.3-windows-x64.exe`
+- **Release / 發布:** [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.1.3)
 
 ## v1.1.2 — 2026-10-23 — Startup Compatibility Fix / 啟動相容性修正
 
