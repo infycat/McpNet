@@ -31,7 +31,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          # Go 1.23.0 fails to compile this Windows build with a nosplit-stack
+          # overflow in syscall.Syscall18. Pin the latest Go 1.23 patch release.
+          go-version: 1.23.12
           cache: true
 
       - name: Set up Node.js
