@@ -17,6 +17,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 const (
@@ -25,7 +27,8 @@ const (
 )
 
 type mcpServer struct {
-	app *App
+	app     *App
+	confirm func(title, message string) bool
 
 	mu      sync.RWMutex
 	ln      net.Listener
@@ -378,9 +381,13 @@ func (s *mcpServer) handleMCP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := io.ReadAll(io.LimitReader(r.Body, 4<<20))
+	body, err := io.ReadAll(io.LimitReader(r.Body, maxMCPRequestBytes+1))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if len(body) > maxMCPRequestBytes {
+		http.Error(w, "MCP request body exceeds 24 MiB", http.StatusRequestEntityTooLarge)
 		return
 	}
 	var raw json.RawMessage = body
@@ -548,6 +555,7 @@ func toolText(v any, isError bool) map[string]any {
 }
 
 const maxMCPBodyBytes = 64 << 10
+const maxMCPRequestBytes = 24 << 20
 
 func argInt(args map[string]any, key string, fallback int) int {
 	v, ok := args[key]
@@ -593,35 +601,26 @@ func boundedBase64(body []byte) (string, bool) {
 func captureMetadata(c MapHash.CaptureSnapshot) map[string]any {
 	return map[string]any{
 		"capture_id": c.ID, "protocol": c.Protocol, "method": c.Method, "url": redactCaptureURL(c.URL),
-		"pid": c.PID, "client_ip": c.ClientIP, "status_code": c.StatusCode,
+		"status_code":  c.StatusCode,
 		"request_time": c.RequestAt, "response_time": c.ResponseAt,
 		"request_body_length": len(c.RequestBody), "response_body_length": len(c.ResponseBody),
 		"sent_bytes": c.SentBytes, "received_bytes": c.RecvBytes, "message_count": len(c.Messages),
 	}
 }
 
-// redactCaptureURL keeps query parameter names useful for debugging but never
-// exposes their values through the metadata-only MCP capture tools.
+// redactCaptureURL exposes only the scheme and host to metadata-only MCP tools.
 func redactCaptureURL(raw string) string {
 	parsed, err := url.Parse(raw)
 	if err != nil {
 		return "[invalid URL omitted]"
 	}
-	if parsed.User != nil {
-		parsed.User = url.User("REDACTED")
+	parsed.User = nil
+	if parsed.Path != "" && parsed.Path != "/" {
+		parsed.Path = "/[redacted]"
+		parsed.RawPath = ""
 	}
-	if query := parsed.Query(); len(query) > 0 {
-		for key, values := range query {
-			for i := range values {
-				values[i] = "REDACTED"
-			}
-			query[key] = values
-		}
-		parsed.RawQuery = query.Encode()
-	}
-	if parsed.Fragment != "" {
-		parsed.Fragment = "REDACTED"
-	}
+	parsed.RawQuery = ""
+	parsed.Fragment = ""
 	return parsed.String()
 }
 
@@ -639,23 +638,41 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 	case "mcpnet_status":
 		running, proxy := s.app.listenerStatus()
 		info := s.app.mcpInfo()
+		mcpStatus := map[string]any{
+			"running": info["running"],
+			"url":     info["url"],
+			"port":    info["port"],
+		}
 		return map[string]any{
 			"listener_running": running,
 			"system_proxy":     proxy,
-			"mcp":              info,
+			"mcp":              mcpStatus,
 		}, nil
 	case "mcpnet_start_listener":
+		if !s.confirmUser("McpNet MCP request", "AI 客戶端要求啟動流量監聽，可能檢視經過 McpNet 的流量。允許？\n\nAn AI client wants to start traffic monitoring. This may inspect traffic that passes through McpNet. Allow?") {
+			return nil, fmt.Errorf("user denied starting traffic monitoring")
+		}
 		if err := s.app.startListener(); err != nil {
 			return nil, err
 		}
 		running, proxy := s.app.listenerStatus()
 		return map[string]any{"listener_running": running, "system_proxy": proxy}, nil
 	case "mcpnet_stop_listener":
+		if !s.confirmUser("McpNet MCP request", "AI 客戶端要求停止流量監聽並清除系統代理。允許？\n\nAn AI client wants to stop traffic monitoring and clear the system proxy. Allow?") {
+			return nil, fmt.Errorf("user denied stopping traffic monitoring")
+		}
 		s.app.stopListener()
 		running, proxy := s.app.listenerStatus()
 		return map[string]any{"listener_running": running, "system_proxy": proxy}, nil
 	case "mcpnet_set_system_proxy":
 		enable, _ := args["enable"].(bool)
+		action := "停用 / disable"
+		if enable {
+			action = "啟用 / enable"
+		}
+		if !s.confirmUser("McpNet MCP request", fmt.Sprintf("AI 客戶端要求%s Windows 系統代理，會改變系統流量路由。允許？\n\nAn AI client wants to %s the Windows system proxy. This changes system traffic routing. Allow?", action, map[bool]string{true: "enable", false: "disable"}[enable])) {
+			return nil, fmt.Errorf("user denied changing the system proxy")
+		}
 		ok := s.app.setSystemProxy(enable)
 		running, proxy := s.app.listenerStatus()
 		return map[string]any{"ok": ok, "listener_running": running, "system_proxy": proxy}, nil
@@ -664,21 +681,112 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 		if strings.TrimSpace(command) == "" {
 			return nil, fmt.Errorf("command is required")
 		}
+		if !s.confirmUser("McpNet MCP command", fmt.Sprintf("AI 客戶端要求執行 McpNet 命令 %q；命令可能讀取私人資料、執行本機程式碼、傳送網路流量或更改應用程式／系統狀態。允許？\n\nAn AI client requests UI command %q. It may read private data, execute local code, transmit network traffic, or change application/system state. Allow?", command, command)) {
+			return nil, fmt.Errorf("user denied UI command %q", command)
+		}
 		var cmdArgs any
 		if v, ok := args["args"]; ok {
 			cmdArgs = v
 		}
-		res := s.app.Do(map[string]any{"Command": command, "Args": cmdArgs})
+		res, err := s.doUICommand(command, cmdArgs)
+		if err != nil {
+			return nil, err
+		}
 		return map[string]any{"command": command, "result": res}, nil
+	case "mcpnet_list_plugins":
+		result, err := s.doUICommand("插件列表", nil)
+		if err != nil {
+			return nil, err
+		}
+		if info, ok := result.(map[string]any); ok {
+			return map[string]any{"plugins": info["plugins"]}, nil
+		}
+		return nil, fmt.Errorf("unexpected plugin list response")
+	case "mcpnet_import_plugin":
+		if !s.confirmUser("McpNet plugin import", "AI 客戶端要求安裝 Go 插件程式碼。插件匯入後預設停用，啟用時可讀取／修改本機流量；請先審查來源。允許匯入？\n\nAn AI client wants to install Go plugin code. Imports are disabled by default but can access local traffic when enabled. Review the source before enabling. Allow import?") {
+			return nil, fmt.Errorf("user denied plugin import")
+		}
+		if zipData, _ := args["zip_base64"].(string); zipData != "" {
+			return s.doUICommand("導入插件ZIP", map[string]any{"Data": zipData})
+		}
+		manifest, _ := args["manifest_json"].(string)
+		source, _ := args["source"].(string)
+		if manifest == "" || source == "" {
+			return nil, fmt.Errorf("provide zip_base64 or both manifest_json and source")
+		}
+		return s.doUICommand("導入插件資料夾", map[string]any{"Manifest": manifest, "Source": source})
+	case "mcpnet_set_plugin_enabled":
+		id, _ := args["plugin_id"].(string)
+		enabled, _ := args["enabled"].(bool)
+		if strings.TrimSpace(id) == "" {
+			return nil, fmt.Errorf("plugin_id is required")
+		}
+		if enabled && !s.confirmUser("McpNet enable plugin", fmt.Sprintf("AI 客戶端要求啟用插件 %q。Go 程式碼會在本機執行，可能檢視或修改流量；請確認你信任此插件。允許啟用？\n\nAn AI client wants to enable plugin %q. Go code runs locally and may inspect or modify traffic. Review and trust this plugin before allowing. Enable?", id, id)) {
+			return nil, fmt.Errorf("user denied enabling plugin %q", id)
+		}
+		return s.doUICommand("设置插件状态", map[string]any{"Id": id, "Enabled": fmt.Sprint(enabled)})
+	case "mcpnet_send_session_data":
+		id := argInt(args, "capture_id", -1)
+		protocol, _ := args["protocol"].(string)
+		data, _ := args["data_base64"].(string)
+		direction, _ := args["direction"].(string)
+		decoded, err := base64.StdEncoding.DecodeString(data)
+		if id < 0 || err != nil || len(decoded) == 0 {
+			return nil, fmt.Errorf("capture_id and a non-empty valid data_base64 value are required")
+		}
+		isWS := strings.EqualFold(protocol, "websocket") || strings.EqualFold(protocol, "ws")
+		isTCP := strings.EqualFold(protocol, "tcp")
+		isUDP := strings.EqualFold(protocol, "udp")
+		if !isWS && !isTCP && !isUDP {
+			return nil, fmt.Errorf("protocol must be websocket, tcp, or udp; use the UI command tool for HTTP request replay")
+		}
+		if direction != "Server" && direction != "Client" {
+			return nil, fmt.Errorf("direction must be Server or Client")
+		}
+		if !s.confirmUser("McpNet send packet", fmt.Sprintf("AI 客戶端要求透過捕獲 %d 的既有 %s 連線，向%s發送 %d bytes。資料會傳給已連線的對端。允許？\n\nAn AI client wants to send %d bytes via %s through capture %d toward the %s. This transmits data to the connected peer. Allow?", id, protocol, direction, len(decoded), len(decoded), protocol, id, direction)) {
+			return nil, fmt.Errorf("user denied packet send")
+		}
+		encodedInput := base64.StdEncoding.EncodeToString([]byte(data))
+		res, err := s.doUICommand("主动发送", map[string]any{
+			"Theology": strconv.Itoa(id), "IsWs": strconv.FormatBool(isWS), "IsTCP": strconv.FormatBool(isTCP), "IsUDP": strconv.FormatBool(isUDP),
+			"wsType": "Binary", "SendType": "Base64", "direction": direction, "Data": encodedInput,
+		})
+		if err != nil {
+			return nil, err
+		}
+		return map[string]any{"capture_id": id, "protocol": protocol, "result": res}, nil
+	case "mcpnet_replay_capture":
+		id := argInt(args, "capture_id", -1)
+		mode := argInt(args, "mode", 3)
+		if id < 0 {
+			return nil, fmt.Errorf("capture_id must be a non-negative integer")
+		}
+		if mode != 3 && mode != 1 && mode != 2 {
+			return nil, fmt.Errorf("mode must be 3 (normal), 1 (intercept upload), or 2 (intercept download)")
+		}
+		capture, ok := HashMap.SnapshotCapture(id)
+		if !ok {
+			return nil, fmt.Errorf("capture %d was not found", id)
+		}
+		if !strings.EqualFold(capture.Protocol, "HTTP") {
+			return nil, fmt.Errorf("HTTP replay is only available for HTTP/HTTPS captures; use mcpnet_send_session_data for existing socket sessions")
+		}
+		if !s.confirmUser("McpNet replay request", fmt.Sprintf("AI 客戶端要求重播捕獲請求 %d（%s %s，模式 %d）。這會向原始目標送出新的網路請求。允許？\n\nAn AI client wants to replay capture %d (%s %s, mode %d). This sends a new network request to the original destination. Allow?", id, capture.Method, redactCaptureURL(capture.URL), mode, id, capture.Method, redactCaptureURL(capture.URL), mode)) {
+			return nil, fmt.Errorf("user denied request replay")
+		}
+		return s.doUICommand("重发请求", map[string]any{"Data": []int{id}, "Mode": mode})
 	case "mcpnet_help":
 		return map[string]any{
-			"usage": "Use mcpnet_command with any command accepted by the McpNet UI.",
+			"usage": "Use named MCP tools for captures, plugins, listener/proxy control, session sends, and HTTP request replay. Use mcpnet_command for other UI commands; it always requires direct user confirmation.",
 			"examples": []string{
 				"启动监听", "停止监听", "监听状态", "设置IE代理",
+				"插件列表", "導入插件ZIP", "设置插件状态", "重发请求",
 				"加载配置", "保存配置", "获取运行端口", "获取内网IP",
 			},
 			"capture_tools": []string{"mcpnet_list_captures", "mcpnet_get_capture", "mcpnet_get_messages"},
-			"note":          "Capture listing is metadata-only. Headers and payloads are excluded unless include_body is explicitly true. The generic UI command tool can change app state.",
+			"plugin_tools":  []string{"mcpnet_list_plugins", "mcpnet_import_plugin", "mcpnet_set_plugin_enabled"},
+			"send_tools":    []string{"mcpnet_send_session_data", "mcpnet_replay_capture"},
+			"note":          "Capture metadata omits private URL components, client IPs, and process IDs. Headers/payloads require include_body=true and a direct user approval dialog. Sends, replay, plugin installation/enabling, listener/proxy changes, and generic UI commands require user approval.",
 		}, nil
 	case "mcpnet_list_captures":
 		limit := argInt(args, "limit", 50)
@@ -715,8 +823,14 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 		}
 		out := captureMetadata(c)
 		if argBool(args, "include_body") {
+			if !s.confirmUser("McpNet private capture data", fmt.Sprintf("AI 客戶端要求讀取捕獲 %d 的完整 URL、IP/PID、標頭與請求／回應本文；可能含憑證或個人資料。是否分享？\n\nAn AI client requests the full URL, IP/PID, headers, and request/response bodies for capture %d. This may contain credentials or personal information. Share?", id, id)) {
+				return nil, fmt.Errorf("user denied access to private capture data")
+			}
 			out["request_headers"] = c.RequestHead
 			out["response_headers"] = c.ResponseHead
+			out["url_private"] = c.URL
+			out["pid"] = c.PID
+			out["client_ip"] = c.ClientIP
 			out["request_body_base64"], out["request_body_truncated"] = boundedBase64(c.RequestBody)
 			out["response_body_base64"], out["response_body_truncated"] = boundedBase64(c.ResponseBody)
 		}
@@ -745,6 +859,9 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 			limit = 200
 		}
 		includeBody := argBool(args, "include_body")
+		if includeBody && !s.confirmUser("McpNet private capture data", fmt.Sprintf("AI 客戶端要求讀取捕獲 %d 的第 %d 則訊息本文；可能含憑證或個人資料。是否分享？\n\nAn AI client requests message %d in capture %d. Its payload may contain credentials or personal information. Share?", id, offset, offset, id)) {
+			return nil, fmt.Errorf("user denied access to private capture data")
+		}
 		if includeBody && limit > 1 {
 			limit = 1
 		}
@@ -766,6 +883,48 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 	}
 }
 
+func (s *mcpServer) doUICommand(command string, args any) (any, error) {
+	if s == nil || s.app == nil {
+		return nil, fmt.Errorf("McpNet application is not available")
+	}
+	var wrapped map[string]any
+	callArgs := any(nil)
+	if args != nil {
+		callArgs = map[string]any{"Command": command, "Args": args}
+	} else {
+		callArgs = map[string]any{"Command": command}
+	}
+	result := s.app.Do(callArgs)
+	if result == nil {
+		return nil, fmt.Errorf("UI command %q returned no result", command)
+	}
+	if value, ok := result.(map[string]any); ok {
+		wrapped = value
+		if message, ok := wrapped["error"].(string); ok && message != "" {
+			return nil, fmt.Errorf("%s", message)
+		}
+	}
+	return result, nil
+}
+
+func (s *mcpServer) confirmUser(title, message string) bool {
+	if s != nil && s.confirm != nil {
+		return s.confirm(title, message)
+	}
+	if s == nil || s.app == nil || s.app.ctx == nil {
+		return false
+	}
+	answer, err := runtime.MessageDialog(s.app.ctx, runtime.MessageDialogOptions{
+		Type:          runtime.QuestionDialog,
+		Title:         title,
+		Message:       message,
+		Buttons:       []string{"允許 / Allow", "拒絕 / Deny"},
+		DefaultButton: "拒絕 / Deny",
+		CancelButton:  "拒絕 / Deny",
+	})
+	return err == nil && answer == "允許 / Allow"
+}
+
 func mcpTools() []mcpTool {
 	obj := func(props map[string]any, required []string) map[string]any {
 		m := map[string]any{"type": "object", "properties": props}
@@ -777,23 +936,60 @@ func mcpTools() []mcpTool {
 	return []mcpTool{
 		{
 			Name:        "mcpnet_list_captures",
-			Description: "List captured HTTP/HTTPS, WebSocket, TCP, and UDP sessions. Returns metadata only; no headers or payloads. URL query values, user info, and fragments are redacted.",
+			Description: "List captured HTTP/HTTPS, WebSocket, TCP, and UDP sessions. Returns metadata only; no headers, payloads, process IDs, client IPs, or private URL path/query/userinfo/fragment components.",
 			InputSchema: obj(map[string]any{"after_id": map[string]any{"type": "integer", "minimum": 0}, "limit": map[string]any{"type": "integer", "minimum": 1, "maximum": 200}, "protocol": map[string]any{"type": "string", "description": "Optional HTTP, WebSocket, TCP, or UDP filter."}}, nil),
 		},
 		{
 			Name:        "mcpnet_get_capture",
-			Description: "Get one captured session's metadata. URL query values, user info, and fragments are always redacted. Set include_body=true to include headers and request/response payloads (base64, capped at 64 KiB each); these may contain credentials or personal data.",
+			Description: "Get one captured session's metadata. Private URL components are redacted. Set include_body=true to request the original URL, client IP, process ID, headers, and request/response payloads (Base64, capped at 64 KiB each); a direct user confirmation dialog appears first because these may contain personal data.",
 			InputSchema: obj(map[string]any{"capture_id": map[string]any{"type": "integer", "minimum": 0}, "include_body": map[string]any{"type": "boolean", "default": false}}, []string{"capture_id"}),
 		},
 		{
 			Name:        "mcpnet_get_messages",
-			Description: "List WebSocket/TCP/UDP messages for a captured session. Payloads are omitted unless include_body=true; then one message per call is returned with a Base64 payload capped at 64 KiB. Payloads may contain private data.",
+			Description: "List WebSocket/TCP/UDP messages for a captured session. Payloads are omitted unless include_body=true; then one message per call is returned with a Base64 payload capped at 64 KiB after direct user confirmation. Payloads may contain private data.",
 			InputSchema: obj(map[string]any{"capture_id": map[string]any{"type": "integer", "minimum": 0}, "offset": map[string]any{"type": "integer", "minimum": 0}, "limit": map[string]any{"type": "integer", "minimum": 1, "maximum": 200}, "include_body": map[string]any{"type": "boolean", "default": false}}, []string{"capture_id"}),
 		},
 		{
 			Name:        "mcpnet_status",
 			Description: "Return listener/system-proxy/MCP status for McpNet.",
 			InputSchema: obj(map[string]any{}, nil),
+		},
+		{
+			Name:        "mcpnet_list_plugins",
+			Description: "List local plugins and their enabled/error status. Does not include source code.",
+			InputSchema: obj(map[string]any{}, nil),
+		},
+		{
+			Name:        "mcpnet_import_plugin",
+			Description: "Install a community Go plugin from Base64 ZIP or from a JSON manifest plus main.go source. Imported code remains disabled by default; the user must separately approve enabling it.",
+			InputSchema: obj(map[string]any{
+				"zip_base64":    map[string]any{"type": "string", "description": "Base64-encoded ZIP containing main.go and one JSON manifest; max 16 MiB."},
+				"manifest_json": map[string]any{"type": "string", "description": "Plugin JSON manifest; use with source."},
+				"source":        map[string]any{"type": "string", "description": "main.go source; use with manifest_json."},
+			}, nil),
+		},
+		{
+			Name:        "mcpnet_set_plugin_enabled",
+			Description: "Enable or disable a local plugin. Enabling executes trusted local Go code and requires direct user approval.",
+			InputSchema: obj(map[string]any{"plugin_id": map[string]any{"type": "string"}, "enabled": map[string]any{"type": "boolean"}}, []string{"plugin_id", "enabled"}),
+		},
+		{
+			Name:        "mcpnet_send_session_data",
+			Description: "Send Base64 bytes through an existing WebSocket, TCP, or UDP capture session. Each send requires direct user approval. This does not create arbitrary new connections.",
+			InputSchema: obj(map[string]any{
+				"capture_id":  map[string]any{"type": "integer", "minimum": 0},
+				"protocol":    map[string]any{"type": "string", "enum": []string{"websocket", "tcp", "udp"}},
+				"direction":   map[string]any{"type": "string", "enum": []string{"Server", "Client"}},
+				"data_base64": map[string]any{"type": "string", "description": "Bytes to send, Base64 encoded."},
+			}, []string{"capture_id", "protocol", "direction", "data_base64"}),
+		},
+		{
+			Name:        "mcpnet_replay_capture",
+			Description: "Replay a captured HTTP/HTTPS request to its original destination. Every replay displays a user confirmation; it sends a new network request.",
+			InputSchema: obj(map[string]any{
+				"capture_id": map[string]any{"type": "integer", "minimum": 0},
+				"mode":       map[string]any{"type": "integer", "enum": []int{3, 1, 2}, "default": 3, "description": "3 normal replay, 1 intercept upload, 2 intercept download."},
+			}, []string{"capture_id"}),
 		},
 		{
 			Name:        "mcpnet_start_listener",
@@ -812,7 +1008,7 @@ func mcpTools() []mcpTool {
 		},
 		{
 			Name:        "mcpnet_command",
-			Description: "Execute any McpNet UI command. This exposes the same command dispatcher used by the frontend, including capture start/stop, config load/save, rules, hosts, scripts and request tools.",
+			Description: "Execute any McpNet UI command. Every invocation displays a direct user confirmation because commands may read private data or change application/network state. This is the compatibility path for other UI features, including request tools and plugin authoring.",
 			InputSchema: obj(map[string]any{
 				"command": map[string]any{"type": "string", "description": "UI command name, e.g. 启动监听 / 停止监听 / 设置IE代理 / 保存配置"},
 				"args":    map[string]any{"type": "object", "description": "Same Args object the UI sends; omit if none."},

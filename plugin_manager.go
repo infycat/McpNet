@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -37,21 +38,13 @@ import (
 // ---------------------------------------------------------------------------
 
 type pluginManifest struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Version     string    `json:"version"`
-	Author      string    `json:"author"`
-	Description string    `json:"description"`
-	Enabled     bool      `json:"enabled"`
-	Order       int       `json:"order"`
-	UI          *pluginUI `json:"ui,omitempty"`
-}
-
-// pluginUI is an optional self-contained HTML panel rendered in a sandboxed
-// iframe. It can only call back through the constrained OnPluginAction hook.
-type pluginUI struct {
-	Title string `json:"title,omitempty"`
-	HTML  string `json:"html,omitempty"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Version     string `json:"version"`
+	Author      string `json:"author"`
+	Description string `json:"description"`
+	Enabled     bool   `json:"enabled"`
+	Order       int    `json:"order"`
 }
 
 func parsePluginManifest(value any) (pluginManifest, error) {
@@ -108,6 +101,7 @@ var (
 // ---- runtime context shared with plugin hooks ----
 
 type pluginCtx struct {
+	PluginID       string
 	Direction      string
 	Host           string
 	Path           string
@@ -347,6 +341,9 @@ func runHook(hook string, ctx *pluginCtx) bool {
 	ctxMu.Unlock()
 	changed := false
 	for _, p := range plugins() {
+		ctxMu.Lock()
+		ctx.PluginID = p.Manifest.ID
+		ctxMu.Unlock()
 		if !p.Manifest.Enabled {
 			continue
 		}
@@ -424,9 +421,6 @@ func writePluginManifest(m pluginManifest, source *string) error {
 	if strings.TrimSpace(m.Name) == "" {
 		m.Name = m.ID
 	}
-	if err := validatePluginUI(m.UI); err != nil {
-		return err
-	}
 	dir := filepath.Join(pluginDataDir(), sanitizePluginID(m.ID))
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
@@ -441,19 +435,6 @@ func writePluginManifest(m pluginManifest, source *string) error {
 		}
 	}
 	invalidatePluginCache()
-	return nil
-}
-
-func validatePluginUI(ui *pluginUI) error {
-	if ui == nil {
-		return nil
-	}
-	if len(ui.HTML) > 256<<10 {
-		return fmt.Errorf("插件介面 HTML 不可超過 256 KB")
-	}
-	if len(ui.Title) > 128 {
-		return fmt.Errorf("插件介面標題不可超過 128 個字元")
-	}
 	return nil
 }
 
@@ -520,37 +501,12 @@ func pluginInfo() map[string]any {
 			"enabled":     p.Manifest.Enabled,
 			"order":       p.Manifest.Order,
 			"error":       p.Err,
-			"hasUI":       p.Manifest.UI != nil && strings.TrimSpace(p.Manifest.UI.HTML) != "",
-			"uiTitle":     pluginUITitle(p.Manifest),
 		})
 	}
 	return map[string]any{
 		"dir":     pluginDataDir(),
 		"plugins": items,
 	}
-}
-
-func pluginUITitle(manifest pluginManifest) string {
-	if manifest.UI != nil && strings.TrimSpace(manifest.UI.Title) != "" {
-		return manifest.UI.Title
-	}
-	return manifest.Name
-}
-
-func pluginUIHTML(id string) (string, error) {
-	for _, p := range plugins() {
-		if p.Manifest.ID != id {
-			continue
-		}
-		if !p.Manifest.Enabled {
-			return "", fmt.Errorf("請先啟用插件才能開啟其介面")
-		}
-		if p.Manifest.UI == nil || strings.TrimSpace(p.Manifest.UI.HTML) == "" {
-			return "", fmt.Errorf("此插件沒有自訂介面")
-		}
-		return p.Manifest.UI.HTML, nil
-	}
-	return "", fmt.Errorf("找不到插件")
 }
 
 func runPluginUIAction(id, action, payload string) (string, error) {
@@ -578,7 +534,7 @@ func runPluginUIAction(id, action, payload string) (string, error) {
 		if !p.hookUIAction {
 			return "", fmt.Errorf("插件未實作 OnPluginAction")
 		}
-		ctx := &pluginCtx{Action: action, Payload: payload}
+		ctx := &pluginCtx{PluginID: id, Action: action, Payload: payload}
 		ctxMu.Lock()
 		curCtx = ctx
 		ctxMu.Unlock()
@@ -618,32 +574,34 @@ func pluginExports() map[string]map[string]reflect.Value {
 		// "mcpnet" is treated as a missing package name, so source importing
 		// "mcpnet" falls through to GOPATH lookup and fails in packaged builds.
 		"mcpnet/mcpnet": {
-			"Direction":      reflect.ValueOf(apiDirection),
-			"Action":         reflect.ValueOf(apiAction),
-			"Payload":        reflect.ValueOf(apiPayload),
-			"SetUIResult":    reflect.ValueOf(apiSetUIResult),
-			"Host":           reflect.ValueOf(apiHost),
-			"Path":           reflect.ValueOf(apiPath),
-			"URL":            reflect.ValueOf(apiURL),
-			"Method":         reflect.ValueOf(apiMethod),
-			"Body":           reflect.ValueOf(apiBody),
-			"SetBody":        reflect.ValueOf(apiSetBody),
-			"SetWireBody":    reflect.ValueOf(apiSetWireBody),
-			"DisplayBody":    reflect.ValueOf(apiDisplayBody),
-			"SetDisplayBody": reflect.ValueOf(apiSetDisplayBody),
-			"SetURL":         reflect.ValueOf(apiSetURL),
-			"PID":            reflect.ValueOf(apiPID),
-			"Process":        reflect.ValueOf(apiProcess),
-			"Log":            reflect.ValueOf(apiLog),
-			"HexEncode":      reflect.ValueOf(apiHexEncode),
-			"HexDecode":      reflect.ValueOf(apiHexDecode),
-			"Base64Encode":   reflect.ValueOf(apiBase64Encode),
-			"Base64Decode":   reflect.ValueOf(apiBase64Decode),
-			"Xor":            reflect.ValueOf(apiXor),
-			"XXTEAEncrypt":   reflect.ValueOf(apiXXTEAEncrypt),
-			"XXTEADecrypt":   reflect.ValueOf(apiXXTEADecrypt),
-			"XXTEAPack":      reflect.ValueOf(apiXXTEAPack),
-			"XXTEAUnpack":    reflect.ValueOf(apiXXTEAUnpack),
+			"Direction":       reflect.ValueOf(apiDirection),
+			"Action":          reflect.ValueOf(apiAction),
+			"Payload":         reflect.ValueOf(apiPayload),
+			"SetUIResult":     reflect.ValueOf(apiSetUIResult),
+			"OpenWindow":      reflect.ValueOf(apiOpenWindow),
+			"OpenExternalURL": reflect.ValueOf(apiOpenExternalURL),
+			"Host":            reflect.ValueOf(apiHost),
+			"Path":            reflect.ValueOf(apiPath),
+			"URL":             reflect.ValueOf(apiURL),
+			"Method":          reflect.ValueOf(apiMethod),
+			"Body":            reflect.ValueOf(apiBody),
+			"SetBody":         reflect.ValueOf(apiSetBody),
+			"SetWireBody":     reflect.ValueOf(apiSetWireBody),
+			"DisplayBody":     reflect.ValueOf(apiDisplayBody),
+			"SetDisplayBody":  reflect.ValueOf(apiSetDisplayBody),
+			"SetURL":          reflect.ValueOf(apiSetURL),
+			"PID":             reflect.ValueOf(apiPID),
+			"Process":         reflect.ValueOf(apiProcess),
+			"Log":             reflect.ValueOf(apiLog),
+			"HexEncode":       reflect.ValueOf(apiHexEncode),
+			"HexDecode":       reflect.ValueOf(apiHexDecode),
+			"Base64Encode":    reflect.ValueOf(apiBase64Encode),
+			"Base64Decode":    reflect.ValueOf(apiBase64Decode),
+			"Xor":             reflect.ValueOf(apiXor),
+			"XXTEAEncrypt":    reflect.ValueOf(apiXXTEAEncrypt),
+			"XXTEADecrypt":    reflect.ValueOf(apiXXTEADecrypt),
+			"XXTEAPack":       reflect.ValueOf(apiXXTEAPack),
+			"XXTEAUnpack":     reflect.ValueOf(apiXXTEAUnpack),
 		},
 	}
 }
@@ -673,6 +631,37 @@ func apiSetUIResult(value string) {
 		return
 	}
 	curCtx.UIResult = value
+}
+
+// OpenWindow lets trusted Go plugins provide their own in-app tool window.
+// It is only available while one of the plugin hooks is running.
+func apiOpenWindow(title, html string) bool {
+	ctxMu.Lock()
+	if curCtx == nil || curCtx.PluginID == "" || strings.TrimSpace(html) == "" || len(title) > 128 || len(html) > 256<<10 {
+		ctxMu.Unlock()
+		return false
+	}
+	id := curCtx.PluginID
+	ctxMu.Unlock()
+	CallJs("插件開啟介面", map[string]string{"Id": id, "Title": title, "HTML": html})
+	return true
+}
+
+// OpenExternalURL opens an HTTP(S) URL in the user's default browser.
+func apiOpenExternalURL(raw string) bool {
+	raw = strings.TrimSpace(raw)
+	parsed, err := url.ParseRequestURI(raw)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Hostname() == "" || len(raw) > 4096 {
+		return false
+	}
+	ctxMu.Lock()
+	allowed := curCtx != nil && curCtx.PluginID != ""
+	ctxMu.Unlock()
+	if !allowed {
+		return false
+	}
+	CallJs("插件開啟外部網址", map[string]string{"URL": parsed.String()})
+	return true
 }
 
 func apiDirection() string {

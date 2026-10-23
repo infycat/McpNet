@@ -328,6 +328,16 @@ export async function EventsDo(arg) {
                 }
             )
             return
+        case "插件開啟介面":
+            if (Args && typeof Args === "object" && window.dispatchEvent) {
+                window.dispatchEvent(new CustomEvent("mcpnet-plugin-open-window", {detail: Args}))
+            }
+            return
+        case "插件開啟外部網址":
+            if (Args && typeof Args.URL === "string" && /^https?:\/\//i.test(Args.URL)) {
+                BrowserOpenURL(Args.URL)
+            }
+            return
         case "弹出错误提示":
         case "弹出错误信息":
         case "弹出错误消息":

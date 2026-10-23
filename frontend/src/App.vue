@@ -1,5 +1,6 @@
 <script>
 import Home from './components/Home.vue'
+import PluginWindowHost from './components/PluginWindowHost.vue'
 import {CallGoDo} from "./components/CallbackEventsOn.js";
 import {ElNotification} from "element-plus";
 import {LogError, LogInfo} from "../wailsjs/runtime/runtime";
@@ -27,7 +28,8 @@ window.VsCodeEdit = {JavaScriptEdit: false}
 let Interval = 0;
 export default {
   components: {
-    Home
+    Home,
+    PluginWindowHost
   },
   data() {
     return {}
@@ -127,6 +129,7 @@ document.addEventListener('mousemove', event => {
 
 <template>
   <Home v-no-scroll/>
+  <PluginWindowHost />
 </template>
 
 

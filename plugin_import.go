@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -61,12 +62,27 @@ func readPluginFolder(folder string) (pluginPackage, error) {
 }
 
 func readPluginZip(zipPath string) (pluginPackage, error) {
-	var pkg pluginPackage
 	archive, err := zip.OpenReader(zipPath)
 	if err != nil {
-		return pkg, fmt.Errorf("無法開啟 ZIP：%w", err)
+		return pluginPackage{}, fmt.Errorf("無法開啟 ZIP：%w", err)
 	}
 	defer archive.Close()
+	return readPluginZipArchive(&archive.Reader)
+}
+
+func readPluginZipBytes(data []byte) (pluginPackage, error) {
+	if len(data) > maxPluginPackageSize {
+		return pluginPackage{}, fmt.Errorf("ZIP 檔案不可超過 16 MB")
+	}
+	archive, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		return pluginPackage{}, fmt.Errorf("無法開啟 ZIP：%w", err)
+	}
+	return readPluginZipArchive(archive)
+}
+
+func readPluginZipArchive(archive *zip.Reader) (pluginPackage, error) {
+	var pkg pluginPackage
 
 	if len(archive.File) > 512 {
 		return pkg, fmt.Errorf("ZIP 內檔案數量過多")
@@ -208,9 +224,6 @@ func parseImportedManifest(data []byte) (pluginManifest, error) {
 	if strings.TrimSpace(manifest.Version) == "" {
 		manifest.Version = "1.0.0"
 	}
-	if err := validatePluginUI(manifest.UI); err != nil {
-		return pluginManifest{}, err
-	}
 	// Imported code must never run until the user explicitly enables it.
 	manifest.Enabled = false
 	return manifest, nil
@@ -276,4 +289,26 @@ func importPluginFromZip(zipPath string) error {
 		return err
 	}
 	return installPluginPackage(pkg)
+}
+
+func importPluginZipBytes(data []byte) error {
+	pkg, err := readPluginZipBytes(data)
+	if err != nil {
+		return err
+	}
+	return installPluginPackage(pkg)
+}
+
+func importPluginFiles(manifestJSON, source string) error {
+	if len(manifestJSON) > maxPluginPackageFileSize || len(source) > maxPluginPackageFileSize {
+		return fmt.Errorf("插件單一檔案不可超過 4 MB")
+	}
+	manifest, err := parseImportedManifest([]byte(manifestJSON))
+	if err != nil {
+		return err
+	}
+	if len(strings.TrimSpace(source)) == 0 {
+		return fmt.Errorf("main.go 不能為空")
+	}
+	return installPluginPackage(pluginPackage{manifest: manifest, source: []byte(source)})
 }

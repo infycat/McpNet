@@ -282,41 +282,23 @@ func event(command string, args *JSON.SyJson) any {
 		return map[string]any{"key": loadThemeSettings().Key}
 	case "插件列表":
 		return pluginInfo()
-	case "導入插件":
-		importType := strings.ToLower(args.GetData("Type"))
-		defaultDirectory, _ := CommAnd.GetDesktopPath()
-		var selected string
-		var dialogErr error
-		if importType == "folder" {
-			selected, dialogErr = runtime.OpenDirectoryDialog(app.ctx, runtime.OpenDialogOptions{
-				DefaultDirectory: defaultDirectory,
-				Title:            "選擇插件資料夾（需包含 main.go 和一個 JSON 清單）",
-			})
-		} else if importType == "zip" {
-			selected, dialogErr = runtime.OpenFileDialog(app.ctx, runtime.OpenDialogOptions{
-				DefaultDirectory: defaultDirectory,
-				Title:            "選擇插件 ZIP",
-				Filters: []runtime.FileFilter{{
-					DisplayName: "ZIP 插件包 (*.zip)",
-					Pattern:     "*.zip",
-				}},
-			})
-		} else {
-			return map[string]any{"error": "不支援的插件匯入方式"}
+	case "導入插件ZIP":
+		data, err := base64.StdEncoding.DecodeString(args.GetData("Data"))
+		if err != nil {
+			return map[string]any{"error": "ZIP 檔案資料無效：" + err.Error()}
 		}
-		if dialogErr != nil {
-			return map[string]any{"error": "開啟插件選擇視窗失敗：" + dialogErr.Error()}
+		if len(data) > maxPluginPackageSize {
+			return map[string]any{"error": "ZIP 檔案不可超過 16 MB"}
 		}
-		if selected == "" {
-			return map[string]any{"cancelled": true}
+		if err := importPluginZipBytes(data); err != nil {
+			return map[string]any{"error": err.Error()}
 		}
-		if importType == "folder" {
-			dialogErr = importPluginFromFolder(selected)
-		} else {
-			dialogErr = importPluginFromZip(selected)
-		}
-		if dialogErr != nil {
-			return map[string]any{"error": dialogErr.Error()}
+		info := pluginInfo()
+		info["imported"] = true
+		return info
+	case "導入插件資料夾":
+		if err := importPluginFiles(args.GetData("Manifest"), args.GetData("Source")); err != nil {
+			return map[string]any{"error": err.Error()}
 		}
 		info := pluginInfo()
 		info["imported"] = true
@@ -325,12 +307,6 @@ func event(command string, args *JSON.SyJson) any {
 		return pluginSourceOf(args.GetData("Id"))
 	case "插件清單":
 		return pluginManifestOf(args.GetData("Id"))
-	case "插件UI":
-		html, err := pluginUIHTML(args.GetData("Id"))
-		if err != nil {
-			return map[string]any{"error": err.Error()}
-		}
-		return map[string]any{"html": html}
 	case "插件界面動作":
 		result, err := runPluginUIAction(args.GetData("Id"), args.GetData("Action"), args.GetData("Payload"))
 		if err != nil {
@@ -811,6 +787,7 @@ func event(command string, args *JSON.SyJson) any {
 		Theology := getInt(args.GetData("Theology"))
 		IsWs := args.GetData("IsWs") == "true"
 		IsTCP := args.GetData("IsTCP") == "true"
+		IsUDP := args.GetData("IsUDP") == "true"
 		wsType := args.GetData("wsType")
 		SendType := args.GetData("SendType")
 		direction := args.GetData("direction")
@@ -975,6 +952,42 @@ func event(command string, args *JSON.SyJson) any {
 			_update.Info.Index = len(h.SocketData)
 			isUpdateRequestInfo := currentlySelected == Theology
 			if isUpdateRequestInfo {
+				SocketData = append(SocketData, _update.Info)
+			}
+			Insert.Unlock()
+			return true
+		}
+		if IsUDP {
+			if h.UdpConn == nil {
+				CallJs("弹出错误提示", "发送失败:UDP 请求可能已失效")
+				return false
+			}
+			var sent bool
+			if direction == "Server" {
+				sent = h.UdpConn.SendToServer(_Bytes)
+			} else {
+				sent = h.UdpConn.SendToClient(_Bytes)
+			}
+			if !sent {
+				CallJs("弹出错误提示", "主动发送 UDP 数据失败")
+				return false
+			}
+			CallJs("弹出成功提示", "发送成功")
+			_update := &MapHash.UpdateSocketData{
+				Body: _Bytes,
+				Info: &MapHash.UpdateSocketList{
+					Theology: Theology,
+					Ico:      Ico,
+					BodyHash: BodyHash,
+					Length:   len(_Bytes),
+					Time:     time.Now().Format("15:04:05.000"),
+					WsType:   displaySendType(SendType, wsType, _Bytes),
+				},
+			}
+			HashMap.SetSocketData(Theology, _update, Ico == "上行", len(_Bytes))
+			Insert.Lock()
+			_update.Info.Index = len(h.SocketData)
+			if currentlySelected == Theology {
 				SocketData = append(SocketData, _update.Info)
 			}
 			Insert.Unlock()

@@ -61,6 +61,8 @@ func OnWebSocket() {
 	_, _ = mcpnet.XXTEAUnpack(packed, key)
 	mcpnet.SetBody(packed)
 	mcpnet.SetURL(mcpnet.URL())
+	_ = mcpnet.OpenWindow("Tool", "<button>Run</button>")
+	_ = mcpnet.OpenExternalURL("https://example.com/tool")
 	_ = mcpnet.Direction()
 	_ = mcpnet.Process()
 }

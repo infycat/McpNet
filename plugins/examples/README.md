@@ -8,21 +8,27 @@ Do not commit personal finished plugins (including protocol-specific XXTEA/XOR i
 
 The runtime uses Yaegi and offers the `mcpnet` package helpers documented in the project architecture guide. Hooks include `OnHTTPRequest`, `OnHTTPResponse`, `OnWebSocket`, `OnUDP`, `OnURLDisplay`, and `OnPluginAction`. Go hooks are intentionally open-ended: use protocol fields, `regexp`, text, or byte checks as needed; `SetBody`/`SetWireBody` can change traffic and `SetURL` changes display only.
 
-### Optional custom window
+### Plugin-owned windows
 
-Add a `ui` object to `plugin.json` to show an **Open UI** button after enabling the plugin:
+There is no client-side **Open UI** button. A Go hook decides when to open its own tool window by calling `mcpnet.OpenWindow(title, html)`; use `mcpnet.OpenExternalURL(url)` for an external HTTP(S) page. The client provides a generic in-app window host, while plugin behavior and UI remain plugin-owned. For example:
 
-```json
-{
-  "id": "my-tool",
-  "name": "My Tool",
-  "version": "1.0.0",
-  "enabled": false,
-  "ui": {
-    "title": "My Tool",
-    "html": "<!doctype html><html><body><button onclick=\"parent.postMessage({type:'mcpnet-plugin-action',action:'run',payload:{text:'hello'}}, '*')\">Run</button></body></html>"
-  }
+```go
+func OnHTTPRequest() {
+    if mcpnet.Host() != "example.com" || mcpnet.Path() != "/tool" {
+        return
+    }
+    html := `<!doctype html><html><body>
+      <button onclick="parent.postMessage({type:'mcpnet-plugin-action',action:'run',payload:{text:'hello'}}, '*')">Run</button>
+    </body></html>`
+    mcpnet.OpenWindow("My tool", html)
+}
+
+func OnPluginAction() {
+    if mcpnet.Action() == "run" {
+        // Read mcpnet.Payload(), perform plugin logic, then:
+        mcpnet.SetUIResult("done")
+    }
 }
 ```
 
-The HTML/JavaScript runs in an opaque-origin iframe sandbox; network access and top-level navigation are blocked. UI events are delivered to `OnPluginAction()`. In Go, `mcpnet.Action()` returns `run`, while `mcpnet.Payload()` returns the JSON string `{"text":"hello"}`. Call `mcpnet.SetUIResult("done")` to send a result back; the page can listen for the `mcpnet-plugin-result` message. UI HTML is limited to 256 KiB and each payload/result to 16 KiB. This only isolates the web UI: enabled Go plugin code itself runs locally without a security sandbox. Review and trust plugin source before enabling.
+The HTML/JavaScript runs in an opaque-origin iframe sandbox; network access and top-level navigation are blocked. Enabled Go plugin code itself runs locally without a security sandbox. Review and trust plugin source before enabling.

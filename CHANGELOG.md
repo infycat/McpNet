@@ -1,6 +1,26 @@
 # Release Notes / 版本紀錄
 
-Current stable release / 目前正式版本：**v1.2.0**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+Current stable release / 目前正式版本：**v1.2.1**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+
+## v1.2.1 — 2026-10-24 — MCP Integration and Privacy / MCP 整合與隱私
+
+### 繁體中文
+
+- 擴充本機 MCP 工具，AI 客戶端可查詢捕獲清單、詳情與訊息，查看狀態和插件，並在使用者確認後匯入／啟用插件、發送或重播封包、控制監聽與系統代理，以及呼叫通用插件介面命令。
+- 涉及封包發送、插件程式碼、監聽、系統代理或插件介面操作時，逐次顯示確認；MCP 連線不會自動啟動攔截或代理。
+- URL 查詢值、認證資訊與片段預設遮蔽；封包本文、標頭與其他敏感欄位須明確選擇，並經使用者同意才會提供。
+- 更新 MCP 安全與捕獲檢視測試、架構說明及插件範例文件。
+
+### English
+
+- Expanded local MCP tools so AI clients can inspect captured sessions, details, and messages; check status and plugins; and, after user confirmation, import/enable plugins, send or replay packets, control capture/system proxy, and invoke generic plugin UI actions.
+- Packet sends, plugin code, capture/proxy controls, and plugin UI actions require per-operation confirmation. Connecting an MCP client does not automatically start interception or configure the system proxy.
+- URL query values, credentials, and fragments are redacted by default. Payloads, headers, and other sensitive fields require an explicit MCP request and user consent before they are shared.
+- Updated MCP privacy/capture tests, architecture documentation, and plugin examples.
+
+- **Platform / 平台:** Windows x64
+- **File / 檔案:** `McpNet-v1.2.1-windows-x64.exe`
+- **Release / 發布:** [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.2.1)
 
 ## v1.2.0 — 2026-10-23 — Open Plugin Platform / 開源插件平台
 
@@ -9,7 +29,8 @@ Current stable release / 目前正式版本：**v1.2.0**. Previous releases rema
 - **大更新：以開源與社群擴充為核心。** 使用者可自行開發並分享插件，按自己的協定和工作流程組裝功能，不再只受內建解碼器限制。
 - 支援 ZIP／資料夾一鍵匯入，套件需包含 `main.go` 與一個 JSON 清單；匯入後預設停用，重複 ID 不會覆蓋既有插件。
 - Go hooks 可在 HTTP 請求／回應、WebSocket、UDP 等事件中自由組合協定、方向、URL、字串、正則、位元組模式和自訂條件，並按插件邏輯解碼、編碼或修改封包。
-- 支援以 `ui.title`／`ui.html` 建立 HTML/JavaScript 插件小視窗，與 Go hook 透過 action、payload 和 result 溝通。
+- 插件 Go hook 可呼叫 `mcpnet.OpenWindow(title, html)` 或 `mcpnet.OpenExternalURL(url)`，依插件自己的條件開啟工具窗口或外部頁面；客戶端只提供通用窗口容器，不加固定插件按鈕。
+- ZIP／資料夾選擇由內置 WebView 處理，取消或驗證錯誤不會關閉主程式；插件匯入、啟用、封包發送、監聽／系統代理更改及通用 MCP UI 命令均逐次要求使用者確認。敏感封包本文、URL、用戶端 IP 與 PID 需同意後才會提供給 MCP 客戶端。
 - README、架構文件與公開範例補充插件套件格式、開發和分享方式、hook API、自訂 UI 與安全邊界。
 - **安全提醒：** Go 插件在本機執行且沒有安全沙箱隔離；只導入可信來源。個人插件、金鑰、設定與抓包仍留在本機，公開倉庫只收錄通用範例。
 
@@ -18,7 +39,8 @@ Current stable release / 目前正式版本：**v1.2.0**. Previous releases rema
 - **Major update centered on open source and community extensibility.** Users can build and share plugins around their own protocols and workflows instead of being limited to built-in decoders.
 - Added one-click ZIP/folder import for packages containing `main.go` and one JSON manifest. Imported plugins are disabled by default; duplicate IDs never overwrite installed plugins.
 - Go hooks can combine protocol, direction, URL, text, regexp, byte-pattern, and custom conditions across HTTP request/response, WebSocket, UDP, and other events, then decode, encode, or modify packets according to plugin logic.
-- Added optional `ui.title`/`ui.html` custom HTML/JavaScript plugin windows that communicate with Go hooks through actions, payloads, and results.
+- Go hooks can call `mcpnet.OpenWindow(title, html)` or `mcpnet.OpenExternalURL(url)` based on plugin logic; the client provides a generic host instead of a fixed per-plugin button.
+- ZIP/folder selection uses the embedded WebView, and cancellation or validation errors no longer close the app. Plugin import/enable, packet sends, listener/proxy changes, and generic MCP UI commands require per-action user approval. Private payloads, full URLs, client IPs, and PIDs are shared with MCP only after direct user consent.
 - Expanded the README, architecture guide, and public examples with package format, plugin development/sharing, hook APIs, custom UI, and security boundaries.
 - **Security note:** Go plugins run locally without a security sandbox; import trusted sources only. Personal plugins, keys, settings, and captures stay local; the public repository contains generic examples only.
 

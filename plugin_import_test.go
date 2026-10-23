@@ -22,23 +22,29 @@ func TestReadPluginZipWithSingleWrapperFolder(t *testing.T) {
 	if pkg.manifest.ID != "shared-plugin" || pkg.manifest.Enabled {
 		t.Fatalf("unexpected imported manifest: %+v", pkg.manifest)
 	}
-	if pkg.manifest.UI == nil || pkg.manifest.UI.Title != "Tool" || pkg.manifest.UI.HTML != "<button>ok</button>" {
-		t.Fatalf("custom UI was not preserved: %+v", pkg.manifest.UI)
+	manifestJSON, err := json.Marshal(pkg.manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(manifestJSON), `"ui"`) {
+		t.Fatalf("legacy manifest UI should be ignored; windows are defined by Go hooks: %s", manifestJSON)
 	}
 	if !strings.Contains(string(pkg.source), "OnWebSocket") {
 		t.Fatalf("unexpected source: %q", pkg.source)
 	}
+
+	archiveBytes, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := readPluginZipBytes(archiveBytes); err != nil {
+		t.Fatalf("readPluginZipBytes() error = %v", err)
+	}
 }
 
-func TestPluginUIValidationLimits(t *testing.T) {
-	if err := validatePluginUI(&pluginUI{Title: "Tool", HTML: "<button>ok</button>"}); err != nil {
-		t.Fatalf("valid plugin UI rejected: %v", err)
-	}
-	if err := validatePluginUI(&pluginUI{HTML: strings.Repeat("x", (256<<10)+1)}); err == nil {
-		t.Fatal("expected oversized plugin UI to be rejected")
-	}
-	if err := validatePluginUI(&pluginUI{Title: strings.Repeat("x", 129)}); err == nil {
-		t.Fatal("expected oversized plugin UI title to be rejected")
+func TestReadPluginZipBytesRejectsOversizedArchive(t *testing.T) {
+	if _, err := readPluginZipBytes(make([]byte, maxPluginPackageSize+1)); err == nil {
+		t.Fatal("expected oversized ZIP bytes to be rejected")
 	}
 }
 

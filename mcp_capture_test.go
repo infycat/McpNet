@@ -15,18 +15,8 @@ func TestRedactCaptureURLHidesQueryAndUserInfo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("redacted URL is invalid: %q: %v", got, err)
 	}
-	if parsed.User.Username() != "REDACTED" {
-		t.Fatalf("userinfo was not redacted: %q", got)
-	}
-	for key, values := range parsed.Query() {
-		for _, value := range values {
-			if value != "REDACTED" {
-				t.Fatalf("query value leaked for %q: %q", key, value)
-			}
-		}
-	}
-	if parsed.Fragment != "REDACTED" {
-		t.Fatalf("fragment was not redacted: %q", got)
+	if parsed.User != nil || parsed.Path != "/[redacted]" || parsed.RawQuery != "" || parsed.Fragment != "" {
+		t.Fatalf("private URL components were not removed: %q", got)
 	}
 }
 
@@ -43,7 +33,7 @@ func TestMCPCaptureToolsDefaultToMetadata(t *testing.T) {
 	r := &MapHash.Request{Display: true, Way: "HTTP", Method: "POST", URL: "http://example.test/submit?token=secret&uid=42", Body: []byte("secret"), SendNum: 6}
 	r.Header = http.Header{"Authorization": []string{"secret-token"}}
 	HashMap.SetRequest(11, r)
-	s := &mcpServer{}
+	s := &mcpServer{confirm: func(title, message string) bool { return true }}
 
 	got, err := s.callTool("mcpnet_list_captures", map[string]any{"limit": 10})
 	if err != nil {
@@ -60,8 +50,14 @@ func TestMCPCaptureToolsDefaultToMetadata(t *testing.T) {
 	if _, ok := row["request_headers"]; ok {
 		t.Fatal("capture listing exposed headers")
 	}
-	if row["url"] != "http://example.test/submit?token=REDACTED&uid=REDACTED" {
-		t.Fatalf("capture listing did not redact URL values: %#v", row["url"])
+	if row["url"] != "http://example.test/[redacted]" {
+		t.Fatalf("capture listing did not redact private URL components: %#v", row["url"])
+	}
+	if _, ok := row["client_ip"]; ok {
+		t.Fatal("capture listing exposed client IP without consent")
+	}
+	if _, ok := row["pid"]; ok {
+		t.Fatal("capture listing exposed PID without consent")
 	}
 
 	got, err = s.callTool("mcpnet_get_capture", map[string]any{"capture_id": 11})
@@ -83,6 +79,48 @@ func TestMCPCaptureToolsDefaultToMetadata(t *testing.T) {
 	if details["request_headers"].(map[string][]string)["Authorization"][0] != "secret-token" {
 		t.Fatal("opt-in headers missing")
 	}
+	if details["url_private"] != "http://example.test/submit?token=secret&uid=42" {
+		t.Fatalf("consented response missing original URL: %#v", details["url_private"])
+	}
+}
+
+func TestMCPPrivateCaptureRequiresUserConsent(t *testing.T) {
+	old := HashMap
+	HashMap = MapHash.NewHashMap()
+	t.Cleanup(func() { HashMap = old })
+	HashMap.SetRequest(12, &MapHash.Request{Display: true, Way: "HTTP", URL: "https://example.test/private", Body: []byte("secret")})
+	asked := false
+	s := &mcpServer{confirm: func(title, message string) bool {
+		asked = true
+		return false
+	}}
+	if _, err := s.callTool("mcpnet_get_capture", map[string]any{"capture_id": 12, "include_body": true}); err == nil {
+		t.Fatal("expected denied private-data request")
+	}
+	if !asked {
+		t.Fatal("expected direct user consent prompt")
+	}
+}
+
+func TestMCPToolsExposePluginAndSendWorkflows(t *testing.T) {
+	want := map[string]bool{
+		"mcpnet_list_plugins":       false,
+		"mcpnet_import_plugin":      false,
+		"mcpnet_set_plugin_enabled": false,
+		"mcpnet_send_session_data":  false,
+		"mcpnet_replay_capture":     false,
+		"mcpnet_command":            false,
+	}
+	for _, tool := range mcpTools() {
+		if _, ok := want[tool.Name]; ok {
+			want[tool.Name] = true
+		}
+	}
+	for name, found := range want {
+		if !found {
+			t.Errorf("MCP tool %q is missing", name)
+		}
+	}
 }
 
 func TestMCPMessagePaginationAndPayloadOptIn(t *testing.T) {
@@ -94,7 +132,7 @@ func TestMCPMessagePaginationAndPayloadOptIn(t *testing.T) {
 		{Info: &MapHash.UpdateSocketList{Ico: "下行", WsType: "JSON", Length: 2}, Body: []byte("[]")},
 	}}
 	HashMap.SetRequest(4, r)
-	s := &mcpServer{}
+	s := &mcpServer{confirm: func(title, message string) bool { return true }}
 	got, err := s.callTool("mcpnet_get_messages", map[string]any{"capture_id": 4, "offset": 0, "limit": 1})
 	if err != nil {
 		t.Fatal(err)
