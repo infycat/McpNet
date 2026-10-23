@@ -1,6 +1,28 @@
 # Release Notes / 版本紀錄
 
-Current stable release / 目前正式版本：**v1.1.3**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+Current stable release / 目前正式版本：**v1.1.4**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+
+## v1.1.4 — 2026-10-23 — Plugin Extensibility / 插件功能擴充
+
+### 繁體中文
+
+- 新增社群插件一鍵導入，可選 ZIP 或資料夾；套件須包含 `main.go` 與一個 JSON 清單。導入後預設停用，重複 ID 不會覆蓋既有插件。
+- 「解碼與編碼」擴充為「插件功能」。Go hooks 可在 HTTP 請求／回應、WebSocket、UDP 等事件中自行組合協議、URL、字串、正則與位元組格式判斷，並可改寫封包後繼續轉送。
+- 插件清單可選擇提供 `ui.title` 和 `ui.html`，建立 HTML/JavaScript 小視窗；透過 `OnPluginAction` 與 `mcpnet.Action()`、`mcpnet.Payload()`、`mcpnet.SetUIResult()` 和插件 Go 邏輯互通。
+- HTML/JavaScript 視窗使用限制網路與頂層導覽的 iframe sandbox；Go 插件程式仍在本機執行且不具安全沙箱隔離，只啟用可信來源。
+- 更新 README、架構文件與插件範例，說明安裝格式、封包處理 hook、自訂介面及安全限制。
+
+### English
+
+- Added one-click community plugin import from a ZIP or folder containing `main.go` and one JSON manifest. Imports are disabled by default, and duplicate IDs never overwrite an installed plugin.
+- Expanded “Encoding & Decoding” into “Plugin Features.” Go hooks can combine protocol, URL, text, regexp, and byte-pattern checks across HTTP request/response, WebSocket, UDP, and other events, and can rewrite packets before forwarding.
+- Plugin manifests can optionally define `ui.title` and `ui.html` for a custom HTML/JavaScript window. `OnPluginAction` connects the UI to Go code through `mcpnet.Action()`, `mcpnet.Payload()`, and `mcpnet.SetUIResult()`.
+- The HTML/JavaScript UI runs in an iframe sandbox with network access and top-level navigation restricted. Go plugin code still runs locally without a security sandbox; enable trusted code only.
+- Updated the README, architecture guide, and plugin examples with import format, packet hooks, custom UI, and security limitations.
+
+- **Platform / 平台:** Windows x64
+- **File / 檔案:** `McpNet-v1.1.4-windows-x64.exe`
+- **Release / 發布:** [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.1.4)
 
 ## v1.1.3 — 2026-10-23 — Startup Fix / 啟動修復
 

@@ -304,9 +304,13 @@
     ['func OnHTTPResponse() {}', '// 回包到达后'],
     ['func OnWebSocket()    {}', '// WS 帧收发'],
     ['func OnUDP()          {}', '// UDP 数据'],
+    ['func OnPluginAction() {}', '// 自訂介面動作'],
     ['', ''],
     ['// ---- 上下文 ----', ''],
     ['mcpnet.Direction() string', '// "in" 接收 / "out" 发送'],
+    ['mcpnet.Action() string', '// UI 動作名稱'],
+    ['mcpnet.Payload() string', '// UI 傳入的 JSON 字串'],
+    ['mcpnet.SetUIResult(s string)', '// 回傳至 HTML 介面'],
     ['mcpnet.Host() string', '// 主机名'],
     ['mcpnet.Path() string', '// 路径'],
     ['mcpnet.URL() string', '// 完整 URL'],
@@ -486,14 +490,14 @@
     return collapseItem('M12 3a9 9 0 1 0 0 18 4 4 0 0 0 0-8 4 4 0 0 1 0-8', L('界面主题', '介面主題', 'Theme'), null, panel, false);
   }
 
-  function buildCodecItem() {
+  function buildPluginFeaturesItem() {
     var panel = el('div');
     panel.id = 'sn-plugin-panel';
     panel.style.cssText = 'padding:4px 0 2px;';
 
-    var hint = el('div', '', L('插件保存在本机。启动时读取，首次处理对应流量时编译；勾选后才参与请求/回包处理。',
-      '插件保存在本機。啟動時讀取，首次處理對應流量時編譯；勾選後才參與請求/回包處理。',
-      'Plugins are stored locally, scanned at startup, and compiled on first matching traffic. Enable one to process traffic.'));
+    var hint = el('div', '', L('插件保存在本機，啟用後可用 Go hooks 自由判斷協議、URL、字串、正則或位元組格式並處理流量；也可在清單 JSON 加入 ui.title 與 ui.html 建立 HTML/JavaScript 小視窗，再用 OnPluginAction 接收介面操作。程式碼在本機執行，請只啟用可信插件。',
+      '插件保存在本機，啟用後可用 Go hooks 自由判斷協議、URL、字串、正則或位元組格式並處理流量；也可在清單 JSON 加入 ui.title 與 ui.html 建立 HTML/JavaScript 小視窗，再用 OnPluginAction 接收介面操作。程式碼在本機執行，請只啟用可信插件。',
+      'Plugins run locally. Use Go hooks for protocol, URL, string, regexp, or byte-pattern checks and traffic processing. Add ui.title/ui.html to the JSON manifest for an HTML/JavaScript window; OnPluginAction handles UI actions. Enable trusted code only.'));
     hint.style.cssText = 'color:var(--app-muted-text,#aab7c2);font-size:12px;line-height:1.6;margin:2px 0 8px;';
     panel.appendChild(hint);
 
@@ -502,9 +506,12 @@
     panel.appendChild(listBox);
 
     var bar = el('div');
-    bar.style.cssText = 'display:flex;align-items:center;gap:8px;margin:10px 0 4px;';
+    bar.style.cssText = 'display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:10px 0 4px;';
     var newBtn = el('button', 'el-button el-button--small el-button--primary');
     newBtn.textContent = L('新建插件', '新建插件', 'New plugin');
+    var importBtn = el('button', 'el-button el-button--small');
+    importBtn.textContent = L('導入插件', '導入插件', 'Import plugin');
+    importBtn.setAttribute('aria-haspopup', 'dialog');
     var refreshBtn = el('button', 'el-button el-button--small');
     refreshBtn.textContent = L('刷新列表', '刷新清單', 'Refresh');
     refreshBtn.title = L('重新读取本地插件状态', '重新讀取本機插件狀態', 'Reload local plugin status');
@@ -512,8 +519,145 @@
     dirText.style.cssText = 'color:var(--app-muted-text,#7f8c98);font-size:11px;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
     var status = el('span');
     status.style.cssText = 'font-size:12px;color:#aab7c2;';
-    bar.appendChild(newBtn); bar.appendChild(refreshBtn); bar.appendChild(dirText); bar.appendChild(status);
+    bar.appendChild(newBtn); bar.appendChild(importBtn); bar.appendChild(refreshBtn); bar.appendChild(dirText); bar.appendChild(status);
     panel.appendChild(bar);
+
+    // ---- community plugin import chooser ----
+    var importOverlay = el('div');
+    importOverlay.setAttribute('role', 'presentation');
+    importOverlay.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99998;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
+    var importModal = el('div');
+    importModal.setAttribute('role', 'dialog');
+    importModal.setAttribute('aria-modal', 'true');
+    importModal.setAttribute('aria-labelledby', 'sn-plugin-import-title');
+    importModal.style.cssText = 'width:min(480px,96vw);background:var(--app-surface,#1b1b1b);color:var(--app-text,#d4d4d4);border:1px solid var(--app-border,#3c3c3c);border-radius:6px;box-shadow:0 12px 40px rgba(0,0,0,.5);overflow:hidden;';
+    var importTitle = el('div', '', L('導入社群插件', '導入社群插件', 'Import a community plugin'));
+    importTitle.id = 'sn-plugin-import-title';
+    importTitle.style.cssText = 'padding:12px 14px;background:var(--app-header,#202020);border-bottom:1px solid var(--app-border,#333);font-size:14px;font-weight:600;';
+    var importHint = el('div', '', L(
+      '選擇插件 ZIP 或資料夾。格式需包含 main.go 和一個 JSON 清單（建議命名 plugin.json）。導入後預設停用。',
+      '選擇插件 ZIP 或資料夾。格式需包含 main.go 和一個 JSON 清單（建議命名 plugin.json）。導入後預設停用。',
+      'Choose a plugin ZIP or folder containing main.go and one JSON manifest (plugin.json recommended). Imported plugins are disabled by default.'
+    ));
+    importHint.style.cssText = 'padding:12px 14px 4px;font-size:12px;line-height:1.6;color:var(--app-muted-text,#aab7c2);';
+    var importWarning = el('div', '', L(
+      '安全提醒：插件程式會在本機執行，啟用後可能讀取或修改流量。只導入你信任的來源。',
+      '安全提醒：插件程式會在本機執行，啟用後可能讀取或修改流量。只導入你信任的來源。',
+      'Security: plugin code runs locally and may read or modify traffic when enabled. Import code only from sources you trust.'
+    ));
+    importWarning.style.cssText = 'margin:8px 14px;padding:9px 10px;border:1px solid var(--app-border,#5b5140);border-radius:4px;color:var(--app-text,#d4d4d4);background:rgba(230,162,60,.10);font-size:12px;line-height:1.5;';
+    var importActions = el('div');
+    importActions.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:8px 14px 14px;';
+    var importZipBtn = el('button', 'el-button el-button--small el-button--primary');
+    importZipBtn.textContent = L('選擇 ZIP', '選擇 ZIP', 'Choose ZIP');
+    var importFolderBtn = el('button', 'el-button el-button--small');
+    importFolderBtn.textContent = L('選擇資料夾', '選擇資料夾', 'Choose folder');
+    var importCancelBtn = el('button', 'el-button el-button--small');
+    importCancelBtn.textContent = L('取消', '取消', 'Cancel');
+    [importZipBtn, importFolderBtn, importCancelBtn].forEach(function (button) {
+      button.style.minHeight = '36px';
+      importActions.appendChild(button);
+    });
+    importModal.appendChild(importTitle);
+    importModal.appendChild(importHint);
+    importModal.appendChild(importWarning);
+    importModal.appendChild(importActions);
+    importOverlay.appendChild(importModal);
+    panel.appendChild(importOverlay);
+
+    // Render plugin-owned interfaces in an opaque-origin iframe. Its only
+    // supported bridge is a constrained message routed to OnPluginAction.
+    var uiOverlay = el('div');
+    uiOverlay.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:100000;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+    var uiModal = el('div');
+    uiModal.style.cssText = 'width:min(900px,96vw);height:min(680px,88vh);display:flex;flex-direction:column;background:var(--app-surface,#1b1b1b);color:var(--app-text,#d4d4d4);border:1px solid var(--app-border,#3c3c3c);border-radius:6px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.55);';
+    var uiHead = el('div');
+    uiHead.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--app-header,#202020);border-bottom:1px solid var(--app-border,#333);';
+    var uiTitle = el('div');
+    uiTitle.style.cssText = 'flex:1;font-size:13px;';
+    var uiClose = el('button', 'el-button el-button--small');
+    uiClose.textContent = '✕';
+    var uiFrame = document.createElement('iframe');
+    uiFrame.title = L('插件自訂介面', '插件自訂介面', 'Plugin custom UI');
+    uiFrame.setAttribute('sandbox', 'allow-scripts');
+    uiFrame.style.cssText = 'width:100%;height:100%;flex:1;border:0;background:var(--app-surface,#1b1b1b);';
+    uiHead.appendChild(uiTitle); uiHead.appendChild(uiClose);
+    uiModal.appendChild(uiHead); uiModal.appendChild(uiFrame);
+    uiOverlay.appendChild(uiModal);
+    panel.appendChild(uiOverlay);
+    function closePluginUI() {
+      uiFrame.srcdoc = '';
+      uiOverlay.style.display = 'none';
+    }
+    uiClose.addEventListener('click', closePluginUI);
+    uiOverlay.addEventListener('click', function (event) { if (event.target === uiOverlay) closePluginUI(); });
+    window.addEventListener('message', function (event) {
+      if (!uiFrame.contentWindow || event.source !== uiFrame.contentWindow || !event.data || event.data.type !== 'mcpnet-plugin-action') return;
+      var action = String(event.data.action || '');
+      if (!action || action.length > 128) return;
+      var payload;
+      try { payload = JSON.stringify(event.data.payload == null ? null : event.data.payload); } catch (_) { return; }
+      if (payload.length > 16 * 1024) return;
+      doCommand('插件界面動作', { Id: uiFrame.dataset.pluginId || '', Action: action, Payload: payload }).then(function (result) {
+        if (result && result.error) {
+          status.style.color = '#f56c6c';
+          status.textContent = result.error;
+          return;
+        }
+        if (uiFrame.contentWindow) uiFrame.contentWindow.postMessage({ type: 'mcpnet-plugin-result', action: action, result: result && result.result ? result.result : '' }, '*');
+      }).catch(function (error) {
+        status.style.color = '#f56c6c';
+        status.textContent = String(error && error.message ? error.message : error);
+      });
+    });
+    function openPluginUI(plugin) {
+      doCommand('插件UI', { Id: plugin.id }).then(function (result) {
+        if (!result || result.error) throw new Error(result && result.error ? result.error : 'Unable to load plugin UI');
+        uiFrame.dataset.pluginId = plugin.id;
+        uiTitle.textContent = plugin.uiTitle || plugin.name || plugin.id;
+        var csp = '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data: blob:; style-src \'unsafe-inline\'; script-src \'unsafe-inline\'; connect-src \'none\'; form-action \'none\'; navigate-to \'none\'">';
+        var html = String(result.html || '');
+        var doctype = html.match(/^\s*<!doctype[^>]*>/i);
+        uiFrame.srcdoc = doctype ? doctype[0] + csp + html.slice(doctype[0].length) : csp + html;
+        uiOverlay.style.display = 'flex';
+      }).catch(function (error) {
+        status.style.color = '#f56c6c';
+        status.textContent = String(error && error.message ? error.message : error);
+      });
+    }
+
+    function closeImportDialog() {
+      importOverlay.style.display = 'none';
+      importBtn.focus();
+    }
+    function beginPluginImport(type) {
+      [importZipBtn, importFolderBtn, importCancelBtn].forEach(function (button) { button.disabled = true; });
+      status.style.color = 'var(--app-muted-text,#aab7c2)';
+      status.textContent = L('請選擇插件檔案…', '請選擇插件檔案…', 'Choose a plugin package…');
+      doCommand('導入插件', { Type: type }).then(function (info) {
+        if (info && info.cancelled) return;
+        if (info && info.error) throw new Error(info.error);
+        state.plugins = info || {};
+        render(L('插件已導入並保持停用；確認來源可信後再勾選啟用。', '插件已導入並保持停用；確認來源可信後再勾選啟用。', 'Plugin imported disabled. Verify its source before enabling it.'));
+      }).catch(function (error) {
+        status.style.color = '#f56c6c';
+        status.textContent = String(error && error.message ? error.message : error);
+      }).finally(function () {
+        [importZipBtn, importFolderBtn, importCancelBtn].forEach(function (button) { button.disabled = false; });
+        closeImportDialog();
+      });
+    }
+    importBtn.addEventListener('click', function () {
+      importOverlay.style.display = 'flex';
+      importZipBtn.focus();
+    });
+    importZipBtn.addEventListener('click', function () { beginPluginImport('zip'); });
+    importFolderBtn.addEventListener('click', function () { beginPluginImport('folder'); });
+    importCancelBtn.addEventListener('click', closeImportDialog);
+    importOverlay.addEventListener('click', function (event) { if (event.target === importOverlay) closeImportDialog(); });
+    importModal.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') { event.preventDefault(); closeImportDialog(); }
+    });
 
     // ---- full editor overlay ----
     var overlay = el('div');
@@ -547,6 +691,20 @@
     var fOrder = field('order 100');
     var fDesc = field('描述');
     modal.appendChild(meta);
+
+    var uiEditor = el('details');
+    uiEditor.style.cssText = 'margin:0 14px 8px;border:1px solid var(--app-border,#3c3c3c);border-radius:4px;background:var(--app-surface-raised,#1f1f1f);';
+    var uiSummary = el('summary', '', L('自訂 HTML/JavaScript 介面（選填）', '自訂 HTML/JavaScript 介面（選填）', 'Custom HTML/JavaScript UI (optional)'));
+    uiSummary.style.cssText = 'padding:7px 9px;cursor:pointer;font-size:12px;';
+    var fUITitle = el('input', 'el-input__inner');
+    fUITitle.placeholder = L('視窗標題（選填）', '視窗標題（選填）', 'Window title (optional)');
+    fUITitle.style.cssText = 'display:block;width:calc(100% - 16px);box-sizing:border-box;margin:4px 8px 7px;background:var(--app-surface,#141414);color:var(--app-text,#d4d4d4);border:1px solid var(--app-border,#3c3c3c);border-radius:4px;padding:6px 8px;font-size:12px;';
+    var fUIHTML = el('textarea');
+    fUIHTML.spellcheck = false;
+    fUIHTML.placeholder = '<!doctype html>\n<html><body>...';
+    fUIHTML.style.cssText = 'display:block;width:calc(100% - 16px);height:130px;box-sizing:border-box;margin:0 8px 8px;background:var(--app-surface,#141414);color:var(--app-text,#d4d4d4);border:1px solid var(--app-border,#3c3c3c);border-radius:4px;padding:8px;font:12px/1.5 Consolas,monospace;resize:vertical;';
+    uiEditor.appendChild(uiSummary); uiEditor.appendChild(fUITitle); uiEditor.appendChild(fUIHTML);
+    modal.appendChild(uiEditor);
 
     var body = el('div');
     body.style.cssText = 'flex:1 1 auto;display:flex;min-height:0;padding:0 14px 10px;gap:10px;';
@@ -610,7 +768,7 @@
     function getCode() {
       return codeEditor ? codeEditor.getValue() : fallbackSrc.value;
     }
-    function openEditor(p, code) {
+    function openEditor(p, code, pluginUI) {
       editingId = p && p.id ? p.id : '';
       fID.value = editingId;
       fName.value = p && p.name ? p.name : '';
@@ -618,6 +776,9 @@
       fAuthor.value = p && p.author ? p.author : '';
       fOrder.value = String((p && p.order) || 100);
       fDesc.value = p && p.description ? p.description : '';
+      fUITitle.value = pluginUI && pluginUI.title ? pluginUI.title : '';
+      fUIHTML.value = pluginUI && pluginUI.html ? pluginUI.html : '';
+      uiEditor.open = !!(pluginUI && pluginUI.html);
       setCode(code || pluginTemplate());
       footMsg.textContent = '';
       overlay.style.display = 'flex';
@@ -643,6 +804,7 @@
         enabled: true,
         order: parseInt(fOrder.value, 10) || 100
       };
+      if (fUIHTML.value.trim()) p.ui = { title: fUITitle.value.trim(), html: fUIHTML.value };
       doCommand('保存插件', { Manifest: p, WithSource: 'true', Source: getCode() }).then(function (info) {
         if (info && info.error) { footMsg.style.color = '#f56c6c'; footMsg.textContent = info.error; return; }
         state.plugins = info || {};
@@ -653,14 +815,14 @@
       });
     });
 
-    function render() {
+    function render(messageOverride) {
       doCommand('插件列表', null).then(function (info) {
         state.plugins = info || {};
         dirText.textContent = info && info.dir ? info.dir : '';
         listBox.innerHTML = '';
         var items = (info && info.plugins) || [];
-        status.style.color = 'var(--app-muted-text,#8b98a5)';
-        status.textContent = L('已读取 ' + items.length + ' 个本地插件', '已讀取 ' + items.length + ' 個本機插件', items.length + ' local plugin(s) loaded');
+        status.style.color = messageOverride ? '#67c23a' : 'var(--app-muted-text,#8b98a5)';
+        status.textContent = messageOverride || L('已读取 ' + items.length + ' 个本地插件', '已讀取 ' + items.length + ' 個本機插件', items.length + ' local plugin(s) loaded');
         if (!items.length) {
           var empty = el('div', '', L('还没有插件，点击「新建插件」开始。', '還沒有插件，點擊「新建插件」開始。', 'No plugins yet. Click "New plugin".'));
           empty.style.cssText = 'color:var(--app-muted-text,#8b98a5);font-size:12px;padding:10px;';
@@ -669,7 +831,7 @@
         }
         items.forEach(function (p) {
           var row = el('div');
-          row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:7px 10px;border-bottom:1px solid var(--app-border,#333);';
+          row.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--app-border,#333);';
           var cb = el('input');
           cb.type = 'checkbox';
           cb.checked = !!p.enabled;
@@ -710,8 +872,15 @@
           var edit = el('button', 'el-button el-button--small');
           edit.textContent = L('编辑代码', '編輯程式碼', 'Edit');
           edit.addEventListener('click', function () {
-            doCommand('插件源码', { Id: p.id }).then(function (code) { openEditor(p, code); });
+            Promise.all([doCommand('插件源码', { Id: p.id }), doCommand('插件清單', { Id: p.id })]).then(function (result) {
+              openEditor(p, result[0], result[1] && result[1].ui ? result[1].ui : null);
+            });
           });
+          var uiBtn = el('button', 'el-button el-button--small');
+          uiBtn.textContent = L('開啟介面', '開啟介面', 'Open UI');
+          uiBtn.disabled = !p.hasUI || !p.enabled;
+          uiBtn.title = !p.hasUI ? L('此插件沒有自訂介面', '此插件沒有自訂介面', 'This plugin has no custom UI') : (!p.enabled ? L('請先啟用插件', '請先啟用插件', 'Enable the plugin first') : '');
+          uiBtn.addEventListener('click', function () { openPluginUI(p); });
           var del = el('button', 'el-button el-button--small');
           del.textContent = L('删除', '刪除', 'Delete');
           del.addEventListener('click', function () {
@@ -721,7 +890,7 @@
               status.textContent = L('已删除', '已刪除', 'Deleted');
             });
           });
-          row.appendChild(cb); row.appendChild(main); row.appendChild(edit); row.appendChild(del);
+          row.appendChild(cb); row.appendChild(main); row.appendChild(uiBtn); row.appendChild(edit); row.appendChild(del);
           listBox.appendChild(row);
         });
       }).catch(function (e) {
@@ -744,10 +913,10 @@
       });
     }
 
-    newBtn.addEventListener('click', function () { openEditor(null, pluginTemplate()); });
+    newBtn.addEventListener('click', function () { openEditor(null, pluginTemplate(), null); });
     refreshBtn.addEventListener('click', render);
     render();
-    return collapseItem('M4 7h16M4 12h16M4 17h10M18 15l3 3-3 3', L('解碼與編碼', '解碼與編碼', 'Decode & Encode'), null, panel, false);
+    return collapseItem('M4 7h16M4 12h16M4 17h10M18 15l3 3-3 3', L('插件功能', '插件功能', 'Plugin Features'), null, panel, false);
   }
 
   function pluginTemplate() {
@@ -789,7 +958,7 @@
     langItem.id = 'sn-lang-item';
     var mcpItem = buildMcpItem();
     mcpItem.id = 'sn-mcp-item';
-    var codecItem = buildCodecItem();
+    var codecItem = buildPluginFeaturesItem();
     codecItem.id = 'sn-codec-item';
     var themeItem = buildThemeItem();
     themeItem.id = 'sn-theme-item';

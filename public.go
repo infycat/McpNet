@@ -282,8 +282,61 @@ func event(command string, args *JSON.SyJson) any {
 		return map[string]any{"key": loadThemeSettings().Key}
 	case "插件列表":
 		return pluginInfo()
+	case "導入插件":
+		importType := strings.ToLower(args.GetData("Type"))
+		defaultDirectory, _ := CommAnd.GetDesktopPath()
+		var selected string
+		var dialogErr error
+		if importType == "folder" {
+			selected, dialogErr = runtime.OpenDirectoryDialog(app.ctx, runtime.OpenDialogOptions{
+				DefaultDirectory: defaultDirectory,
+				Title:            "選擇插件資料夾（需包含 main.go 和一個 JSON 清單）",
+			})
+		} else if importType == "zip" {
+			selected, dialogErr = runtime.OpenFileDialog(app.ctx, runtime.OpenDialogOptions{
+				DefaultDirectory: defaultDirectory,
+				Title:            "選擇插件 ZIP",
+				Filters: []runtime.FileFilter{{
+					DisplayName: "ZIP 插件包 (*.zip)",
+					Pattern:     "*.zip",
+				}},
+			})
+		} else {
+			return map[string]any{"error": "不支援的插件匯入方式"}
+		}
+		if dialogErr != nil {
+			return map[string]any{"error": "開啟插件選擇視窗失敗：" + dialogErr.Error()}
+		}
+		if selected == "" {
+			return map[string]any{"cancelled": true}
+		}
+		if importType == "folder" {
+			dialogErr = importPluginFromFolder(selected)
+		} else {
+			dialogErr = importPluginFromZip(selected)
+		}
+		if dialogErr != nil {
+			return map[string]any{"error": dialogErr.Error()}
+		}
+		info := pluginInfo()
+		info["imported"] = true
+		return info
 	case "插件源码":
 		return pluginSourceOf(args.GetData("Id"))
+	case "插件清單":
+		return pluginManifestOf(args.GetData("Id"))
+	case "插件UI":
+		html, err := pluginUIHTML(args.GetData("Id"))
+		if err != nil {
+			return map[string]any{"error": err.Error()}
+		}
+		return map[string]any{"html": html}
+	case "插件界面動作":
+		result, err := runPluginUIAction(args.GetData("Id"), args.GetData("Action"), args.GetData("Payload"))
+		if err != nil {
+			return map[string]any{"error": err.Error()}
+		}
+		return map[string]any{"ok": true, "result": result}
 	case "设置插件状态":
 		if err := setPluginEnabled(args.GetData("Id"), args.GetData("Enabled") == "true"); err != nil {
 			return map[string]any{"error": err.Error()}
