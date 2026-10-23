@@ -307,7 +307,7 @@ func (s *mcpServer) start() error {
 	mux.HandleFunc("/mcp", s.handleMCP)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = fmt.Fprintf(w, `{"ok":true,"name":"mcpnet","version":"1.2.1","port":%d}`, defaultMCPPort)
+		_, _ = fmt.Fprintf(w, `{"ok":true,"name":"mcpnet","version":"%s","port":%d}`, applicationVersion, defaultMCPPort)
 	})
 	s.srv = &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second}
 	s.running = true
@@ -490,7 +490,7 @@ func (s *mcpServer) handleOne(raw json.RawMessage) (any, bool) {
 			},
 			"serverInfo": map[string]any{
 				"name":    "mcpnet",
-				"version": "1.2.1",
+				"version": applicationVersion,
 			},
 		}), false
 	case "notifications/initialized", "notifications/cancelled":
@@ -649,7 +649,7 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 			"mcp":              mcpStatus,
 		}, nil
 	case "mcpnet_start_listener":
-		if !s.confirmUser("McpNet MCP request", "AI 客戶端要求啟動流量監聽，可能檢視經過 McpNet 的流量。允許？\n\nAn AI client wants to start traffic monitoring. This may inspect traffic that passes through McpNet. Allow?") {
+		if !s.authorize("settings", "McpNet MCP request", "AI 客戶端要求啟動流量監聽，可能檢視經過 McpNet 的流量。允許？\n\nAn AI client wants to start traffic monitoring. This may inspect traffic that passes through McpNet. Allow?") {
 			return nil, fmt.Errorf("user denied starting traffic monitoring")
 		}
 		if err := s.app.startListener(); err != nil {
@@ -658,7 +658,7 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 		running, proxy := s.app.listenerStatus()
 		return map[string]any{"listener_running": running, "system_proxy": proxy}, nil
 	case "mcpnet_stop_listener":
-		if !s.confirmUser("McpNet MCP request", "AI 客戶端要求停止流量監聽並清除系統代理。允許？\n\nAn AI client wants to stop traffic monitoring and clear the system proxy. Allow?") {
+		if !s.authorize("settings", "McpNet MCP request", "AI 客戶端要求停止流量監聽並清除系統代理。允許？\n\nAn AI client wants to stop traffic monitoring and clear the system proxy. Allow?") {
 			return nil, fmt.Errorf("user denied stopping traffic monitoring")
 		}
 		s.app.stopListener()
@@ -670,7 +670,7 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 		if enable {
 			action = "啟用 / enable"
 		}
-		if !s.confirmUser("McpNet MCP request", fmt.Sprintf("AI 客戶端要求%s Windows 系統代理，會改變系統流量路由。允許？\n\nAn AI client wants to %s the Windows system proxy. This changes system traffic routing. Allow?", action, map[bool]string{true: "enable", false: "disable"}[enable])) {
+		if !s.authorize("settings", "McpNet MCP request", fmt.Sprintf("AI 客戶端要求%s Windows 系統代理，會改變系統流量路由。允許？\n\nAn AI client wants to %s the Windows system proxy. This changes system traffic routing. Allow?", action, map[bool]string{true: "enable", false: "disable"}[enable])) {
 			return nil, fmt.Errorf("user denied changing the system proxy")
 		}
 		ok := s.app.setSystemProxy(enable)
@@ -681,7 +681,7 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 		if strings.TrimSpace(command) == "" {
 			return nil, fmt.Errorf("command is required")
 		}
-		if !s.confirmUser("McpNet MCP command", fmt.Sprintf("AI 客戶端要求執行 McpNet 命令 %q；命令可能讀取私人資料、執行本機程式碼、傳送網路流量或更改應用程式／系統狀態。允許？\n\nAn AI client requests UI command %q. It may read private data, execute local code, transmit network traffic, or change application/system state. Allow?", command, command)) {
+		if !s.authorize("generic", "McpNet MCP command", fmt.Sprintf("AI 客戶端要求執行 McpNet 命令 %q；命令可能讀取私人資料、執行本機程式碼、傳送網路流量或更改應用程式／系統狀態。允許？\n\nAn AI client requests UI command %q. It may read private data, execute local code, transmit network traffic, or change application/system state. Allow?", command, command)) {
 			return nil, fmt.Errorf("user denied UI command %q", command)
 		}
 		var cmdArgs any
@@ -703,7 +703,7 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 		}
 		return nil, fmt.Errorf("unexpected plugin list response")
 	case "mcpnet_import_plugin":
-		if !s.confirmUser("McpNet plugin import", "AI 客戶端要求安裝 Go 插件程式碼。插件匯入後預設停用，啟用時可讀取／修改本機流量；請先審查來源。允許匯入？\n\nAn AI client wants to install Go plugin code. Imports are disabled by default but can access local traffic when enabled. Review the source before enabling. Allow import?") {
+		if !s.authorize("plugin_code", "McpNet plugin import", "AI 客戶端要求安裝 Go 插件程式碼。插件匯入後預設停用，啟用時可讀取／修改本機流量；請先審查來源。允許匯入？\n\nAn AI client wants to install Go plugin code. Imports are disabled by default but can access local traffic when enabled. Review the source before enabling. Allow import?") {
 			return nil, fmt.Errorf("user denied plugin import")
 		}
 		if zipData, _ := args["zip_base64"].(string); zipData != "" {
@@ -721,7 +721,7 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 		if strings.TrimSpace(id) == "" {
 			return nil, fmt.Errorf("plugin_id is required")
 		}
-		if enabled && !s.confirmUser("McpNet enable plugin", fmt.Sprintf("AI 客戶端要求啟用插件 %q。Go 程式碼會在本機執行，可能檢視或修改流量；請確認你信任此插件。允許啟用？\n\nAn AI client wants to enable plugin %q. Go code runs locally and may inspect or modify traffic. Review and trust this plugin before allowing. Enable?", id, id)) {
+		if enabled && !s.authorize("plugin_code", "McpNet enable plugin", fmt.Sprintf("AI 客戶端要求啟用插件 %q。Go 程式碼會在本機執行，可能檢視或修改流量；請確認你信任此插件。允許啟用？\n\nAn AI client wants to enable plugin %q. Go code runs locally and may inspect or modify traffic. Review and trust this plugin before allowing. Enable?", id, id)) {
 			return nil, fmt.Errorf("user denied enabling plugin %q", id)
 		}
 		return s.doUICommand("设置插件状态", map[string]any{"Id": id, "Enabled": fmt.Sprint(enabled)})
@@ -743,7 +743,7 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 		if direction != "Server" && direction != "Client" {
 			return nil, fmt.Errorf("direction must be Server or Client")
 		}
-		if !s.confirmUser("McpNet send packet", fmt.Sprintf("AI 客戶端要求透過捕獲 %d 的既有 %s 連線，向%s發送 %d bytes。資料會傳給已連線的對端。允許？\n\nAn AI client wants to send %d bytes via %s through capture %d toward the %s. This transmits data to the connected peer. Allow?", id, protocol, direction, len(decoded), len(decoded), protocol, id, direction)) {
+		if !s.authorize("network_write", "McpNet send packet", fmt.Sprintf("AI 客戶端要求透過捕獲 %d 的既有 %s 連線，向%s發送 %d bytes。資料會傳給已連線的對端。允許？\n\nAn AI client wants to send %d bytes via %s through capture %d toward the %s. This transmits data to the connected peer. Allow?", id, protocol, direction, len(decoded), len(decoded), protocol, id, direction)) {
 			return nil, fmt.Errorf("user denied packet send")
 		}
 		encodedInput := base64.StdEncoding.EncodeToString([]byte(data))
@@ -771,13 +771,13 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 		if !strings.EqualFold(capture.Protocol, "HTTP") {
 			return nil, fmt.Errorf("HTTP replay is only available for HTTP/HTTPS captures; use mcpnet_send_session_data for existing socket sessions")
 		}
-		if !s.confirmUser("McpNet replay request", fmt.Sprintf("AI 客戶端要求重播捕獲請求 %d（%s %s，模式 %d）。這會向原始目標送出新的網路請求。允許？\n\nAn AI client wants to replay capture %d (%s %s, mode %d). This sends a new network request to the original destination. Allow?", id, capture.Method, redactCaptureURL(capture.URL), mode, id, capture.Method, redactCaptureURL(capture.URL), mode)) {
+		if !s.authorize("network_write", "McpNet replay request", fmt.Sprintf("AI 客戶端要求重播捕獲請求 %d（%s %s，模式 %d）。這會向原始目標送出新的網路請求。允許？\n\nAn AI client wants to replay capture %d (%s %s, mode %d). This sends a new network request to the original destination. Allow?", id, capture.Method, redactCaptureURL(capture.URL), mode, id, capture.Method, redactCaptureURL(capture.URL), mode)) {
 			return nil, fmt.Errorf("user denied request replay")
 		}
 		return s.doUICommand("重发请求", map[string]any{"Data": []int{id}, "Mode": mode})
 	case "mcpnet_help":
 		return map[string]any{
-			"usage": "Use named MCP tools for captures, plugins, listener/proxy control, session sends, and HTTP request replay. Use mcpnet_command for other UI commands; it always requires direct user confirmation.",
+			"usage": "Use named MCP tools for captures, plugins, listener/proxy control, session sends, and HTTP request replay. The local MCP access policy can require confirmation, grant selected categories, or grant unrestricted access. Use mcpnet_command for other UI commands; it always requires direct user confirmation unless unrestricted access is enabled.",
 			"examples": []string{
 				"启动监听", "停止监听", "监听状态", "设置IE代理",
 				"插件列表", "導入插件ZIP", "设置插件状态", "重发请求",
@@ -786,7 +786,7 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 			"capture_tools": []string{"mcpnet_list_captures", "mcpnet_get_capture", "mcpnet_get_messages"},
 			"plugin_tools":  []string{"mcpnet_list_plugins", "mcpnet_import_plugin", "mcpnet_set_plugin_enabled"},
 			"send_tools":    []string{"mcpnet_send_session_data", "mcpnet_replay_capture"},
-			"note":          "Capture metadata omits private URL components, client IPs, and process IDs. Headers/payloads require include_body=true and a direct user approval dialog. Sends, replay, plugin installation/enabling, listener/proxy changes, and generic UI commands require user approval.",
+			"note":          "Capture metadata omits private URL components, client IPs, and process IDs. Headers/payloads require include_body=true and permission under the local MCP access policy. Sends, replay, plugin installation/enabling, and listener/proxy changes use their respective permission categories. Generic UI commands always require direct user confirmation unless unrestricted access is enabled.",
 		}, nil
 	case "mcpnet_list_captures":
 		limit := argInt(args, "limit", 50)
@@ -823,7 +823,7 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 		}
 		out := captureMetadata(c)
 		if argBool(args, "include_body") {
-			if !s.confirmUser("McpNet private capture data", fmt.Sprintf("AI 客戶端要求讀取捕獲 %d 的完整 URL、IP/PID、標頭與請求／回應本文；可能含憑證或個人資料。是否分享？\n\nAn AI client requests the full URL, IP/PID, headers, and request/response bodies for capture %d. This may contain credentials or personal information. Share?", id, id)) {
+			if !s.authorize("private_read", "McpNet private capture data", fmt.Sprintf("AI 客戶端要求讀取捕獲 %d 的完整 URL、IP/PID、標頭與請求／回應本文；可能含憑證或個人資料。是否分享？\n\nAn AI client requests the full URL, IP/PID, headers, and request/response bodies for capture %d. This may contain credentials or personal information. Share?", id, id)) {
 				return nil, fmt.Errorf("user denied access to private capture data")
 			}
 			out["request_headers"] = c.RequestHead
@@ -859,7 +859,7 @@ func (s *mcpServer) callTool(name string, args map[string]any) (any, error) {
 			limit = 200
 		}
 		includeBody := argBool(args, "include_body")
-		if includeBody && !s.confirmUser("McpNet private capture data", fmt.Sprintf("AI 客戶端要求讀取捕獲 %d 的第 %d 則訊息本文；可能含憑證或個人資料。是否分享？\n\nAn AI client requests message %d in capture %d. Its payload may contain credentials or personal information. Share?", id, offset, offset, id)) {
+		if includeBody && !s.authorize("private_read", "McpNet private capture data", fmt.Sprintf("AI 客戶端要求讀取捕獲 %d 的第 %d 則訊息本文；可能含憑證或個人資料。是否分享？\n\nAn AI client requests message %d in capture %d. Its payload may contain credentials or personal information. Share?", id, offset, offset, id)) {
 			return nil, fmt.Errorf("user denied access to private capture data")
 		}
 		if includeBody && limit > 1 {
@@ -926,6 +926,13 @@ func (s *mcpServer) confirmUser(title, message string) bool {
 		CancelButton:  "No",
 	})
 	return err == nil && affirmativeDialogAnswer(answer)
+}
+
+func (s *mcpServer) authorize(category, title, message string) bool {
+	if loadMCPAccessSettings().permits(category) {
+		return true
+	}
+	return s.confirmUser(title, message)
 }
 
 func mcpTools() []mcpTool {

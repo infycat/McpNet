@@ -1,6 +1,26 @@
 # Release Notes / 版本紀錄
 
-Current stable release / 目前正式版本：**v1.2.1**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+Current stable release / 目前正式版本：**v1.2.2**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+
+## v1.2.2 — 2026-10-24 — MCP Permission Profiles and Live Plugins / MCP 權限設定與插件即時更新
+
+### 繁體中文
+
+- 插件功能清單高度增加，並在面板展開期間即時檢查插件變更；透過 MCP 導入或管理插件後，約 1.5 秒內更新，不必重啟程式。
+- MCP 新增三種本機權限模式：逐次詢問（預設）、部分允許與完全允許。部分允許可分別授權讀取完整封包資料、變更設定／監聽代理、導入或啟用插件程式碼、發送或重播網路資料。
+- 完全允許會略過所有 MCP 操作確認，包括私密封包資料讀取與網路／插件操作；只連接可信任的 MCP 客戶端。權限設定保存在本機，原有設定預設仍是逐次詢問。
+- MCP 健康檢查與伺服器資訊改為使用同一個應用程式版本來源。
+
+### English
+
+- Enlarged the plugin list and added live change detection while the panel is open. Plugins imported or managed through MCP appear within about 1.5 seconds without restarting the app.
+- Added three local MCP permission modes: ask per operation (default), custom/partial grants, and unrestricted access. Partial grants independently control full capture-data reads, settings/capture/proxy controls, plugin import or execution, and network sends/replays.
+- Unrestricted access skips all MCP confirmations, including private capture reads and network/plugin actions. Connect trusted MCP clients only. Permission settings are stored locally, and existing installations remain in ask-per-operation mode by default.
+- MCP health and server information now use the application's shared version value.
+
+- **Platform / 平台:** Windows x64
+- **File / 檔案:** `McpNet-v1.2.2-windows-x64.exe`
+- **Release / 發布:** [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.2.2)
 
 ## v1.2.1 — 2026-10-24 — MCP Integration and Privacy / MCP 整合與隱私
 

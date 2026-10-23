@@ -8,9 +8,9 @@
 
 | 最新穩定版 | 平台 | 直接下載 | 全部版本 |
 |---|---|---|---|
-| **v1.2.1** · MCP 工具擴充、操作確認與隱私保護 | Windows x64 | [下載 McpNet-v1.2.1-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
+| **v1.2.2** · MCP 權限分級、插件即時更新 | Windows x64 | [下載 McpNet-v1.2.2-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.2/McpNet-v1.2.2-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
 
-[v1.2.1 更新內容與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.1)
+[v1.2.2 更新內容與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.2)
 
 下載成品請使用上表的 EXE 連結；GitHub 頁面上的 **Source code ZIP/TAR.GZ 是原始碼，不是安裝程式**。首次使用前請查看下方的系統需求及安全提醒。
 
@@ -161,16 +161,17 @@ flowchart TB
 | UDP | 收送事件與插件 hook | 擷取可能需要驅動、程序設定或代理 |
 | MCP | JSON-RPC、工具呼叫、SSE、健康檢查 | 預設僅綁定 `127.0.0.1:2026` |
 
-MCP 端點：`http://127.0.0.1:2026/mcp`；健康檢查：`http://127.0.0.1:2026/health`。支援 `initialize`、`ping`、`tools/list`、`tools/call`，提供封包清單／詳情、插件清單／導入／啟用，以及狀態、監聽、代理、既有 WebSocket/TCP/UDP 連線發送和通用 UI 命令。AI 可透過 `mcpnet_import_plugin` 導入 `main.go` 與 JSON（ZIP 或分開提供），再以 `mcpnet_set_plugin_enabled` 啟用；Go 插件會在本機執行，因此啟用必須由使用者在確認對話框中批准。封包本文預設不回傳；即使 AI 傳入 `include_body=true`，仍會先彈出使用者同意視窗。發送封包、變更監聽／系統代理及通用 UI 命令也需逐次批准。URL 查詢值、使用者資訊與片段會遮蔽，每段本文最多 64 KiB。服務只綁定 `127.0.0.1`，但本機其他程式也可能連線；請只連接信任的 MCP 客戶端。`mcpnet_send_session_data` 只能透過已存在的 WebSocket/TCP/UDP 會話發送，HTTP 請求使用通用 UI 命令執行重發；不會建立任意新連線。
+MCP 端點：`http://127.0.0.1:2026/mcp`；健康檢查：`http://127.0.0.1:2026/health`。支援 `initialize`、`ping`、`tools/list`、`tools/call`，提供封包清單／詳情、插件清單／導入／啟用，以及狀態、監聽、代理、既有 WebSocket/TCP/UDP 連線發送和通用 UI 命令。AI 可透過 `mcpnet_import_plugin` 導入 `main.go` 與 JSON（ZIP 或分開提供），再以 `mcpnet_set_plugin_enabled` 啟用；Go 插件會在本機執行。MCP 權限預設逐次詢問，也可在程式設定中選擇部分授權（私密封包讀取、設定／監聽代理、插件程式碼、網路發送各自控制）或完全允許；完全允許會略過所有操作確認，請只連接信任的 MCP 客戶端。URL 查詢值、使用者資訊與片段預設遮蔽，每段本文最多 64 KiB。服務只綁定 `127.0.0.1`，但本機其他程式也可能連線。`mcpnet_send_session_data` 只能透過已存在的 WebSocket/TCP/UDP 會話發送，HTTP 請求使用通用 UI 命令執行重發；不會建立任意新連線。
 
 HTTP(S) 捕獲可使用 `mcpnet_replay_capture` 重播到原始目標，每次都會先要求你確認；WebSocket/TCP/UDP 則使用 `mcpnet_send_session_data` 經既有連線發送。
 
 ## 版本與下載
 
-目前正式下載版本為 v1.2.1；v1.2.0 及更早版本保留為舊版。v1.2.1 擴充 MCP 工具，讓 AI 客戶端在使用者逐次確認後操作插件、封包發送／重播、監聽與系統代理；捕獲本文等隱私資料需明確同意才提供。v1.2.0 將插件擴充提升為產品核心方向：以開源方式提供插件開發與分享能力。每次啟動日誌位於 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup_*.log`，最近 50 份會保留。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
+目前正式下載版本為 v1.2.2；舊版仍保留。v1.2.2 新增逐次詢問、自訂分類授權與完全允許三種 MCP 權限模式，並讓插件清單在面板打開時即時更新；完全允許會略過包含私密資料與網路操作在內的 MCP 確認，請謹慎使用。v1.2.1 擴充 MCP 工具與隱私遮蔽；v1.2.0 將插件擴充提升為產品核心方向。每次啟動日誌位於 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup_*.log`，最近 50 份會保留。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
 
 | 版本 | 日期 | 狀態 | 平台 | 成品下載 | 發布資訊 |
 |---|---|---|---|---|---|
+| **v1.2.2** | 2026-10-24 | MCP 權限分級、插件即時更新 | Windows x64 | [McpNet-v1.2.2-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.2/McpNet-v1.2.2-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.2) |
 | **v1.2.1** | 2026-10-24 | MCP 工具擴充、操作確認與隱私遮蔽 | Windows x64 | [McpNet-v1.2.1-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.1) |
 | **v1.2.0** | 2026-10-23 | 大更新：開源插件平台、社群匯入、Go hook 與自訂插件 UI | Windows x64 | [McpNet-v1.2.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.0) |
 | **v1.1.4** | 2026-10-23 | 插件匯入、Go hook 封包處理、自訂 HTML/JavaScript 介面 | Windows x64 | [McpNet-v1.1.4-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.4/McpNet-v1.1.4-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.4) |
@@ -242,9 +243,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | 最新稳定版 | 平台 | 直接下载 | 全部版本 |
 |---|---|---|---|
-| **v1.2.1** · MCP 工具扩展、操作确认与隐私保护 | Windows x64 | [下载 McpNet-v1.2.1-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
+| **v1.2.2** · MCP 权限分级、插件实时更新 | Windows x64 | [下载 McpNet-v1.2.2-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.2/McpNet-v1.2.2-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
 
-[v1.2.1 更新内容与 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.1)
+[v1.2.2 更新内容与 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.2)
 
 McpNet 是以开源和可扩展为核心的 Windows 网络分析工具，由 Go/Wails 后端、Vue 3 界面和 McpNet 核心组成。除 HTTP(S)、WebSocket、TCP、UDP 流量分析、规则和本机 MCP 外，用户还可通过 Go 插件自行打造协议解码、封包条件、数据修改和小型工具界面，不必等待核心内置每项功能。启动应用不会自动开启全系统流量拦截；监听与系统代理由用户分别控制。
 
@@ -367,7 +368,7 @@ mindmap
 | UDP | 收发事件和插件 hook | 捕获可能需要驱动、进程配置或代理 |
 | MCP | JSON-RPC、工具调用、SSE、健康检查 | 默认仅绑定 `127.0.0.1:2026` |
 
-MCP 地址为 `http://127.0.0.1:2026/mcp`，健康检查为 `/health`。工具可查看捕获元数据、管理插件、操作界面命令，并通过现有 WebSocket/TCP/UDP 会话发送数据。AI 可用 `mcpnet_import_plugin` 导入 `main.go` 与 JSON（ZIP 或分开提供），再调用 `mcpnet_set_plugin_enabled`；插件会在本机运行，启用必须由用户在确认框批准。请求头和数据体默认不返回；即使传入 `include_body=true`，也会先询问用户。发送数据、改变监听／系统代理和通用 UI 命令逐次要求用户确认。URL 查询值、用户信息和片段会遮蔽，每段数据体最多 64 KiB。服务只绑定 `127.0.0.1`，本机其他程序仍可连接；仅连接可信 MCP 客户端。`mcpnet_send_session_data` 使用已有 WebSocket/TCP/UDP 会话；HTTP 重发通过通用 UI 命令，不会新建任意连接。
+MCP 地址为 `http://127.0.0.1:2026/mcp`，健康检查为 `/health`。工具可查看捕获元数据、管理插件、操作界面命令，并通过现有 WebSocket/TCP/UDP 会话发送数据。AI 可用 `mcpnet_import_plugin` 导入 `main.go` 与 JSON（ZIP 或分开提供），再调用 `mcpnet_set_plugin_enabled`；插件会在本机运行。MCP 权限默认逐次询问，也可选择部分授权（完整封包读取、设置／监听代理、插件代码、网络写入分别控制）或完全允许。完全允许会略过所有确认，只连接可信客户端。URL 查询值、用户信息和片段会遮蔽，每段数据体最多 64 KiB。服务只绑定 `127.0.0.1`，本机其他程序仍可连接。`mcpnet_send_session_data` 使用已有 WebSocket/TCP/UDP 会话；HTTP 重发通过通用 UI 命令，不会新建任意连接。
 
 HTTP(S) 捕获可用 `mcpnet_replay_capture` 重发到原始目标，每次都会先询问用户；WebSocket/TCP/UDP 则通过 `mcpnet_send_session_data` 使用现有连接发送。
 
@@ -375,6 +376,7 @@ HTTP(S) 捕获可用 `mcpnet_replay_capture` 重发到原始目标，每次都�
 
 | 版本 | 日期 | 状态 | 平台 | 成品下载 | 发布信息 |
 |---|---|---|---|---|---|
+| **v1.2.2** | 2026-10-24 | MCP 权限分级、插件实时更新 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.2.2/McpNet-v1.2.2-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.2.2) |
 | **v1.2.1** | 2026-10-24 | MCP 工具扩展、操作确认与隐私遮蔽 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.2.1) |
 | **v1.2.0** | 2026-10-23 | 大更新：开源插件平台、社区导入、Go hook 与自定义插件 UI | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.2.0) |
 | **v1.1.4** | 2026-10-23 | 插件导入、Go hook 封包处理、自定义 HTML/JavaScript 界面 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.4/McpNet-v1.1.4-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.4) |
@@ -384,7 +386,7 @@ HTTP(S) 捕获可用 `mcpnet_replay_capture` 重发到原始目标，每次都�
 | **v1.1.0** | 2026-10-20 | 第二版；调整全屏设置窗口边界、补充功能截图 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 | **v1.0.0** | 2026-10-20 | 首个正式版本；修复主题底板与全屏设置窗口、更新图标与作者页 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-当前正式下载版本为 v1.2.1，v1.2.0 及更早版本保留为历史版本。v1.2.1 扩展 MCP 工具，让 AI 客户端在用户逐次确认后操作插件、发送／重播数据包、控制监听与系统代理；捕获正文等隐私数据需明确同意才提供。v1.2.0 是插件功能的大更新：以开源为核心，让用户和社区自行开发、分享插件，扩展协议识别、灵活条件判断、封包处理及自定义 UI。插件默认停用；Go 代码仍在本机运行，请只启用可信来源。每次启动会在 `%LOCALAPPDATA%\McpNet_new\logs\` 写入带时间和 PID 的诊断日志，保留最近 50 份；无法写入时回退到用户配置目录或 `%TEMP%`。每次发布 GitHub Release 后，GitHub Actions 会自动构建 Windows x64 EXE、上传成品并补充文件大小与 SHA-256。GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。
+当前正式下载版本为 v1.2.2，旧版仍保留。v1.2.2 新增逐次确认、自定义分类授权和完全允许三种 MCP 权限模式，并在插件面板打开时实时更新插件列表；完全允许会跳过包括隐私数据和网络操作在内的 MCP 确认，请谨慎使用。v1.2.1 扩展了 MCP 工具和隐私遮蔽；v1.2.0 是插件功能的大更新。插件代码仍在本机运行，只启用可信来源。每次启动会在 `%LOCALAPPDATA%\McpNet_new\logs\` 写入带时间和 PID 的诊断日志，保留最近 50 份；无法写入时回退到用户配置目录或 `%TEMP%`。每次发布 GitHub Release 后，GitHub Actions 会自动构建 Windows x64 EXE、上传成品并补充文件大小与 SHA-256。GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。
 
 v1.1.0 文件大小：91,961,856 bytes；SHA-256：`6939D6EB999FE8869E0C89B987FE22C5EBC01446874429746B8D03F57F2E93CD`。v1.0.0 SHA-256：`BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`。
 
@@ -417,9 +419,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | Latest stable | Platform | Direct download | All versions |
 |---|---|---|---|
-| **v1.2.1** · Expanded MCP tools with consent and privacy safeguards | Windows x64 | [Download McpNet-v1.2.1-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe) | [All releases](https://github.com/infycat/McpNet/releases) |
+| **v1.2.2** · MCP permission profiles and live plugin updates | Windows x64 | [Download McpNet-v1.2.2-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.2/McpNet-v1.2.2-windows-x64.exe) | [All releases](https://github.com/infycat/McpNet/releases) |
 
-[v1.2.1 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.1)
+[v1.2.2 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.2)
 
 McpNet is an open-source, extensible Windows network analysis tool built with a Go/Wails backend, Vue 3 UI, and the McpNet core. Alongside HTTP(S), WebSocket, TCP, and UDP analysis, rules, and local MCP, users can build Go plugins for protocol decoding, packet conditions, data modification, and small custom tools—without waiting for every capability to be built into the core. Launching the app does **not** enable system-wide interception; capture and system-proxy controls are separate.
 
@@ -542,7 +544,7 @@ mindmap
 | UDP | Send/receive events and plugin hooks | Capture may require a driver, process setup, or proxy |
 | MCP | JSON-RPC, tools, SSE, health check | Bound to `127.0.0.1:2026` by default |
 
-MCP endpoints: `http://127.0.0.1:2026/mcp` and `/health`. Tools expose capture metadata/details, plugin listing/import/enabling, status, listener/proxy control, existing-session WebSocket/TCP/UDP sends, and a compatibility command for other UI features. AI can import `main.go` plus JSON (as a ZIP or separate fields) with `mcpnet_import_plugin`; enabling a plugin runs local Go code and requires direct user approval. Headers and bodies are omitted by default; even with `include_body=true`, a user confirmation dialog appears before private capture data is returned. Packet sends, listener/system-proxy changes, and generic UI commands also require per-action user approval. URL query values, user info, and fragments are redacted, and each body is capped at 64 KiB. The service binds only to `127.0.0.1`, but other local processes can connect, so connect trusted MCP clients only. `mcpnet_send_session_data` sends only through an existing WebSocket/TCP/UDP session; HTTP replay uses the generic UI command and no arbitrary new connection is created.
+MCP endpoints: `http://127.0.0.1:2026/mcp` and `/health`. Tools expose capture metadata/details, plugin listing/import/enabling, status, listener/proxy control, existing-session WebSocket/TCP/UDP sends, and a compatibility command for other UI features. MCP permissions default to asking per operation; users may instead grant selected categories (full capture reads, settings/capture/proxy controls, plugin code, network writes) or unrestricted access. Unrestricted access skips all confirmations, so connect trusted clients only. URL query values, user info, and fragments are redacted, and each body is capped at 64 KiB. The service binds only to `127.0.0.1`, but other local processes can connect. `mcpnet_send_session_data` sends only through an existing WebSocket/TCP/UDP session; HTTP replay uses the generic UI command and no arbitrary new connection is created.
 
 HTTP(S) captures can be replayed to their original destination with `mcpnet_replay_capture`, which always asks the user first. WebSocket/TCP/UDP payloads use `mcpnet_send_session_data` over an existing session.
 
@@ -550,6 +552,7 @@ HTTP(S) captures can be replayed to their original destination with `mcpnet_repl
 
 | Version | Date | Status | Platform | Download | Release info |
 |---|---|---|---|---|---|
+| **v1.2.2** | 2026-10-24 | MCP permission profiles and live plugin updates | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.2.2/McpNet-v1.2.2-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.2.2) |
 | **v1.2.1** | 2026-10-24 | Expanded MCP tools with per-action approval and privacy protections | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.2.1) |
 | **v1.2.0** | 2026-10-23 | Major update: open plugin platform, community imports, Go hooks, and custom plugin UI | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.2.0) |
 | **v1.1.4** | 2026-10-23 | Plugin imports, flexible Go hooks, and custom HTML/JavaScript UI | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.4/McpNet-v1.1.4-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.4) |
@@ -559,7 +562,7 @@ HTTP(S) captures can be replayed to their original destination with `mcpnet_repl
 | **v1.1.0** | 2026-10-20 | Second release; maximized settings bounds fixed and feature screenshots added | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 | **v1.0.0** | 2026-10-20 | Initial stable release; themed panels, maximized settings, icon, and author page updated | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-The current official download is v1.2.1, with v1.2.0 and earlier releases retained as history. This update expands MCP tools for capture inspection, plugin workflows, packet sending/replay, and capture/proxy controls, with per-operation approval for sensitive actions. URL secrets are redacted by default; payloads and other private fields require explicit consent. Plugin code still runs locally, so enable trusted code only. Each launch writes a timestamped diagnostic log under `%LOCALAPPDATA%\McpNet_new\logs\` (with config-directory and `%TEMP%` fallbacks); the newest 50 are retained. Publishing a GitHub Release triggers GitHub Actions to build and upload the Windows x64 executable and add its file size and SHA-256. GitHub's automatically generated source archives are not executable builds.
+The current official download is v1.2.2, with older releases retained as history. This version adds ask-per-operation, custom category grants, and unrestricted MCP permission modes, and refreshes the plugin list live while its panel is open. Unrestricted access skips MCP confirmations for private data and network/plugin actions, so connect trusted clients only. v1.2.1 expanded MCP tools and privacy protections; v1.2.0 introduced the open plugin platform. Plugin code still runs locally; enable trusted code only. Each launch writes a timestamped diagnostic log under `%LOCALAPPDATA%\McpNet_new\logs\` (with config-directory and `%TEMP%` fallbacks); the newest 50 are retained. Publishing a GitHub Release triggers GitHub Actions to build and upload the Windows x64 executable and add its file size and SHA-256. GitHub's automatically generated source archives are not executable builds.
 
 v1.1.0 file size: 91,961,856 bytes; SHA-256: `6939D6EB999FE8869E0C89B987FE22C5EBC01446874429746B8D03F57F2E93CD`. v1.0.0 SHA-256: `BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`.
 

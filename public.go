@@ -269,6 +269,14 @@ func event(command string, args *JSON.SyJson) any {
 		return map[string]bool{"running": running, "proxy": proxy}
 	case "mcp信息":
 		return app.mcpInfo()
+	case "mcp權限":
+		return app.mcpAccessInfo()
+	case "mcp設定權限":
+		settings, err := app.setMCPAccessSettings(args.GetMap())
+		if err != nil {
+			return map[string]any{"error": err.Error()}
+		}
+		return settings
 	case "mcp设置路径":
 		return app.setMCPPath(args.GetData("Path"))
 	case "mcp重启":

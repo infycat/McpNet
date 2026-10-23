@@ -215,6 +215,99 @@
     note.style.marginBottom = '8px';
     panel.appendChild(note);
 
+    var permissionNote = el('div', '', L(
+      'AI 可透過 MCP 查看封包中繼資料、協助建立／導入插件，並操作既有連線；讀取封包本文、發送資料、啟用插件或更改監聽／系統代理前，程式會逐次詢問你。只連接可信任的 AI 客戶端。',
+      'AI 可透過 MCP 查看封包中繼資料、協助建立／匯入插件，並操作既有連線；讀取封包本文、發送資料、啟用插件或更改監聽／系統代理前，程式會逐次詢問你。只連接可信任的 AI 客戶端。',
+      'AI clients can inspect capture metadata, help create/import plugins, and operate existing sessions through MCP. The app asks you before sharing payloads, sending data, enabling a plugin, or changing capture/proxy settings. Connect trusted AI clients only.'
+    ));
+    permissionNote.style.cssText = 'font-size:12px;line-height:1.6;color:var(--app-muted-text,#aab7c2);margin:0 0 10px;';
+    panel.appendChild(permissionNote);
+
+    var accessBox = el('div');
+    accessBox.style.cssText = 'border:1px solid var(--app-border,#3c3c3c);border-radius:5px;padding:10px 12px;margin:0 0 10px;background:var(--app-surface-raised,#1f1f1f);';
+    var accessTitle = el('div', '', L('MCP 權限', 'MCP 權限', 'MCP access'));
+    accessTitle.style.cssText = 'font-size:13px;font-weight:600;margin-bottom:5px;';
+    var accessHint = el('div', '', L(
+      '預設逐次詢問。可選完全允許，或只允許勾選的類別；設定會保存在本機。完全允許會略過所有 MCP 操作確認，請只連接可信任的 AI 客戶端。',
+      '預設逐次詢問。可選完全允許，或只允許勾選的類別；設定會保存在本機。完全允許會略過所有 MCP 操作確認，請只連接可信任的 AI 客戶端。',
+      'By default, MCP asks before each sensitive action. Choose unrestricted access or grant only selected categories. Settings stay local. Unrestricted access skips all MCP confirmations; connect trusted AI clients only.'
+    ));
+    accessHint.style.cssText = 'font-size:12px;line-height:1.5;color:var(--app-muted-text,#aab7c2);margin-bottom:7px;';
+    accessBox.appendChild(accessTitle);
+    accessBox.appendChild(accessHint);
+    function accessToggle(label) {
+      var wrap = el('label');
+      wrap.style.cssText = 'display:flex;align-items:center;gap:7px;min-height:26px;cursor:pointer;font-size:12px;';
+      var cb = el('input'); cb.type = 'checkbox'; cb.style.accentColor = 'var(--app-accent,#409eff)';
+      wrap.appendChild(cb); wrap.appendChild(el('span', '', label));
+      accessBox.appendChild(wrap);
+      return cb;
+    }
+    var fullAccess = accessToggle(L('完全允許（無限制）', '完全允許（無限制）', 'Unrestricted access'));
+    var partialAccess = accessToggle(L('部分允許（自訂類別）', '部分允許（自訂類別）', 'Partial access (choose categories)'));
+    var accessOptions = el('div');
+    accessOptions.style.cssText = 'margin:2px 0 3px 22px;padding-left:9px;border-left:2px solid var(--app-border,#3c3c3c);';
+    function categoryToggle(label) {
+      var wrap = el('label');
+      wrap.style.cssText = 'display:flex;align-items:center;gap:7px;min-height:25px;cursor:pointer;font-size:12px;';
+      var cb = el('input'); cb.type = 'checkbox'; cb.style.accentColor = 'var(--app-accent,#409eff)';
+      wrap.appendChild(cb); wrap.appendChild(el('span', '', label));
+      accessOptions.appendChild(wrap);
+      return cb;
+    }
+    var allowPrivateRead = categoryToggle(L('讀取完整封包資料（URL、標頭、本文、IP/PID）', '讀取完整封包資料（URL、標頭、本文、IP/PID）', 'Read full capture data (URLs, headers, bodies, IP/PID)'));
+    var allowSettings = categoryToggle(L('修改設定、控制監聽與系統代理', '修改設定、控制監聽與系統代理', 'Change settings and control capture/system proxy'));
+    var allowPluginCode = categoryToggle(L('匯入及啟用插件程式碼（會在本機執行）', '匯入及啟用插件程式碼（會在本機執行）', 'Import and enable plugin code (runs locally)'));
+    var allowNetworkWrites = categoryToggle(L('發送封包或重播請求（會傳送網路資料）', '發送封包或重播請求（會傳送網路資料）', 'Send packets or replay requests (transmits network data)'));
+    accessBox.appendChild(accessOptions);
+    panel.appendChild(accessBox);
+
+    var accessSaveBusy = false;
+    function applyAccessSettings(settings) {
+      settings = settings || {};
+      fullAccess.checked = settings.mode === 'unrestricted';
+      partialAccess.checked = settings.mode === 'custom';
+      accessOptions.style.display = partialAccess.checked ? '' : 'none';
+      allowPrivateRead.checked = !!settings.allow_private_read;
+      allowSettings.checked = !!settings.allow_settings;
+      allowPluginCode.checked = !!settings.allow_plugin_code;
+      allowNetworkWrites.checked = !!settings.allow_network_writes;
+    }
+    function persistAccessSettings() {
+      if (accessSaveBusy) return;
+      if (fullAccess.checked) partialAccess.checked = false;
+      accessOptions.style.display = partialAccess.checked ? '' : 'none';
+      accessSaveBusy = true;
+      doCommand('mcp設定權限', {
+        Mode: fullAccess.checked ? 'unrestricted' : (partialAccess.checked ? 'custom' : 'confirm'),
+        AllowPrivateRead: allowPrivateRead.checked,
+        AllowSettings: allowSettings.checked,
+        AllowPluginCode: allowPluginCode.checked,
+        AllowNetworkWrites: allowNetworkWrites.checked
+      }).then(function (settings) {
+        if (settings && settings.error) throw new Error(settings.error);
+        applyAccessSettings(settings);
+      }).catch(function (error) {
+        err.textContent = String(error && error.message ? error.message : error);
+        err.style.display = 'block';
+      }).then(function () { accessSaveBusy = false; });
+    }
+    fullAccess.addEventListener('change', function () {
+      if (fullAccess.checked) partialAccess.checked = false;
+      persistAccessSettings();
+    });
+    partialAccess.addEventListener('change', function () {
+      if (partialAccess.checked) fullAccess.checked = false;
+      persistAccessSettings();
+    });
+    [allowPrivateRead, allowSettings, allowPluginCode, allowNetworkWrites].forEach(function (cb) {
+      cb.addEventListener('change', function () {
+        if (cb.checked) { partialAccess.checked = true; fullAccess.checked = false; }
+        persistAccessSettings();
+      });
+    });
+    doCommand('mcp權限', null).then(applyAccessSettings).catch(function () {});
+
     var out = textarea();
     out.className += ' sn-mcp-json';
     panel.appendChild(out);
@@ -304,9 +397,13 @@
     ['func OnHTTPResponse() {}', '// 回包到达后'],
     ['func OnWebSocket()    {}', '// WS 帧收发'],
     ['func OnUDP()          {}', '// UDP 数据'],
+    ['func OnPluginAction() {}', '// 內置窗口回調動作'],
     ['', ''],
     ['// ---- 上下文 ----', ''],
     ['mcpnet.Direction() string', '// "in" 接收 / "out" 发送'],
+    ['mcpnet.Action() string', '// UI 動作名稱'],
+    ['mcpnet.Payload() string', '// UI 傳入的 JSON 字串'],
+    ['mcpnet.SetUIResult(s string)', '// 回傳至插件窗口'],
     ['mcpnet.Host() string', '// 主机名'],
     ['mcpnet.Path() string', '// 路径'],
     ['mcpnet.URL() string', '// 完整 URL'],
@@ -318,6 +415,8 @@
     ['mcpnet.SetWireBody(b []byte)', '// 明确要求改写实际发送的数据'],
     ['mcpnet.DisplayBody() []byte', '// 读取仅供界面显示的数据'],
     ['mcpnet.SetDisplayBody(b []byte)', '// 设置界面显示，不改动线上封包'],
+    ['mcpnet.OpenWindow(title, html string) bool', '// Go hook 建立內置插件窗口'],
+    ['mcpnet.OpenExternalURL(url string) bool', '// Go hook 開啟外部 HTTP(S) 頁面'],
     ['', ''],
     ['// ---- 工具 ----', ''],
     ['mcpnet.HexEncode(b []byte) string', ''],
@@ -329,11 +428,11 @@
     ['mcpnet.XXTEADecrypt(b, key []byte) []byte', ''],
     ['mcpnet.Log(s string)', '// 输出日志'],
     ['', ''],
-    ['// ---- 示例：接收时解码，并只更新界面预览 ----', ''],
+    ['// ---- 示例：按你的條件建立窗口 ----', ''],
     ['func OnWebSocket() {', ''],
-    ['    if mcpnet.Direction() == "in" {', ''],
-    ['        // decoded := yourLocalDecoder(mcpnet.Body())', ''],
-    ['        // mcpnet.SetDisplayBody(decoded)', ''],
+    ['    if mcpnet.Direction() == "in" && shouldOpenTool(mcpnet.Body()) {', ''],
+    ['        html := `<button onclick="parent.postMessage({type:\'mcpnet-plugin-action\',action:\'refresh\'},\'*\')">Refresh</button>`', ''],
+    ['        mcpnet.OpenWindow("My plugin tool", html)', ''],
     ['    }', ''],
     ['}', '']
   ].map(function (p) { return p[0] + (p[1] ? '  ' + p[1] : ''); }).join('\n');
@@ -486,25 +585,28 @@
     return collapseItem('M12 3a9 9 0 1 0 0 18 4 4 0 0 0 0-8 4 4 0 0 1 0-8', L('界面主题', '介面主題', 'Theme'), null, panel, false);
   }
 
-  function buildCodecItem() {
+  function buildPluginFeaturesItem() {
     var panel = el('div');
     panel.id = 'sn-plugin-panel';
     panel.style.cssText = 'padding:4px 0 2px;';
 
-    var hint = el('div', '', L('插件保存在本机。启动时读取，首次处理对应流量时编译；勾选后才参与请求/回包处理。',
-      '插件保存在本機。啟動時讀取，首次處理對應流量時編譯；勾選後才參與請求/回包處理。',
-      'Plugins are stored locally, scanned at startup, and compiled on first matching traffic. Enable one to process traffic.'));
+    var hint = el('div', '', L('插件保存在本機。用 Go hooks 自由判斷協議、URL、字串、正則或位元組格式並處理流量；插件程式可呼叫 mcpnet.OpenWindow(title, html) 建立內置工具窗口，或用 mcpnet.OpenExternalURL(url) 開啟外部頁面，不需要客戶端為每個插件新增專用按鈕。Go 程式碼在本機執行，請只啟用可信插件。',
+      '插件保存在本機。用 Go hooks 自由判斷協議、URL、字串、正則或位元組格式並處理流量；插件程式可呼叫 mcpnet.OpenWindow(title, html) 建立內置工具窗口，或用 mcpnet.OpenExternalURL(url) 開啟外部頁面，不需要客戶端為每個插件新增專用按鈕。Go 程式碼在本機執行，請只啟用可信插件。',
+      'Plugins live locally. Go hooks can inspect protocols, URLs, strings, regexps, or byte patterns and process traffic. Plugin code can call mcpnet.OpenWindow(title, html) for an in-app tool window or mcpnet.OpenExternalURL(url) for an external page; the client does not add plugin-specific buttons. Go code runs locally; enable trusted plugins only.'));
     hint.style.cssText = 'color:var(--app-muted-text,#aab7c2);font-size:12px;line-height:1.6;margin:2px 0 8px;';
     panel.appendChild(hint);
 
     var listBox = el('div');
-    listBox.style.cssText = 'border:1px solid var(--app-border,#3c3c3c);border-radius:4px;background:var(--app-surface-raised,#1f1f1f);max-height:150px;overflow:auto;color:var(--app-text,#d4d4d4);';
+    listBox.style.cssText = 'border:1px solid var(--app-border,#3c3c3c);border-radius:4px;background:var(--app-surface-raised,#1f1f1f);max-height:min(52vh,480px);min-height:100px;overflow:auto;color:var(--app-text,#d4d4d4);';
     panel.appendChild(listBox);
 
     var bar = el('div');
-    bar.style.cssText = 'display:flex;align-items:center;gap:8px;margin:10px 0 4px;';
+    bar.style.cssText = 'display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:10px 0 4px;';
     var newBtn = el('button', 'el-button el-button--small el-button--primary');
     newBtn.textContent = L('新建插件', '新建插件', 'New plugin');
+    var importBtn = el('button', 'el-button el-button--small');
+    importBtn.textContent = L('導入插件', '導入插件', 'Import plugin');
+    importBtn.setAttribute('aria-haspopup', 'dialog');
     var refreshBtn = el('button', 'el-button el-button--small');
     refreshBtn.textContent = L('刷新列表', '刷新清單', 'Refresh');
     refreshBtn.title = L('重新读取本地插件状态', '重新讀取本機插件狀態', 'Reload local plugin status');
@@ -512,8 +614,182 @@
     dirText.style.cssText = 'color:var(--app-muted-text,#7f8c98);font-size:11px;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
     var status = el('span');
     status.style.cssText = 'font-size:12px;color:#aab7c2;';
-    bar.appendChild(newBtn); bar.appendChild(refreshBtn); bar.appendChild(dirText); bar.appendChild(status);
+    bar.appendChild(newBtn); bar.appendChild(importBtn); bar.appendChild(refreshBtn); bar.appendChild(dirText); bar.appendChild(status);
     panel.appendChild(bar);
+
+    // ---- community plugin import chooser ----
+    var importOverlay = el('div');
+    importOverlay.setAttribute('role', 'presentation');
+    importOverlay.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99998;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
+    var importModal = el('div');
+    importModal.setAttribute('role', 'dialog');
+    importModal.setAttribute('aria-modal', 'true');
+    importModal.setAttribute('aria-labelledby', 'sn-plugin-import-title');
+    importModal.style.cssText = 'width:min(480px,96vw);background:var(--app-surface,#1b1b1b);color:var(--app-text,#d4d4d4);border:1px solid var(--app-border,#3c3c3c);border-radius:6px;box-shadow:0 12px 40px rgba(0,0,0,.5);overflow:hidden;';
+    var importTitle = el('div', '', L('導入社群插件', '導入社群插件', 'Import a community plugin'));
+    importTitle.id = 'sn-plugin-import-title';
+    importTitle.style.cssText = 'padding:12px 14px;background:var(--app-header,#202020);border-bottom:1px solid var(--app-border,#333);font-size:14px;font-weight:600;';
+    var importHint = el('div', '', L(
+      '選擇插件 ZIP 或資料夾。格式需包含 main.go 和一個 JSON 清單（建議命名 plugin.json）。導入後預設停用。',
+      '選擇插件 ZIP 或資料夾。格式需包含 main.go 和一個 JSON 清單（建議命名 plugin.json）。導入後預設停用。',
+      'Choose a plugin ZIP or folder containing main.go and one JSON manifest (plugin.json recommended). Imported plugins are disabled by default.'
+    ));
+    importHint.style.cssText = 'padding:12px 14px 4px;font-size:12px;line-height:1.6;color:var(--app-muted-text,#aab7c2);';
+    var importWarning = el('div', '', L(
+      '安全提醒：插件程式會在本機執行，啟用後可能讀取或修改流量。只導入你信任的來源。',
+      '安全提醒：插件程式會在本機執行，啟用後可能讀取或修改流量。只導入你信任的來源。',
+      'Security: plugin code runs locally and may read or modify traffic when enabled. Import code only from sources you trust.'
+    ));
+    importWarning.style.cssText = 'margin:8px 14px;padding:9px 10px;border:1px solid var(--app-border,#5b5140);border-radius:4px;color:var(--app-text,#d4d4d4);background:rgba(230,162,60,.10);font-size:12px;line-height:1.5;';
+    var importActions = el('div');
+    importActions.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:8px 14px 14px;';
+    var importStatus = el('div');
+    importStatus.setAttribute('role', 'status');
+    importStatus.setAttribute('aria-live', 'polite');
+    importStatus.style.cssText = 'padding:0 14px 8px;font-size:12px;overflow-wrap:anywhere;';
+    var importZipBtn = el('button', 'el-button el-button--small el-button--primary');
+    importZipBtn.textContent = L('選擇 ZIP', '選擇 ZIP', 'Choose ZIP');
+    var importFolderBtn = el('button', 'el-button el-button--small');
+    importFolderBtn.textContent = L('選擇資料夾', '選擇資料夾', 'Choose folder');
+    var importCancelBtn = el('button', 'el-button el-button--small');
+    importCancelBtn.textContent = L('取消', '取消', 'Cancel');
+    [importZipBtn, importFolderBtn, importCancelBtn].forEach(function (button) {
+      button.style.minHeight = '36px';
+      importActions.appendChild(button);
+    });
+    importModal.appendChild(importTitle);
+    importModal.appendChild(importHint);
+    importModal.appendChild(importWarning);
+    importModal.appendChild(importStatus);
+    importModal.appendChild(importActions);
+    importOverlay.appendChild(importModal);
+    panel.appendChild(importOverlay);
+
+    // Use WebView file inputs for package selection. This avoids opening the
+    // native Wails dialog from a bound method, which could terminate the app.
+    var zipInput = el('input');
+    zipInput.type = 'file';
+    zipInput.accept = '.zip,application/zip';
+    zipInput.style.cssText = 'display:none;';
+    var folderInput = el('input');
+    folderInput.type = 'file';
+    folderInput.setAttribute('webkitdirectory', '');
+    folderInput.setAttribute('directory', '');
+    folderInput.style.cssText = 'display:none;';
+    panel.appendChild(zipInput);
+    panel.appendChild(folderInput);
+
+    function setImportStatus(message, isError) {
+      importStatus.style.color = isError ? '#f56c6c' : 'var(--app-muted-text,#aab7c2)';
+      importStatus.textContent = message || '';
+    }
+    function setImportBusy(busy) {
+      importZipBtn.disabled = busy;
+      importFolderBtn.disabled = busy;
+      importCancelBtn.disabled = busy;
+    }
+    function submitImport(command, args) {
+      setImportBusy(true);
+      setImportStatus(L('正在驗證並導入插件…', '正在驗證並匯入插件…', 'Validating and importing plugin…'), false);
+      return doCommand(command, args).then(function (info) {
+        if (!info || info.error) throw new Error(info && info.error ? info.error : '插件匯入失敗');
+        state.plugins = info;
+        render(L('插件已導入並保持停用；確認來源可信後再勾選啟用。', '插件已匯入並保持停用；確認來源可信後再勾選啟用。', 'Plugin imported disabled. Verify its source before enabling it.'));
+        setImportStatus(L('導入完成；插件預設停用。', '匯入完成；插件預設停用。', 'Import complete; the plugin is disabled by default.'), false);
+      }).catch(function (error) {
+        setImportStatus(String(error && error.message ? error.message : error), true);
+      }).finally(function () {
+        setImportBusy(false);
+      });
+    }
+    function readText(file) {
+      return new Promise(function (resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function () { resolve(String(reader.result || '')); };
+        reader.onerror = function () { reject(new Error('讀取插件檔案失敗')); };
+        reader.readAsText(file, 'UTF-8');
+      });
+    }
+    function fileAsBase64(file) {
+      return new Promise(function (resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function () {
+          var value = String(reader.result || '');
+          var comma = value.indexOf(',');
+          if (comma < 0) reject(new Error('ZIP 檔案格式無效'));
+          else resolve(value.slice(comma + 1));
+        };
+        reader.onerror = function () { reject(new Error('讀取 ZIP 失敗')); };
+        reader.readAsDataURL(file);
+      });
+    }
+    function handlePickerCancel() {
+      setImportBusy(false);
+      setImportStatus(L('已取消檔案選擇，程式仍在運行。', '已取消檔案選擇，程式仍在執行。', 'Selection cancelled; the application is still running.'), false);
+    }
+    zipInput.addEventListener('cancel', handlePickerCancel);
+    folderInput.addEventListener('cancel', handlePickerCancel);
+    zipInput.addEventListener('change', function () {
+      var file = zipInput.files && zipInput.files[0];
+      zipInput.value = '';
+      if (!file) { handlePickerCancel(); return; }
+      if (file.size > 16 * 1024 * 1024) { setImportStatus(L('ZIP 檔案不可超過 16 MB', 'ZIP 檔案不可超過 16 MB', 'ZIP file must be 16 MB or smaller.'), true); return; }
+      setImportBusy(true);
+      fileAsBase64(file).then(function (Data) {
+        return submitImport('導入插件ZIP', { Data: Data });
+      }).catch(function (error) {
+        setImportStatus(String(error && error.message ? error.message : error), true);
+      }).finally(function () { setImportBusy(false); });
+    });
+    folderInput.addEventListener('change', function () {
+      var files = Array.from(folderInput.files || []);
+      folderInput.value = '';
+      if (!files.length) { handlePickerCancel(); return; }
+      var mainFiles = [];
+      var jsonFiles = [];
+      files.forEach(function (file) {
+        var parts = String(file.webkitRelativePath || file.name).replace(/\\/g, '/').split('/');
+        if (parts.length !== 2) return;
+        if (parts[1] === 'main.go') mainFiles.push(file);
+        else if (/\.json$/i.test(parts[1])) jsonFiles.push(file);
+      });
+      if (mainFiles.length !== 1 || jsonFiles.length !== 1) {
+        setImportStatus(L('所選資料夾根目錄需有一個 main.go 和一個 JSON 清單。', '所選資料夾根目錄需有一個 main.go 和一個 JSON 清單。', 'The selected folder must contain exactly one main.go and one JSON manifest at its root.'), true);
+        return;
+      }
+      if (mainFiles[0].size > 4 * 1024 * 1024 || jsonFiles[0].size > 4 * 1024 * 1024) {
+        setImportStatus(L('插件單一檔案不可超過 4 MB。', '插件單一檔案不可超過 4 MB。', 'Each plugin file must be 4 MB or smaller.'), true);
+        return;
+      }
+      setImportBusy(true);
+      Promise.all([readText(jsonFiles[0]), readText(mainFiles[0])]).then(function (values) {
+        return submitImport('導入插件資料夾', { Manifest: values[0], Source: values[1] });
+      }).catch(function (error) {
+        setImportStatus(String(error && error.message ? error.message : error), true);
+      }).finally(function () { setImportBusy(false); });
+    });
+
+    function closeImportDialog() {
+      importOverlay.style.display = 'none';
+      importBtn.focus();
+    }
+    function beginPluginImport(type) {
+      setImportStatus(L('選擇取消不會關閉程式；請選取 ZIP 或插件資料夾。', '選擇取消不會關閉程式；請選取 ZIP 或插件資料夾。', 'Cancelling selection will not close the app. Choose a ZIP or plugin folder.'), false);
+      var input = type === 'zip' ? zipInput : folderInput;
+      input.value = '';
+      input.click();
+    }
+    importBtn.addEventListener('click', function () {
+      importOverlay.style.display = 'flex';
+      importZipBtn.focus();
+    });
+    importZipBtn.addEventListener('click', function () { beginPluginImport('zip'); });
+    importFolderBtn.addEventListener('click', function () { beginPluginImport('folder'); });
+    importCancelBtn.addEventListener('click', closeImportDialog);
+    importOverlay.addEventListener('click', function (event) { if (event.target === importOverlay) closeImportDialog(); });
+    importModal.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') { event.preventDefault(); closeImportDialog(); }
+    });
 
     // ---- full editor overlay ----
     var overlay = el('div');
@@ -653,23 +929,32 @@
       });
     });
 
-    function render() {
+    var lastPluginSignature = null;
+    var pluginRefreshBusy = false;
+    function render(messageOverride, force) {
+      if (pluginRefreshBusy) return;
+      pluginRefreshBusy = true;
       doCommand('插件列表', null).then(function (info) {
         state.plugins = info || {};
         dirText.textContent = info && info.dir ? info.dir : '';
-        listBox.innerHTML = '';
         var items = (info && info.plugins) || [];
-        status.style.color = 'var(--app-muted-text,#8b98a5)';
-        status.textContent = L('已读取 ' + items.length + ' 个本地插件', '已讀取 ' + items.length + ' 個本機插件', items.length + ' local plugin(s) loaded');
+        var signature = JSON.stringify(items);
+        if (!force && signature === lastPluginSignature) return;
+        var previousScroll = listBox.scrollTop;
+        lastPluginSignature = signature;
+        listBox.innerHTML = '';
+        status.style.color = messageOverride ? '#67c23a' : 'var(--app-muted-text,#8b98a5)';
+        status.textContent = messageOverride || L('已读取 ' + items.length + ' 个本地插件', '已讀取 ' + items.length + ' 個本機插件', items.length + ' local plugin(s) loaded');
         if (!items.length) {
           var empty = el('div', '', L('还没有插件，点击「新建插件」开始。', '還沒有插件，點擊「新建插件」開始。', 'No plugins yet. Click "New plugin".'));
           empty.style.cssText = 'color:var(--app-muted-text,#8b98a5);font-size:12px;padding:10px;';
           listBox.appendChild(empty);
+          listBox.scrollTop = previousScroll;
           return;
         }
         items.forEach(function (p) {
           var row = el('div');
-          row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:7px 10px;border-bottom:1px solid var(--app-border,#333);';
+          row.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--app-border,#333);';
           var cb = el('input');
           cb.type = 'checkbox';
           cb.checked = !!p.enabled;
@@ -710,7 +995,9 @@
           var edit = el('button', 'el-button el-button--small');
           edit.textContent = L('编辑代码', '編輯程式碼', 'Edit');
           edit.addEventListener('click', function () {
-            doCommand('插件源码', { Id: p.id }).then(function (code) { openEditor(p, code); });
+            doCommand('插件源码', { Id: p.id }).then(function (code) {
+              openEditor(p, code);
+            });
           });
           var del = el('button', 'el-button el-button--small');
           del.textContent = L('删除', '刪除', 'Delete');
@@ -724,10 +1011,11 @@
           row.appendChild(cb); row.appendChild(main); row.appendChild(edit); row.appendChild(del);
           listBox.appendChild(row);
         });
+        listBox.scrollTop = previousScroll;
       }).catch(function (e) {
         status.style.color = '#f56c6c';
         status.textContent = String(e && e.message ? e.message : e);
-      });
+      }).then(function () { pluginRefreshBusy = false; });
     }
 
     function saveMeta(p, okText) {
@@ -745,9 +1033,13 @@
     }
 
     newBtn.addEventListener('click', function () { openEditor(null, pluginTemplate()); });
-    refreshBtn.addEventListener('click', render);
+    refreshBtn.addEventListener('click', function () { render('', true); });
     render();
-    return collapseItem('M4 7h16M4 12h16M4 17h10M18 15l3 3-3 3', L('解碼與編碼', '解碼與編碼', 'Decode & Encode'), null, panel, false);
+    var pluginItem = collapseItem('M4 7h16M4 12h16M4 17h10M18 15l3 3-3 3', L('插件功能', '插件功能', 'Plugin Features'), null, panel, false);
+    setInterval(function () {
+      if (pluginItem.classList.contains('is-active')) render();
+    }, 1500);
+    return pluginItem;
   }
 
   function pluginTemplate() {
@@ -789,7 +1081,7 @@
     langItem.id = 'sn-lang-item';
     var mcpItem = buildMcpItem();
     mcpItem.id = 'sn-mcp-item';
-    var codecItem = buildCodecItem();
+    var codecItem = buildPluginFeaturesItem();
     codecItem.id = 'sn-codec-item';
     var themeItem = buildThemeItem();
     themeItem.id = 'sn-theme-item';

@@ -223,6 +223,91 @@
     permissionNote.style.cssText = 'font-size:12px;line-height:1.6;color:var(--app-muted-text,#aab7c2);margin:0 0 10px;';
     panel.appendChild(permissionNote);
 
+    var accessBox = el('div');
+    accessBox.style.cssText = 'border:1px solid var(--app-border,#3c3c3c);border-radius:5px;padding:10px 12px;margin:0 0 10px;background:var(--app-surface-raised,#1f1f1f);';
+    var accessTitle = el('div', '', L('MCP 權限', 'MCP 權限', 'MCP access'));
+    accessTitle.style.cssText = 'font-size:13px;font-weight:600;margin-bottom:5px;';
+    var accessHint = el('div', '', L(
+      '預設逐次詢問。可選完全允許，或只允許勾選的類別；設定會保存在本機。完全允許會略過所有 MCP 操作確認，請只連接可信任的 AI 客戶端。',
+      '預設逐次詢問。可選完全允許，或只允許勾選的類別；設定會保存在本機。完全允許會略過所有 MCP 操作確認，請只連接可信任的 AI 客戶端。',
+      'By default, MCP asks before each sensitive action. Choose unrestricted access or grant only selected categories. Settings stay local. Unrestricted access skips all MCP confirmations; connect trusted AI clients only.'
+    ));
+    accessHint.style.cssText = 'font-size:12px;line-height:1.5;color:var(--app-muted-text,#aab7c2);margin-bottom:7px;';
+    accessBox.appendChild(accessTitle);
+    accessBox.appendChild(accessHint);
+    function accessToggle(label) {
+      var wrap = el('label');
+      wrap.style.cssText = 'display:flex;align-items:center;gap:7px;min-height:26px;cursor:pointer;font-size:12px;';
+      var cb = el('input'); cb.type = 'checkbox'; cb.style.accentColor = 'var(--app-accent,#409eff)';
+      wrap.appendChild(cb); wrap.appendChild(el('span', '', label));
+      accessBox.appendChild(wrap);
+      return cb;
+    }
+    var fullAccess = accessToggle(L('完全允許（無限制）', '完全允許（無限制）', 'Unrestricted access'));
+    var partialAccess = accessToggle(L('部分允許（自訂類別）', '部分允許（自訂類別）', 'Partial access (choose categories)'));
+    var accessOptions = el('div');
+    accessOptions.style.cssText = 'margin:2px 0 3px 22px;padding-left:9px;border-left:2px solid var(--app-border,#3c3c3c);';
+    function categoryToggle(label) {
+      var wrap = el('label');
+      wrap.style.cssText = 'display:flex;align-items:center;gap:7px;min-height:25px;cursor:pointer;font-size:12px;';
+      var cb = el('input'); cb.type = 'checkbox'; cb.style.accentColor = 'var(--app-accent,#409eff)';
+      wrap.appendChild(cb); wrap.appendChild(el('span', '', label));
+      accessOptions.appendChild(wrap);
+      return cb;
+    }
+    var allowPrivateRead = categoryToggle(L('讀取完整封包資料（URL、標頭、本文、IP/PID）', '讀取完整封包資料（URL、標頭、本文、IP/PID）', 'Read full capture data (URLs, headers, bodies, IP/PID)'));
+    var allowSettings = categoryToggle(L('修改設定、控制監聽與系統代理', '修改設定、控制監聽與系統代理', 'Change settings and control capture/system proxy'));
+    var allowPluginCode = categoryToggle(L('匯入及啟用插件程式碼（會在本機執行）', '匯入及啟用插件程式碼（會在本機執行）', 'Import and enable plugin code (runs locally)'));
+    var allowNetworkWrites = categoryToggle(L('發送封包或重播請求（會傳送網路資料）', '發送封包或重播請求（會傳送網路資料）', 'Send packets or replay requests (transmits network data)'));
+    accessBox.appendChild(accessOptions);
+    panel.appendChild(accessBox);
+
+    var accessSaveBusy = false;
+    function applyAccessSettings(settings) {
+      settings = settings || {};
+      fullAccess.checked = settings.mode === 'unrestricted';
+      partialAccess.checked = settings.mode === 'custom';
+      accessOptions.style.display = partialAccess.checked ? '' : 'none';
+      allowPrivateRead.checked = !!settings.allow_private_read;
+      allowSettings.checked = !!settings.allow_settings;
+      allowPluginCode.checked = !!settings.allow_plugin_code;
+      allowNetworkWrites.checked = !!settings.allow_network_writes;
+    }
+    function persistAccessSettings() {
+      if (accessSaveBusy) return;
+      if (fullAccess.checked) partialAccess.checked = false;
+      accessOptions.style.display = partialAccess.checked ? '' : 'none';
+      accessSaveBusy = true;
+      doCommand('mcp設定權限', {
+        Mode: fullAccess.checked ? 'unrestricted' : (partialAccess.checked ? 'custom' : 'confirm'),
+        AllowPrivateRead: allowPrivateRead.checked,
+        AllowSettings: allowSettings.checked,
+        AllowPluginCode: allowPluginCode.checked,
+        AllowNetworkWrites: allowNetworkWrites.checked
+      }).then(function (settings) {
+        if (settings && settings.error) throw new Error(settings.error);
+        applyAccessSettings(settings);
+      }).catch(function (error) {
+        err.textContent = String(error && error.message ? error.message : error);
+        err.style.display = 'block';
+      }).then(function () { accessSaveBusy = false; });
+    }
+    fullAccess.addEventListener('change', function () {
+      if (fullAccess.checked) partialAccess.checked = false;
+      persistAccessSettings();
+    });
+    partialAccess.addEventListener('change', function () {
+      if (partialAccess.checked) fullAccess.checked = false;
+      persistAccessSettings();
+    });
+    [allowPrivateRead, allowSettings, allowPluginCode, allowNetworkWrites].forEach(function (cb) {
+      cb.addEventListener('change', function () {
+        if (cb.checked) { partialAccess.checked = true; fullAccess.checked = false; }
+        persistAccessSettings();
+      });
+    });
+    doCommand('mcp權限', null).then(applyAccessSettings).catch(function () {});
+
     var out = textarea();
     out.className += ' sn-mcp-json';
     panel.appendChild(out);
@@ -512,7 +597,7 @@
     panel.appendChild(hint);
 
     var listBox = el('div');
-    listBox.style.cssText = 'border:1px solid var(--app-border,#3c3c3c);border-radius:4px;background:var(--app-surface-raised,#1f1f1f);max-height:150px;overflow:auto;color:var(--app-text,#d4d4d4);';
+    listBox.style.cssText = 'border:1px solid var(--app-border,#3c3c3c);border-radius:4px;background:var(--app-surface-raised,#1f1f1f);max-height:min(52vh,480px);min-height:100px;overflow:auto;color:var(--app-text,#d4d4d4);';
     panel.appendChild(listBox);
 
     var bar = el('div');
@@ -844,18 +929,27 @@
       });
     });
 
-    function render(messageOverride) {
+    var lastPluginSignature = null;
+    var pluginRefreshBusy = false;
+    function render(messageOverride, force) {
+      if (pluginRefreshBusy) return;
+      pluginRefreshBusy = true;
       doCommand('插件列表', null).then(function (info) {
         state.plugins = info || {};
         dirText.textContent = info && info.dir ? info.dir : '';
-        listBox.innerHTML = '';
         var items = (info && info.plugins) || [];
+        var signature = JSON.stringify(items);
+        if (!force && signature === lastPluginSignature) return;
+        var previousScroll = listBox.scrollTop;
+        lastPluginSignature = signature;
+        listBox.innerHTML = '';
         status.style.color = messageOverride ? '#67c23a' : 'var(--app-muted-text,#8b98a5)';
         status.textContent = messageOverride || L('已读取 ' + items.length + ' 个本地插件', '已讀取 ' + items.length + ' 個本機插件', items.length + ' local plugin(s) loaded');
         if (!items.length) {
           var empty = el('div', '', L('还没有插件，点击「新建插件」开始。', '還沒有插件，點擊「新建插件」開始。', 'No plugins yet. Click "New plugin".'));
           empty.style.cssText = 'color:var(--app-muted-text,#8b98a5);font-size:12px;padding:10px;';
           listBox.appendChild(empty);
+          listBox.scrollTop = previousScroll;
           return;
         }
         items.forEach(function (p) {
@@ -917,10 +1011,11 @@
           row.appendChild(cb); row.appendChild(main); row.appendChild(edit); row.appendChild(del);
           listBox.appendChild(row);
         });
+        listBox.scrollTop = previousScroll;
       }).catch(function (e) {
         status.style.color = '#f56c6c';
         status.textContent = String(e && e.message ? e.message : e);
-      });
+      }).then(function () { pluginRefreshBusy = false; });
     }
 
     function saveMeta(p, okText) {
@@ -938,9 +1033,13 @@
     }
 
     newBtn.addEventListener('click', function () { openEditor(null, pluginTemplate()); });
-    refreshBtn.addEventListener('click', render);
+    refreshBtn.addEventListener('click', function () { render('', true); });
     render();
-    return collapseItem('M4 7h16M4 12h16M4 17h10M18 15l3 3-3 3', L('插件功能', '插件功能', 'Plugin Features'), null, panel, false);
+    var pluginItem = collapseItem('M4 7h16M4 12h16M4 17h10M18 15l3 3-3 3', L('插件功能', '插件功能', 'Plugin Features'), null, panel, false);
+    setInterval(function () {
+      if (pluginItem.classList.contains('is-active')) render();
+    }, 1500);
+    return pluginItem;
   }
 
   function pluginTemplate() {
