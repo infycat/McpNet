@@ -915,14 +915,17 @@ func (s *mcpServer) confirmUser(title, message string) bool {
 		return false
 	}
 	answer, err := runtime.MessageDialog(s.app.ctx, runtime.MessageDialogOptions{
-		Type:          runtime.QuestionDialog,
-		Title:         title,
-		Message:       message,
-		Buttons:       []string{"允許 / Allow", "拒絕 / Deny"},
-		DefaultButton: "拒絕 / Deny",
-		CancelButton:  "拒絕 / Deny",
+		Type:    runtime.QuestionDialog,
+		Title:   title,
+		Message: message,
+		// Wails uses the native Yes/No buttons on Windows and returns the
+		// canonical answer ("Yes" or "No"); custom labels are ignored there.
+		// Use the standard values so No remains the safe default on every OS.
+		Buttons:       []string{"Yes", "No"},
+		DefaultButton: "No",
+		CancelButton:  "No",
 	})
-	return err == nil && answer == "允許 / Allow"
+	return err == nil && affirmativeDialogAnswer(answer)
 }
 
 func mcpTools() []mcpTool {

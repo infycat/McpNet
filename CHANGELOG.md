@@ -9,6 +9,7 @@ Current stable release / 目前正式版本：**v1.2.1**. Previous releases rema
 - 擴充本機 MCP 工具，AI 客戶端可查詢捕獲清單、詳情與訊息，查看狀態和插件，並在使用者確認後匯入／啟用插件、發送或重播封包、控制監聽與系統代理，以及呼叫通用插件介面命令。
 - 涉及封包發送、插件程式碼、監聽、系統代理或插件介面操作時，逐次顯示確認；MCP 連線不會自動啟動攔截或代理。
 - URL 查詢值、認證資訊與片段預設遮蔽；封包本文、標頭與其他敏感欄位須明確選擇，並經使用者同意才會提供。
+- 修正 Windows 原生確認視窗的回傳值判讀：按下「是(Y)」會正確授權該次操作，「否(N)」或取消仍維持拒絕；「否」設為安全預設值。
 - 更新 MCP 安全與捕獲檢視測試、架構說明及插件範例文件。
 
 ### English
@@ -16,6 +17,7 @@ Current stable release / 目前正式版本：**v1.2.1**. Previous releases rema
 - Expanded local MCP tools so AI clients can inspect captured sessions, details, and messages; check status and plugins; and, after user confirmation, import/enable plugins, send or replay packets, control capture/system proxy, and invoke generic plugin UI actions.
 - Packet sends, plugin code, capture/proxy controls, and plugin UI actions require per-operation confirmation. Connecting an MCP client does not automatically start interception or configure the system proxy.
 - URL query values, credentials, and fragments are redacted by default. Payloads, headers, and other sensitive fields require an explicit MCP request and user consent before they are shared.
+- Fixed native Windows consent handling: selecting “Yes” now authorizes that operation, while “No” or cancel still denies it; “No” remains the safe default.
 - Updated MCP privacy/capture tests, architecture documentation, and plugin examples.
 
 - **Platform / 平台:** Windows x64
