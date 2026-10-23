@@ -8,15 +8,15 @@
 
 | 最新穩定版 | 平台 | 直接下載 | 全部版本 |
 |---|---|---|---|
-| **v1.1.4** · 插件功能擴充、支援社群插件匯入與自訂介面 | Windows x64 | [下載 McpNet-v1.1.4-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.4/McpNet-v1.1.4-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
+| **v1.2.0** · 開源插件擴充平台，讓使用者自行打造功能 | Windows x64 | [下載 McpNet-v1.2.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
 
-[v1.1.4 更新內容與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.4)
+[v1.2.0 更新內容與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.0)
 
 下載成品請使用上表的 EXE 連結；GitHub 頁面上的 **Source code ZIP/TAR.GZ 是原始碼，不是安裝程式**。首次使用前請查看下方的系統需求及安全提醒。
 
 ## 專案簡介
 
-McpNet 由 Go/Wails 桌面後端、Vue 3 介面與 McpNet 網路核心組成。它可檢視和處理 HTTP(S)、WebSocket、TCP、UDP 流量，並提供規則、腳本、使用者插件及本機 MCP 整合。程式啟動不會自動開始全系統攔截：流量監聽與系統代理由使用者分別控制。
+McpNet 是以開源與可擴充為核心的 Windows 網路分析工具，由 Go/Wails 桌面後端、Vue 3 介面與 McpNet 網路核心組成。除了 HTTP(S)、WebSocket、TCP、UDP 流量分析、規則和本機 MCP，使用者也能透過 Go 插件自行打造協定解碼、封包條件、資料修改和小型工具介面，不必等待核心內建每一項功能。程式啟動不會自動開始全系統攔截：流量監聽與系統代理由使用者分別控制。
 
 ### 品牌圖示
 
@@ -26,7 +26,7 @@ McpNet 由 Go/Wails 桌面後端、Vue 3 介面與 McpNet 網路核心組成。�
 |---|---|
 | 流量分析 | HTTP/HTTPS 請求與回應、WebSocket 訊息、TCP/UDP 連線與資料檢視 |
 | 規則與處理 | Hosts、轉送／替換、請求與回應處理、憑證及腳本設定 |
-| 擴充能力 | Yaegi Go 插件、腳本範本、協定內容處理 hook |
+| 開源插件平台 | 社群 ZIP／資料夾匯入、Go hook 自訂判斷與封包處理、HTML/JavaScript 插件小視窗 |
 | MCP 整合 | 本機 HTTP MCP、狀態查詢、監聽控制、系統代理及 UI 命令工具 |
 | 桌面介面 | Windows、Wails v2、Vue 3、WebView2；繁體中文、簡體中文與英文 |
 
@@ -85,6 +85,18 @@ flowchart TD
 **本機 MCP 服務設定**
 
 <img src="docs/screenshots/mcp-settings.png" width="900" alt="本機 MCP 服務狀態、端點與客戶端設定 JSON" />
+
+### 開源插件生態：自己動手擴充功能
+
+McpNet 不把功能限制在內建解碼器：核心、介面和插件範例以開源方式提供，讓使用者與社群作者能自行開發、分享插件，按自己的協定和工作流程組裝工具。這種開放式插件模式讓社群可以持續補充功能，而不必為每種封包格式等待主程式改版。
+
+- **快速分享：** 插件可由 ZIP 或資料夾一鍵匯入，套件包含 `main.go` 和一個 JSON 清單；匯入後預設停用，避免來源不明的程式碼直接執行。
+- **自由判斷：** Go hook 可依協定、方向、URL、字串、正則、位元組模式或任意自訂條件檢查 HTTP 請求／回應、WebSocket、UDP 等資料。
+- **按需處理：** 插件可解碼或編碼資料、修改符合條件的封包，再交回既有流程轉送；使用者以 Go 邏輯定義觸發條件和處理方式。
+- **自訂介面：** 清單可選擇提供 HTML/JavaScript 小視窗，透過插件 action 與 Go 邏輯交換參數和結果，製作專屬操作面板。
+- **安全與邊界：** Go 插件在本機執行，沒有安全沙箱隔離，只匯入可信來源；個人插件、密鑰和抓包資料留在本機，倉庫只放通用公開範例。
+
+詳細套件格式、hook 範例與 UI API 請參閱 [`plugins/examples/README.md`](plugins/examples/README.md)。
 
 ### 腦圖
 
@@ -153,10 +165,11 @@ MCP 端點：`http://127.0.0.1:2026/mcp`；健康檢查：`http://127.0.0.1:2026
 
 ## 版本與下載
 
-目前正式下載版本為 v1.1.4；v1.1.3 及更早版本保留為舊版。v1.1.4 擴充插件功能，支援匯入社群 ZIP/資料夾插件、Go hook 自訂封包判斷與改寫，以及自訂 HTML/JavaScript 插件介面。每次啟動日誌位於 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup_*.log`，最近 50 份會保留。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
+目前正式下載版本為 v1.2.0；v1.1.4 及更早版本保留為舊版。v1.2.0 將插件擴充提升為產品核心方向：開源提供插件開發與分享能力，使用者可自訂封包觸發條件、處理邏輯和插件介面，建立多元的社群工具。每次啟動日誌位於 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup_*.log`，最近 50 份會保留。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
 
 | 版本 | 日期 | 狀態 | 平台 | 成品下載 | 發布資訊 |
 |---|---|---|---|---|---|
+| **v1.2.0** | 2026-10-23 | 大更新：開源插件平台、社群匯入、Go hook 與自訂插件 UI | Windows x64 | [McpNet-v1.2.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.0) |
 | **v1.1.4** | 2026-10-23 | 插件匯入、Go hook 封包處理、自訂 HTML/JavaScript 介面 | Windows x64 | [McpNet-v1.1.4-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.4/McpNet-v1.1.4-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.4) |
 | **v1.1.3** | 2026-10-23 | 完整修正已確認的 SunnyNet 舊匯入路徑啟動崩潰 | Windows x64 | [McpNet-v1.1.3-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.3/McpNet-v1.1.3-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.3) |
 | **v1.1.2** | 2026-10-23 | 啟動相容性修正；恢復穩定編輯器初始化並補強日誌 | Windows x64 | [McpNet-v1.1.2-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.2/McpNet-v1.1.2-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.2) |
@@ -226,11 +239,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | 最新稳定版 | 平台 | 直接下载 | 全部版本 |
 |---|---|---|---|
-| **v1.1.4** · 扩展插件功能、支持导入社区插件与自定义界面 | Windows x64 | [下载 McpNet-v1.1.4-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.4/McpNet-v1.1.4-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
+| **v1.2.0** · 开源插件扩展平台，让用户自行打造功能 | Windows x64 | [下载 McpNet-v1.2.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
 
-[v1.1.4 更新内容与 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.4)
+[v1.2.0 更新内容与 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.0)
 
-McpNet 是 Windows 桌面网络分析与协议调试工具，由 Go/Wails 后端、Vue 3 界面和 McpNet 核心组成。它支持 HTTP(S)、WebSocket、TCP、UDP 流量查看与规则处理，并提供脚本、用户插件和本机 MCP。启动应用不会自动开启全系统流量拦截；监听与系统代理由用户分别控制。
+McpNet 是以开源和可扩展为核心的 Windows 网络分析工具，由 Go/Wails 后端、Vue 3 界面和 McpNet 核心组成。除 HTTP(S)、WebSocket、TCP、UDP 流量分析、规则和本机 MCP 外，用户还可通过 Go 插件自行打造协议解码、封包条件、数据修改和小型工具界面，不必等待核心内置每项功能。启动应用不会自动开启全系统流量拦截；监听与系统代理由用户分别控制。
 
 ### 品牌图标
 
@@ -240,7 +253,7 @@ McpNet 是 Windows 桌面网络分析与协议调试工具，由 Go/Wails 后端
 |---|---|
 | 流量分析 | HTTP/HTTPS 请求与响应、WebSocket 消息、TCP/UDP 连接与数据 |
 | 规则处理 | Hosts、转发／替换、请求和响应处理、证书及脚本设置 |
-| 扩展 | Yaegi Go 插件、脚本模板、协议内容处理 hook |
+| 开源插件平台 | 社区 ZIP／文件夹导入、Go hook 自定义判断与封包处理、HTML/JavaScript 插件小窗口 |
 | MCP | 本机 HTTP MCP、状态查询、监听控制、系统代理及 UI 命令 |
 | 桌面端 | Windows、Wails v2、Vue 3、WebView2；繁中、简中和英文 |
 
@@ -296,6 +309,18 @@ flowchart TD
 
 <img src="docs/screenshots/mcp-settings.png" width="900" alt="本机 MCP 服务状态、端点与客户端设置 JSON" />
 
+### 开源插件生态：自己动手扩展功能
+
+McpNet 不把功能局限于内置解码器：核心、界面和插件示例以开源方式提供，让用户与社区作者自行开发、分享插件，按自己的协议和工作流程组合工具。开放式插件模式让社区持续补充能力，不必为每种封包格式等待主程序更新。
+
+- **快速分享：** 插件可从 ZIP 或文件夹一键导入，套件包含 `main.go` 和一个 JSON 清单；导入后默认停用，避免来源不明的代码直接运行。
+- **自由判断：** Go hook 可按协议、方向、URL、字符串、正则、字节模式或任意自定义条件，检查 HTTP 请求／响应、WebSocket、UDP 等数据。
+- **按需处理：** 插件可解码或编码数据、修改符合条件的封包，再交回现有流程转发；用户用 Go 逻辑定义触发条件和处理方式。
+- **自定义界面：** 清单可选提供 HTML/JavaScript 小窗口，通过插件 action 与 Go 逻辑交换参数和结果，制作专属操作面板。
+- **安全与边界：** Go 插件在本机运行，没有安全沙箱隔离，只导入可信来源；个人插件、密钥和抓包数据保留在本机，仓库仅放通用公开示例。
+
+详细套件格式、hook 示例与 UI API 请参阅 [`plugins/examples/README.md`](plugins/examples/README.md)。
+
 ### 思维导图
 
 ```mermaid
@@ -345,6 +370,7 @@ MCP 地址为 `http://127.0.0.1:2026/mcp`，健康检查为 `/health`。`mcpnet_
 
 | 版本 | 日期 | 状态 | 平台 | 成品下载 | 发布信息 |
 |---|---|---|---|---|---|
+| **v1.2.0** | 2026-10-23 | 大更新：开源插件平台、社区导入、Go hook 与自定义插件 UI | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.2.0) |
 | **v1.1.4** | 2026-10-23 | 插件导入、Go hook 封包处理、自定义 HTML/JavaScript 界面 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.4/McpNet-v1.1.4-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.4) |
 | **v1.1.3** | 2026-10-23 | 完整修复已确认的 SunnyNet 旧导入路径启动崩溃 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.3/McpNet-v1.1.3-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.3) |
 | **v1.1.2** | 2026-10-23 | 启动修复；延后加载编辑器并修正超时误报 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.2/McpNet-v1.1.2-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.2) |
@@ -352,7 +378,7 @@ MCP 地址为 `http://127.0.0.1:2026/mcp`，健康检查为 `/health`。`mcpnet_
 | **v1.1.0** | 2026-10-20 | 第二版；调整全屏设置窗口边界、补充功能截图 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 | **v1.0.0** | 2026-10-20 | 首个正式版本；修复主题底板与全屏设置窗口、更新图标与作者页 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-当前正式下载版本为 v1.1.4，v1.1.3 及更早版本保留为旧版。v1.1.4 新增社群插件 ZIP/資料夾匯入、Go hook 自訂封包條件與處理，以及自訂 HTML/JavaScript 插件視窗。插件預設停用；Go 程式碼仍會在本機執行，請只啟用可信來源。每次啟動會在 `%LOCALAPPDATA%\McpNet_new\logs\` 寫入帶時間和 PID 的診斷日誌，保留最近 50 份；無法寫入時回退到使用者設定目錄或 `%TEMP%`。每次發布 GitHub Release 後，GitHub Actions 會自動建置 Windows x64 EXE、上傳成品並補充檔案大小與 SHA-256。GitHub 自動產生的 Source code 壓縮檔是源碼，不是應用程式。
+当前正式下载版本为 v1.2.0，v1.1.4 及更早版本保留为历史版本。v1.2.0 是插件功能的大更新：以开源为核心，让用户和社区自行开发、分享插件，扩展协议识别、灵活条件判断、封包处理及自定义 UI，而不是受限于内置功能。插件默认停用；Go 代码仍在本机运行，请只启用可信来源。每次启动会在 `%LOCALAPPDATA%\McpNet_new\logs\` 写入带时间和 PID 的诊断日志，保留最近 50 份；无法写入时回退到用户配置目录或 `%TEMP%`。每次发布 GitHub Release 后，GitHub Actions 会自动构建 Windows x64 EXE、上传成品并补充文件大小与 SHA-256。GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。
 
 v1.1.0 文件大小：91,961,856 bytes；SHA-256：`6939D6EB999FE8869E0C89B987FE22C5EBC01446874429746B8D03F57F2E93CD`。v1.0.0 SHA-256：`BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`。
 
@@ -385,11 +411,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | Latest stable | Platform | Direct download | All versions |
 |---|---|---|---|
-| **v1.1.4** · Plugin imports, flexible Go hooks, and custom HTML/JavaScript windows | Windows x64 | [Download McpNet-v1.1.4-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.4/McpNet-v1.1.4-windows-x64.exe) | [All releases](https://github.com/infycat/McpNet/releases) |
+| **v1.2.0** · Open plugin platform for community-built features | Windows x64 | [Download McpNet-v1.2.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe) | [All releases](https://github.com/infycat/McpNet/releases) |
 
-[v1.1.4 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.4)
+[v1.2.0 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.0)
 
-McpNet is a Windows desktop network analysis and protocol debugging tool built with a Go/Wails backend, Vue 3 UI, and the McpNet core. It inspects and processes HTTP(S), WebSocket, TCP, and UDP traffic, with rules, scripts, user plugins, and a local MCP service. Launching the app does **not** enable system-wide interception; capture and system-proxy controls are separate.
+McpNet is an open-source, extensible Windows network analysis tool built with a Go/Wails backend, Vue 3 UI, and the McpNet core. Alongside HTTP(S), WebSocket, TCP, and UDP analysis, rules, and local MCP, users can build Go plugins for protocol decoding, packet conditions, data modification, and small custom tools—without waiting for every capability to be built into the core. Launching the app does **not** enable system-wide interception; capture and system-proxy controls are separate.
 
 ### App icon
 
@@ -399,7 +425,7 @@ The refreshed square icon uses a transparent background and integrates the “Ne
 |---|---|
 | Traffic analysis | HTTP/HTTPS requests and responses, WebSocket messages, TCP/UDP connections and payloads |
 | Rules | Hosts, forwarding/replacement, request/response processing, certificates, and scripts |
-| Extensions | Yaegi Go plugins, script templates, protocol-processing hooks |
+| Open plugin platform | Community ZIP/folder imports, flexible Go hooks and packet processing, custom HTML/JavaScript plugin windows |
 | MCP | Local HTTP MCP, status, capture controls, system proxy, and UI-command tools |
 | Desktop | Windows, Wails v2, Vue 3, WebView2; Traditional Chinese, Simplified Chinese, and English |
 
@@ -455,6 +481,18 @@ These product screenshots demonstrate the main features: process interception an
 
 <img src="docs/screenshots/mcp-settings.png" width="900" alt="Local MCP service status, endpoint, and client configuration JSON" />
 
+### Open plugin ecosystem: build your own features
+
+McpNet is not limited to built-in decoders. Its core, UI, and plugin examples are open source so users and community authors can build and share plugins around their own protocols and workflows. This open extension model lets the community keep adding capabilities without waiting for every packet format to become a built-in feature.
+
+- **Easy sharing:** Import a ZIP or folder containing `main.go` and one JSON manifest. Imported plugins are disabled by default so unfamiliar code never runs immediately.
+- **Flexible matching:** Go hooks can inspect HTTP requests/responses, WebSocket, UDP, and other events using protocol, direction, URL, text, regexp, byte patterns, or arbitrary custom logic.
+- **Custom processing:** Decode or encode data, modify matching packets, and return them to the existing forwarding flow. The plugin author defines when and how it runs.
+- **Custom UI:** An optional HTML/JavaScript window can exchange inputs and results with Go plugin logic through plugin actions.
+- **Safety and boundaries:** Go plugins run locally without a security sandbox; import trusted code only. Personal plugins, keys, and captures stay local; the repository publishes generic examples only.
+
+See [`plugins/examples/README.md`](plugins/examples/README.md) for package format, hook examples, and the UI API.
+
 ### Mind map
 
 ```mermaid
@@ -504,6 +542,7 @@ MCP endpoints: `http://127.0.0.1:2026/mcp` and `/health`. `mcpnet_list_captures`
 
 | Version | Date | Status | Platform | Download | Release info |
 |---|---|---|---|---|---|
+| **v1.2.0** | 2026-10-23 | Major update: open plugin platform, community imports, Go hooks, and custom plugin UI | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.2.0) |
 | **v1.1.4** | 2026-10-23 | Plugin imports, flexible Go hooks, and custom HTML/JavaScript UI | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.4/McpNet-v1.1.4-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.4) |
 | **v1.1.3** | 2026-10-23 | Fully fixes confirmed startup crash from legacy SunnyNet imports | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.3/McpNet-v1.1.3-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.3) |
 | **v1.1.2** | 2026-10-23 | Startup compatibility fix; restore editor initialization and improve diagnostics | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.2/McpNet-v1.1.2-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.2) |
@@ -511,7 +550,7 @@ MCP endpoints: `http://127.0.0.1:2026/mcp` and `/health`. `mcpnet_list_captures`
 | **v1.1.0** | 2026-10-20 | Second release; maximized settings bounds fixed and feature screenshots added | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 | **v1.0.0** | 2026-10-20 | Initial stable release; themed panels, maximized settings, icon, and author page updated | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-The current official download is v1.1.4, with v1.1.3 and earlier releases retained. This version adds community plugin ZIP/folder import, flexible Go hooks for packet matching and processing, and custom HTML/JavaScript plugin windows. Imported plugins are disabled by default; Go code runs locally, so enable trusted plugins only. Each launch writes a timestamped diagnostic log under `%LOCALAPPDATA%\McpNet_new\logs\` (with config-directory and `%TEMP%` fallbacks); the newest 50 are retained. Publishing a GitHub Release triggers GitHub Actions to build and upload the Windows x64 executable and add its file size and SHA-256. GitHub's automatically generated source archives are not executable builds.
+The current official download is v1.2.0, with v1.1.4 and earlier releases retained as history. This major plugin update puts open extensibility at the center: users and community authors can build and share plugins for protocol recognition, flexible matching, packet processing, and custom UI instead of being limited to built-in features. Imports are disabled by default; Go code runs locally, so enable trusted plugins only. Each launch writes a timestamped diagnostic log under `%LOCALAPPDATA%\McpNet_new\logs\` (with config-directory and `%TEMP%` fallbacks); the newest 50 are retained. Publishing a GitHub Release triggers GitHub Actions to build and upload the Windows x64 executable and add its file size and SHA-256. GitHub's automatically generated source archives are not executable builds.
 
 v1.1.0 file size: 91,961,856 bytes; SHA-256: `6939D6EB999FE8869E0C89B987FE22C5EBC01446874429746B8D03F57F2E93CD`. v1.0.0 SHA-256: `BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`.
 

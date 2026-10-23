@@ -16,11 +16,11 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "infycat\0"
       VALUE "FileDescription", "McpNet network analysis tool\0"
-      VALUE "FileVersion", "1.1.4\0"
+      VALUE "FileVersion", "1.2.0\0"
       VALUE "InternalName", "McpNet\0"
-      VALUE "OriginalFilename", "McpNet-v1.1.4-windows-x64.exe\0"
+      VALUE "OriginalFilename", "McpNet-v1.2.0-windows-x64.exe\0"
       VALUE "ProductName", "McpNet\0"
-      VALUE "ProductVersion", "1.1.4\0"
+      VALUE "ProductVersion", "1.2.0\0"
       VALUE "LegalCopyright", "Copyright (C) 2026 infycat\0"
     END
   END

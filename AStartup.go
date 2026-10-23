@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const applicationVersion = "1.1.4"
+const applicationVersion = "1.2.0"
 
 var startupLogPath string
 var startupLogFile *os.File

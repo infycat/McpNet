@@ -1,6 +1,30 @@
 # Release Notes / 版本紀錄
 
-Current stable release / 目前正式版本：**v1.1.4**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+Current stable release / 目前正式版本：**v1.2.0**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+
+## v1.2.0 — 2026-10-23 — Open Plugin Platform / 開源插件平台
+
+### 繁體中文
+
+- **大更新：以開源與社群擴充為核心。** 使用者可自行開發並分享插件，按自己的協定和工作流程組裝功能，不再只受內建解碼器限制。
+- 支援 ZIP／資料夾一鍵匯入，套件需包含 `main.go` 與一個 JSON 清單；匯入後預設停用，重複 ID 不會覆蓋既有插件。
+- Go hooks 可在 HTTP 請求／回應、WebSocket、UDP 等事件中自由組合協定、方向、URL、字串、正則、位元組模式和自訂條件，並按插件邏輯解碼、編碼或修改封包。
+- 支援以 `ui.title`／`ui.html` 建立 HTML/JavaScript 插件小視窗，與 Go hook 透過 action、payload 和 result 溝通。
+- README、架構文件與公開範例補充插件套件格式、開發和分享方式、hook API、自訂 UI 與安全邊界。
+- **安全提醒：** Go 插件在本機執行且沒有安全沙箱隔離；只導入可信來源。個人插件、金鑰、設定與抓包仍留在本機，公開倉庫只收錄通用範例。
+
+### English
+
+- **Major update centered on open source and community extensibility.** Users can build and share plugins around their own protocols and workflows instead of being limited to built-in decoders.
+- Added one-click ZIP/folder import for packages containing `main.go` and one JSON manifest. Imported plugins are disabled by default; duplicate IDs never overwrite installed plugins.
+- Go hooks can combine protocol, direction, URL, text, regexp, byte-pattern, and custom conditions across HTTP request/response, WebSocket, UDP, and other events, then decode, encode, or modify packets according to plugin logic.
+- Added optional `ui.title`/`ui.html` custom HTML/JavaScript plugin windows that communicate with Go hooks through actions, payloads, and results.
+- Expanded the README, architecture guide, and public examples with package format, plugin development/sharing, hook APIs, custom UI, and security boundaries.
+- **Security note:** Go plugins run locally without a security sandbox; import trusted sources only. Personal plugins, keys, settings, and captures stay local; the public repository contains generic examples only.
+
+- **Platform / 平台:** Windows x64
+- **File / 檔案:** `McpNet-v1.2.0-windows-x64.exe`
+- **Release / 發布:** [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.2.0)
 
 ## v1.1.4 — 2026-10-23 — Plugin Extensibility / 插件功能擴充
 
