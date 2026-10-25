@@ -1,5 +1,15 @@
 # Release Notes / 版本紀錄
 
+## v1.2.4 — 2026-10-25 — Automatic Local CA Generation / 本機 CA 自動產生
+
+### 繁體中文
+
+- CA 設定新增「自動生成並應用證書」：產生適用於本機 HTTPS 解密的 RSA-2048 自簽根 CA，保存於使用者設定目錄並立即套用至 McpNet；私鑰不會上傳。此功能不會自動安裝至 Windows 受信任根憑證存放區，系統信任仍需使用者明確執行既有安裝操作。
+
+### English
+
+- Added “Generate and apply a certificate” to CA settings. It creates an RSA-2048 self-signed root CA for local HTTPS inspection, stores the certificate and private key in the user's configuration directory, and applies it to McpNet. The private key is never uploaded. The feature does not install the CA into the Windows trusted root store; that remains a separate, explicit user action.
+
 ## v1.2.3 — 2026-10-25 — MCP Tools and Live Process Filters / MCP 工具與進程規則即時同步
 
 ### 繁體中文
@@ -28,11 +38,11 @@
 - Fixed MCP HTTP replay by preserving the captured body length and Host. Normal replay now waits for the proxy response and returns its HTTP status; transport failures are reported instead of treating background queuing as success.
 - Fixed process settings not refreshing after MCP adds or removes an executable-name filter. Name rules now appear in the left list immediately, and matching running processes are checked in the right list.
 
-Current stable release / 目前正式版本：**v1.2.3**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+Current stable release / 目前正式版本：**v1.2.4**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
 
 - **Platform / 平台:** Windows x64
-- **File / 檔案:** `McpNet-v1.2.3-windows-x64.exe`
-- **Release / 發布:** [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.2.3)
+- **File / 檔案:** `McpNet-v1.2.4-windows-x64.exe`
+- **Release / 發布:** [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.2.4)
 
 ## v1.2.2 — 2026-10-24 — MCP Permission Profiles and Live Plugins / MCP 權限設定與插件即時更新
 

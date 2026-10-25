@@ -1254,7 +1254,7 @@ func mcpUICommandPermission(command string, args map[string]any) (category, oper
 			return "settings", "清除所選連線的已捕獲資料 / clear captured data for the selected connection"
 		}
 		return "private_read", "複製所選連線的封包資料 / copy captured packet data from the selected connection"
-	case "设置断点模式", "清空", "删除请求会话", "更新注释", "更新主题", "标记颜色", "工作状态", "启动监听", "停止监听", "mcp設定權限", "mcp设置路径", "mcp重启", "保存主题", "设置IE代理", "选择文件", "保存文件对话框", "取消搜索颜色标记", "CloseWindow", "保存配置", "加载配置", "重置所有配置", "设置右键菜单配置", "重置颜色列表", "保存上游代理使用规则", "设置上游代理", "保存强制TCP使用规则", "创建证书", "创建证书管理器", "安装CA证书", "导入证书", "安装默认证书", "导出默认证书", "应用默认证书", "修改端口号", "禁止UDP", "禁止TCP", "禁止缓存", "身份验证模式", "更新身份验证账号信息", "加载驱动", "枚举进程图标", "枚举全部进程图标", "进程驱动添加进程名", "进程驱动添加PID", "载入请求证书", "保存替换规则", "保存HOSTS规则", "删除证书管理器", "init", "置剪辑版文本":
+	case "设置断点模式", "清空", "删除请求会话", "更新注释", "更新主题", "标记颜色", "工作状态", "启动监听", "停止监听", "mcp設定權限", "mcp设置路径", "mcp重启", "保存主题", "设置IE代理", "选择文件", "保存文件对话框", "取消搜索颜色标记", "CloseWindow", "保存配置", "加载配置", "重置所有配置", "设置右键菜单配置", "重置颜色列表", "保存上游代理使用规则", "设置上游代理", "保存强制TCP使用规则", "创建证书", "自動生成並應用證書", "创建证书管理器", "安装CA证书", "导入证书", "安装默认证书", "导出默认证书", "应用默认证书", "修改端口号", "禁止UDP", "禁止TCP", "禁止缓存", "身份验证模式", "更新身份验证账号信息", "加载驱动", "枚举进程图标", "枚举全部进程图标", "进程驱动添加进程名", "进程驱动添加PID", "载入请求证书", "保存替换规则", "保存HOSTS规则", "删除证书管理器", "init", "置剪辑版文本":
 		return "settings", "更改應用程式、代理、監聽、進程或憑證設定 / change application, proxy, capture, process, or certificate settings"
 	default:
 		return "generic", "命令可能讀取私人資料或更改應用程式／系統狀態 / the command may read private data or change application/system state"
@@ -1315,7 +1315,7 @@ func mcpUICommandCatalog() []mcpUICommand {
 	names := []string{
 		"工作状态", "主动发送", "加载驱动", "加载配置", "打开记录文件", "全部放行", "关闭请求会话", "创建请求代码",
 		"启动监听", "停止监听", "枚举进程", "枚举进程图标", "枚举全部进程图标",
-		"创建证书", "创建证书管理器", "安装默认证书", "安装CA证书", "导入证书", "导出默认证书",
+		"创建证书", "自動生成並應用證書", "创建证书管理器", "安装默认证书", "安装CA证书", "导入证书", "导出默认证书",
 		"设置上游代理", "设置右键菜单配置", "设置断点模式", "设置IE代理", "删除证书管理器", "删除请求会话",
 		"应用默认证书", "更新主题", "更新身份验证账号信息", "更新注释", "身份验证模式", "取消搜索颜色标记",
 		"进程驱动添加进程名", "进程驱动添加PID", "保存上游代理使用规则", "保存文件", "保存文件对话框",
@@ -1340,6 +1340,8 @@ func mcpUICommandCatalog() []mcpUICommand {
 			authorization = "always_requires_direct_confirmation"
 		}
 		switch name {
+		case "自動生成並應用證書":
+			description = `Generates a local RSA-2048 self-signed root CA, saves the certificate and private key under the current user's McpNet_new/certificates directory, and applies it to McpNet. It does not install the CA into the Windows trust store; use the separate explicit certificate-install command if needed.`
 		case "插件源码":
 			description = `Args: {"Id":"plugin-id"}. Returns local plugin Go source; treat as private code.`
 		case "插件清單":

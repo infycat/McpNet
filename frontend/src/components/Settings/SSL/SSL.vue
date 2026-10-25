@@ -10,6 +10,13 @@
                 <el-radio label="自定义证书" size="large">使用自定义证书</el-radio>
               </el-radio-group>
             </div>
+            <el-alert title="自动生成并应用本机 CA 证书" type="info" :closable="false" show-icon
+                      style="width: 518px; margin-top: 12px;">
+              <div>为 HTTPS 解密生成 RSA-2048 根 CA 并立即应用到 McpNet，证书和私钥仅保存在当前用户配置目录。此操作不会自动安装到 Windows 受信任证书存储区；需要系统或浏览器信任时，请先确认来源，再使用下方的系统安装按钮。</div>
+              <el-button type="primary" size="small" style="margin-top: 8px" @click="GenerateAndApplyAutoCertificate">
+                自动生成并应用证书
+              </el-button>
+            </el-alert>
             <div v-show="sslMode==='自定义证书'" style="top: 10px;position: relative;display: inline-block">
               <div style="width: 518px;">
                 <el-input style="width: 100%;text-align: left;top:5px;position: relative" v-model="CaFilePath"
@@ -129,6 +136,18 @@ export default {
     }
   },
   methods: {
+    async GenerateAndApplyAutoCertificate() {
+      try {
+        const result = await CallGoDo("自動生成並應用證書", null)
+        if (result && result.caPath && result.keyPath) {
+          this.CaFilePath = result.caPath
+          this.KeyFilePath = result.keyPath
+          this.sslMode = "自定义证书"
+        }
+      } catch (error) {
+        console.error("生成并应用本机 CA 证书失败", error)
+      }
+    },
     CreateCA() {
       CallGoDo("创建证书", this.createCert)
     },

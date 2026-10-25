@@ -5,9 +5,14 @@ import (
 	"changeme/CommAnd"
 	"changeme/MapHash"
 	"changeme/Resource"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"github.com/qtgolang/McpNet/Api"
 	"github.com/qtgolang/McpNet/McpNet"
@@ -17,6 +22,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"io"
 	"log"
+	"math/big"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -29,6 +35,7 @@ import (
 
 var startWork = true
 var workLock sync.RWMutex
+var automaticCertificateLock sync.Mutex
 
 func SetWorkingState(open bool) {
 	workLock.Lock()
@@ -40,6 +47,113 @@ func GetWorkingState() bool {
 	defer workLock.RUnlock()
 	A := startWork
 	return A
+}
+
+func createAndApplyAutomaticCertificate() (map[string]string, error) {
+	automaticCertificateLock.Lock()
+	defer automaticCertificateLock.Unlock()
+	if app == nil || app.App == nil {
+		return nil, fmt.Errorf("McpNet 尚未初始化")
+	}
+	configPath, err := configFilePath()
+	if err != nil {
+		return nil, fmt.Errorf("取得使用者設定路徑失敗: %w", err)
+	}
+	certRootDir := filepath.Join(filepath.Dir(configPath), "certificates")
+	if err := os.MkdirAll(certRootDir, 0700); err != nil {
+		return nil, fmt.Errorf("建立本機證書目錄失敗: %w", err)
+	}
+	certDir := filepath.Join(certRootDir, "auto-generated-"+time.Now().UTC().Format("20060102T150405.000000000Z"))
+	if err := os.Mkdir(certDir, 0700); err != nil {
+		return nil, fmt.Errorf("建立本機證書目錄失敗: %w", err)
+	}
+	caPath := filepath.Join(certDir, "McpNet-Auto-Root-CA.pem")
+	keyPath := filepath.Join(certDir, "McpNet-Auto-Root-CA.key")
+
+	caPEM, keyPEM, err := createLocalInterceptionCA()
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(caPEM) == "" || strings.TrimSpace(keyPEM) == "" {
+		return nil, fmt.Errorf("證書管理器沒有輸出完整的 CA 證書與私鑰")
+	}
+	if err := os.WriteFile(caPath, []byte(caPEM), 0600); err != nil {
+		return nil, fmt.Errorf("儲存本機 CA 證書失敗: %w", err)
+	}
+	if err := os.WriteFile(keyPath, []byte(keyPEM), 0600); err != nil {
+		return nil, fmt.Errorf("儲存本機 CA 私鑰失敗: %w", err)
+	}
+	managerID := Api.CreateCertificate()
+	defer Api.RemoveCertificate(managerID)
+	if !Api.LoadX509Certificate(managerID, "", caPEM, keyPEM) {
+		return nil, fmt.Errorf("McpNet 無法載入剛建立的本機根 CA")
+	}
+
+	_TmpLock.Lock()
+	oldCert := GlobalConfig.Cert
+	GlobalConfig.Cert.CaPath = caPath
+	GlobalConfig.Cert.KeyPath = keyPath
+	GlobalConfig.Cert.Default = false
+	if err := GlobalConfig.saveToFile(); err != nil {
+		GlobalConfig.Cert = oldCert
+		_TmpLock.Unlock()
+		return nil, fmt.Errorf("證書已建立，但儲存應用設定失敗: %w", err)
+	}
+	_TmpLock.Unlock()
+
+	app.App.Error = nil
+	if err := app.App.SetCert(managerID).Error; err != nil {
+		_TmpLock.Lock()
+		GlobalConfig.Cert = oldCert
+		_ = GlobalConfig.saveToFile()
+		_TmpLock.Unlock()
+		return nil, fmt.Errorf("證書已建立，但套用至 McpNet 失敗: %w", err)
+	}
+	log.Printf("Generated and applied local HTTPS inspection CA; certificate=%s", caPath)
+	return map[string]string{"caPath": caPath, "keyPath": keyPath}, nil
+}
+
+func createLocalInterceptionCA() (string, string, error) {
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return "", "", fmt.Errorf("產生 RSA-2048 私鑰失敗: %w", err)
+	}
+	serialLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serial, err := rand.Int(rand.Reader, serialLimit)
+	if err != nil {
+		return "", "", fmt.Errorf("產生證書序號失敗: %w", err)
+	}
+	if serial.Sign() == 0 {
+		serial.SetInt64(1)
+	}
+	subject := pkix.Name{
+		Country:            []string{"US"},
+		Organization:       []string{"McpNet"},
+		OrganizationalUnit: []string{"Local HTTPS Inspection"},
+		CommonName:         "McpNet Local HTTPS Inspection CA",
+	}
+	now := time.Now().UTC()
+	template := &x509.Certificate{
+		SerialNumber:          serial,
+		Subject:               subject,
+		Issuer:                subject,
+		NotBefore:             now.Add(-5 * time.Minute),
+		NotAfter:              now.AddDate(10, 0, 0),
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+		MaxPathLen:            1,
+	}
+	der, err := x509.CreateCertificate(rand.Reader, template, template, &key.PublicKey, key)
+	if err != nil {
+		return "", "", fmt.Errorf("簽發本機根 CA 失敗: %w", err)
+	}
+	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
+	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})
+	if len(certPEM) == 0 || len(keyPEM) == 0 {
+		return "", "", fmt.Errorf("編碼本機 CA 證書失敗")
+	}
+	return string(certPEM), string(keyPEM), nil
 }
 
 func event(command string, args *JSON.SyJson) any {
@@ -1490,6 +1604,14 @@ func event(command string, args *JSON.SyJson) any {
 		}
 		CallJsAlert("创建证书成功：已储存在指定路径", "储存文件路径:\n\tCA文件: "+path1+"\n\n\tKEY文件: "+path2)
 		return true
+	case "自動生成並應用證書":
+		result, err := createAndApplyAutomaticCertificate()
+		if err != nil {
+			CallJs("弹出错误提示", "自動生成或套用本機 CA 證書失敗: "+err.Error())
+			return false
+		}
+		CallJs("弹出成功提示", "已生成並套用本機 HTTPS 解密 CA。需要系統或瀏覽器信任時，請再手動安裝 CA 證書。")
+		return result
 	case "安装CA证书":
 		CaFilePath := args.GetData("CaFilePath")
 		CaFilePath = strings.ReplaceAll(CaFilePath, "\\\\", "\\")
