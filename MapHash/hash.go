@@ -5,11 +5,13 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"github.com/qtgolang/McpNet/McpNet"
 	"github.com/qtgolang/McpNet/public"
 	"github.com/qtgolang/McpNet/src/GoWinHttp"
 	"github.com/qtgolang/McpNet/src/http"
 	"io"
+	"log"
 	"net"
 	"os"
 	"sort"
@@ -19,6 +21,11 @@ import (
 	"sync/atomic"
 	"time"
 )
+
+// MCPInternalCaptureHeader marks requests that intentionally pass through the
+// local listener for MCP replay. They must be processed by the proxy pipeline
+// but must not be inserted again as fresh user captures.
+const MCPInternalCaptureHeader = "McpNetInternalCapture"
 
 type Map struct {
 	Request      map[int]*Request
@@ -492,6 +499,33 @@ func (m *Map) Resend(TheologyArray []int, mode int, Port int) {
 	}
 }
 
+// ResendHTTPNow replays one captured HTTP request synchronously. The MCP
+// endpoint uses this form so it can report a real transport result instead of
+// claiming success when an asynchronous replay merely entered a goroutine.
+func (m *Map) ResendHTTPNow(theology, mode, port int) (int, error) {
+	if m == nil {
+		return 0, errors.New("capture store is unavailable")
+	}
+	m.lock.Lock()
+	request := m.Request[theology]
+	if request == nil {
+		m.lock.Unlock()
+		return 0, errors.New("captured request was not found")
+	}
+	if request.Way != "HTTP" {
+		m.lock.Unlock()
+		return 0, errors.New("only HTTP/HTTPS captures can be replayed with this operation")
+	}
+	snapshot := &Request{
+		Method: request.Method,
+		URL:    request.URL,
+		Header: request.Header.Clone(),
+		Body:   append([]byte(nil), request.Body...),
+	}
+	m.lock.Unlock()
+	return resendHttp(snapshot, mode, port)
+}
+
 func resend(m *Request, mode, Port int) {
 	if m != nil {
 		/*
@@ -500,7 +534,12 @@ func resend(m *Request, mode, Port int) {
 			}
 		*/
 		if m.Way == "HTTP" {
-			resendHttp(m, mode, Port)
+			statusCode, err := resendHttp(m, mode, Port)
+			if err != nil {
+				log.Printf("HTTP replay failed (mode=%d)", mode)
+			} else {
+				log.Printf("HTTP replay completed (mode=%d status=%d)", mode, statusCode)
+			}
 		}
 		/*
 			else if m.Way == "UDP" {
@@ -621,9 +660,9 @@ func resendUDP(m *Request, LocalMcpNetPort int) {
 func resendWS(m *Request, mode, Port int) {
 
 }
-func resendHttp(m *Request, mode, McpNetServerPort int) {
+func resendHttp(m *Request, mode, McpNetServerPort int) (int, error) {
 	if m == nil {
-		return
+		return 0, errors.New("captured request was not found")
 	}
 	Body := io.NopCloser(bytes.NewBuffer(m.Body))
 	defer func() {
@@ -633,19 +672,32 @@ func resendHttp(m *Request, mode, McpNetServerPort int) {
 	}()
 	h, e := http.NewRequest(m.Method, m.URL, Body)
 	if e != nil {
-		return
+		return 0, errors.New("captured HTTP request is invalid")
 	}
 	h.Header = m.Header.Clone()
+	if host := h.Header.Get("Host"); host != "" {
+		h.Host = host
+		h.Header.Del("Host")
+	}
+	h.Header.Del("Content-Length")
+	h.ContentLength = int64(len(m.Body))
 	h.Header.Set("McpNetMode", strconv.Itoa(mode))
+	// This request deliberately re-enters McpNet's own listener. Mark it as an
+	// internal HTTP client so the core's loop-prevention check does not mistake
+	// the replay connection for a proxy loop and answer with its local help page.
+	h.Header.Set(public.HTTPClientTags, "true")
+	h.Header.Set(MCPInternalCaptureHeader, "true")
 	w := GoWinHttp.NewGoWinHttp()
 	w.SetProxyType(true)
 	w.SetProxyIP("127.0.0.1:" + strconv.Itoa(McpNetServerPort))
 	RES, _ := w.Do(h)
-	if RES != nil {
-		if RES.Body != nil {
-			_ = RES.Body.Close()
-		}
+	if RES == nil {
+		return 0, errors.New("HTTP replay failed through the McpNet listener")
 	}
+	if RES.Body != nil {
+		_ = RES.Body.Close()
+	}
+	return RES.StatusCode, nil
 }
 
 type UpdateSocketList struct {

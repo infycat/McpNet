@@ -50,7 +50,8 @@ func TestMCPCaptureToolsDefaultToMetadata(t *testing.T) {
 	if _, ok := row["request_headers"]; ok {
 		t.Fatal("capture listing exposed headers")
 	}
-	if row["url"] != "http://example.test/[redacted]" {
+	redactedURL, err := url.Parse(row["url"].(string))
+	if err != nil || redactedURL.Path != "/[redacted]" || redactedURL.RawQuery != "" || redactedURL.User != nil {
 		t.Fatalf("capture listing did not redact private URL components: %#v", row["url"])
 	}
 	if _, ok := row["client_ip"]; ok {
@@ -110,6 +111,7 @@ func TestMCPToolsExposePluginAndSendWorkflows(t *testing.T) {
 		"mcpnet_send_session_data":  false,
 		"mcpnet_replay_capture":     false,
 		"mcpnet_command":            false,
+		"mcpnet_list_commands":      false,
 	}
 	for _, tool := range mcpTools() {
 		if _, ok := want[tool.Name]; ok {

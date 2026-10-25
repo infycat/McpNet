@@ -15,11 +15,17 @@ import (
 
 // App struct
 type App struct {
-	ctx             context.Context
-	App             *McpNet.Mcp
-	listenerMu      sync.Mutex
-	listenerRunning bool
-	proxyEnabled    bool
+	ctx                 context.Context
+	App                 *McpNet.Mcp
+	listenerMu          sync.Mutex
+	listenerRunning     bool
+	proxyEnabled        bool
+	processDriverMu     sync.Mutex
+	processDriverLoaded bool
+	processFilterMu     sync.RWMutex
+	processPIDFilters   map[int]bool
+	processNameFilters  map[string]bool
+	processAllFiltered  bool
 
 	mcpMu sync.Mutex
 	mcp   *mcpServer
@@ -27,7 +33,10 @@ type App struct {
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{}
+	return &App{
+		processPIDFilters:  make(map[int]bool),
+		processNameFilters: make(map[string]bool),
+	}
 }
 
 type Command struct {
@@ -163,6 +172,23 @@ func (a *App) Do(arg any) any {
 }
 func (a *App) CallDo(arg ...any) {
 	runtime.EventsEmit(a.ctx, "Do", arg...)
+}
+
+// notifyMCPUIStateChanged pushes authoritative backend state to the mounted UI
+// immediately after an MCP mutation. Components that are currently closed can
+// still query the same backend snapshot when they are opened.
+func (a *App) notifyMCPUIStateChanged(section string) {
+	if a == nil || a.ctx == nil {
+		return
+	}
+	a.CallDo(&Command{Command: "MCP狀態已更新", Args: section})
+}
+
+func (a *App) notifyMCPUIOperation(message string) {
+	if a == nil || a.ctx == nil || message == "" {
+		return
+	}
+	a.CallDo(&Command{Command: "MCP操作已完成", Args: message})
 }
 func getFloat64(arg any) float64 {
 	switch v := arg.(type) {

@@ -45,6 +45,36 @@ func CallJsAlert(Title, MessageText string) {
 }
 
 var HashMap = MapHash.NewHashMap()
+var internalMCPHTTPRequests sync.Map // map[capture theology]time.Time
+
+func isInternalMCPHTTPRequest(conn *McpNet.HttpConn) bool {
+	if conn == nil || conn.Request == nil {
+		return false
+	}
+	if conn.Type == public.HttpSendRequest && conn.Request.Header != nil && conn.Request.Header.Get(MapHash.MCPInternalCaptureHeader) == "true" {
+		conn.Request.Header.Del(MapHash.MCPInternalCaptureHeader)
+		now := time.Now()
+		internalMCPHTTPRequests.Range(func(key, value any) bool {
+			if created, ok := value.(time.Time); ok && now.Sub(created) > 2*time.Minute {
+				internalMCPHTTPRequests.Delete(key)
+			}
+			return true
+		})
+		internalMCPHTTPRequests.Store(conn.Theology, now)
+	}
+	if conn.Type == public.HttpResponseOK {
+		defer internalMCPHTTPRequests.Delete(conn.Theology)
+	}
+	value, ok := internalMCPHTTPRequests.Load(conn.Theology)
+	if !ok {
+		return false
+	}
+	if created, ok := value.(time.Time); ok && time.Since(created) > 2*time.Minute {
+		internalMCPHTTPRequests.Delete(conn.Theology)
+		return false
+	}
+	return true
+}
 
 func SaveData(args *JSON.SyJson) any {
 	ConfigurationName := args.GetData("Type")
@@ -255,6 +285,7 @@ func HttpCallback(Conn *McpNet.HttpConn) {
 	if Conn.Request.Header == nil {
 		return
 	}
+	internalMCPRequest := isInternalMCPHTTPRequest(Conn)
 	McpNetMode := 0
 	{
 		if Conn.Type == public.HttpSendRequest {
@@ -373,6 +404,9 @@ func HttpCallback(Conn *McpNet.HttpConn) {
 	if Conn.Type == public.HttpSendRequest {
 		{
 			if !RunHTTPRequestScriptCode(Conn) {
+				return
+			}
+			if internalMCPRequest {
 				return
 			}
 			h := HashMap.GetRequest(Conn.Theology)
@@ -520,6 +554,9 @@ func HttpCallback(Conn *McpNet.HttpConn) {
 		}
 	} else if Conn.Type == public.HttpResponseOK {
 		Break := RunHTTPResponseScriptCode(Conn)
+		if internalMCPRequest {
+			return
+		}
 		Insert.Lock()
 		isUpdateRequestInfo := currentlySelected == Conn.Theology
 		Insert.Unlock()

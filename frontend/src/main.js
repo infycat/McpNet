@@ -12,7 +12,24 @@ import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
+import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
+import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
+import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
+import TypeScriptWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import * as MonacoEditor from 'monaco-editor'
+
+// Use workers built from the same Monaco package as the editor. Falling back
+// to the separately vendored AMD files mixes incompatible worker protocols.
+self.MonacoEnvironment = {
+    getWorker(_workerId, label) {
+        if (label === 'json') return new JsonWorker()
+        if (label === 'css' || label === 'scss' || label === 'less') return new CssWorker()
+        if (label === 'html' || label === 'handlebars' || label === 'razor') return new HtmlWorker()
+        if (label === 'javascript' || label === 'typescript') return new TypeScriptWorker()
+        return new EditorWorker()
+    },
+}
 
 window.MonacoEditor = MonacoEditor
 

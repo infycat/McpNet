@@ -151,6 +151,11 @@ export default {
   }
   ,
   methods: {
+    SetProcessNames(names) {
+      this.RowData = (names || []).map(name => ({'进程名': name}))
+      this.agGridApi?.setRowData(this.RowData)
+      this.IsHasModify = false
+    },
     AddProcessName(name) {
       for (let i = 0; i < this.RowData.length; i++) {
         const n = this.RowData[i]['进程名'].toLowerCase()

@@ -25,8 +25,8 @@ if (Test-Path $snSrc) {
 # Build to a temporary name first; only replace the official exe after success.
 $tmp = Join-Path $root 'McpNet.build.exe'
 if (Test-Path $tmp) { Remove-Item $tmp -Force }
-go build -a -buildvcs=false -tags "desktop,production,wv2runtime.download" `
-    -ldflags "-H windowsgui -s -w" -o $tmp .
+go build -a -buildvcs=false -tags "desktop,production,wv2runtime.embed" `
+    -ldflags "-H windowsgui -s -w -linkmode=internal" -o $tmp .
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $tmp)) {
     if (Test-Path -LiteralPath $tmp) { Remove-Item -LiteralPath $tmp -Force }
     throw "Build failed with exit code $LASTEXITCODE; the official executable was not changed."

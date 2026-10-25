@@ -463,7 +463,11 @@ func setPluginEnabled(id string, enabled bool) error {
 		manifest.ID = id
 	}
 	manifest.Enabled = enabled
-	return writePluginManifest(manifest, nil)
+	if err := writePluginManifest(manifest, nil); err != nil {
+		return err
+	}
+	invalidatePluginCache()
+	return nil
 }
 
 func deletePluginDir(id string) error {

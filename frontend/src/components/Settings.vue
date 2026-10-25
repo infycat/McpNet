@@ -120,7 +120,7 @@
                             <span>进程拦截</span>
                           </template>
                           <div v-show="LoadDrive" style="width: 100%;height: 300px;display: flex;">
-                            <Proc/>
+                            <Proc ref="ProcessFilters"/>
                           </div>
                           <div v-show="LoadDrive===false" style="width: 100%;height: 30px;display: flex;">
                             <div style="width: 100%;height: 100%">

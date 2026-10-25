@@ -91,6 +91,10 @@ export default {
       this.$refs.ProcessName.MenuItems[2].visible = !newValue
       this.$refs.ProcessName.MenuItems[3].visible = !newValue
       this.$nextTick(() => {
+        if (this.syncingMCPState) {
+          this.syncingMCPState = false
+          return
+        }
         CallGoDo("进程驱动添加进程名", {Name: "{OpenALL}", isSet: newValue})
       })
     },
@@ -117,11 +121,20 @@ export default {
       anyProcess: false,
       //显示并刷新附近进程列表
       nearbyProcessList: true,
-      Adding: false
+      Adding: false,
+      syncingMCPState: false,
+      mcpSelectedPIDSet: new Set(),
+      mcpSelectedNameSet: new Set(),
+      mcpStateChangedHandler: null,
     }
 
   },
   mounted() {
+    this.mcpStateChangedHandler = (event) => {
+      if (event.detail === "process" || event.detail === "refresh") this.refreshMCPState()
+    }
+    window.addEventListener("mcpnet-state-changed", this.mcpStateChangedHandler)
+    this.$nextTick(() => this.refreshMCPState())
     setInterval(() => {
       if (!this.isEnumerateProcesses) {
         if (window.UI.Settings && window.vm.Settings.Title.indexOf("进程拦截") !== -1 && !this.anyProcess && window.vm.Settings.LoadDrive) {
@@ -133,7 +146,23 @@ export default {
       }
     }, 1000)
   },
+  beforeUnmount() {
+    if (this.mcpStateChangedHandler) window.removeEventListener("mcpnet-state-changed", this.mcpStateChangedHandler)
+  },
   methods: {
+    async refreshMCPState() {
+      const state = await CallGoDo("MCP進程篩選狀態", null)
+      if (!state || !this.$refs.ProcessPid || !this.$refs.ProcessName) return
+      this.mcpSelectedPIDSet = new Set((state.pids || []).map(pid => String(pid)))
+      this.mcpSelectedNameSet = new Set((state.names || []).map(name => String(name).trim().toLowerCase()))
+      this.syncingMCPState = true
+      this.anyProcess = !!state.all
+      this.$refs.ProcessName.SetProcessNames(state.names || [])
+      if (!state.all && window.UI.Settings && window.vm.Settings?.Title.indexOf("進程攔截") !== -1) {
+        await this.EnumerateProcesses()
+      }
+      this.syncingMCPState = false
+    },
     addProcessName() {
       const pName = this.AddName.trim().toLowerCase()
       if (pName === '') {
@@ -168,8 +197,11 @@ export default {
                   const item = res[pid]
                   const processName = item?.name || item?.title || item || ""
                   const icon = item?.ico || ""
-                  if (ps['进程名'] !== processName || ps.ico !== icon) {
-                    update.push({PID: pid, '进程名': processName, ico: icon})
+                  const selectedByPID = this.mcpSelectedPIDSet.has(String(pid))
+                  const selectedByName = this.mcpSelectedNameSet.has(String(processName).trim().toLowerCase())
+                  const selected = selectedByPID || selectedByName
+                  if (ps['进程名'] !== processName || ps.ico !== icon || (ps.box === 1) !== selected || ps.selectedByName !== selectedByName) {
+                    update.push({PID: pid, '进程名': processName, ico: icon, box: selected ? 1 : 0, selectedByName, selectedByPID})
                   }
                 }
               }
@@ -182,7 +214,10 @@ export default {
                     addList.push({
                       PID: pid,
                       '进程名': item?.name || item?.title || item || "",
-                      ico: item?.ico || ""
+                      ico: item?.ico || "",
+                      box: this.mcpSelectedPIDSet.has(String(pid)) || this.mcpSelectedNameSet.has(String(item?.name || item?.title || item || "").trim().toLowerCase()) ? 1 : 0,
+                      selectedByName: this.mcpSelectedNameSet.has(String(item?.name || item?.title || item || "").trim().toLowerCase()),
+                      selectedByPID: this.mcpSelectedPIDSet.has(String(pid))
                     })
                   }
                 }

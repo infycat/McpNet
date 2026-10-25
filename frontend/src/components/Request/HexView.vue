@@ -807,7 +807,13 @@ export default {
     },
     handleSelect(event) {
       let Bool = false
-      let ev = document.elementFromPoint(window.mouseX, window.mouseY);
+      const mouseX = Number(window.mouseX)
+      const mouseY = Number(window.mouseY)
+      if (!Number.isFinite(mouseX) || !Number.isFinite(mouseY)) {
+        this.isContextMenuVisible = false
+        return
+      }
+      let ev = document.elementFromPoint(mouseX, mouseY);
       while (true) {
         if (ev === null || ev === void 0) {
           break

@@ -1,6 +1,38 @@
 # Release Notes / 版本紀錄
 
-Current stable release / 目前正式版本：**v1.2.2**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+## v1.2.3 — 2026-10-25 — MCP Tools and Live Process Filters / MCP 工具與進程規則即時同步
+
+### 繁體中文
+
+- 新增 `mcpnet_list_commands`，讓 AI 客戶端可探索前端使用的後端命令，再透過 `mcpnet_command` 以 UI 相同的 `Args` 格式操作。
+- 新增直接網路 MCP 工具：可建立 HTTP/HTTPS、WebSocket 請求及 TCP/UDP 連線並傳送 Base64 資料；網路發送與讀取響應分別使用網路寫入和私密資料權限。回應大小限制為 64 KiB，HTTP 不跟隨重新導向。`mcpnet_send_session_data` 仍用於既有 WebSocket/TCP/UDP 連線。
+- 新增具名插件 MCP 工具，可讀取插件清單／原始碼、建立或更新插件、刪除插件，以及執行插件自訂 UI 動作；保存操作強制維持停用，必須另行授權啟用。
+- 插件清單、匯入、啟用、管理與自訂 UI 動作改為直接呼叫 Go 後端，不依賴前端視窗事件轉接；啟用／停用後同步清除插件快取。
+- 修正注入式 MCP 確認回呼被本機已保存的完全允許設定略過的測試隔離問題；擴充前端及後端命令目錄覆蓋測試，並補入受私密資料權限保護的「枚舉進程」命令。
+- MCP 與健康檢查 HTTP 端點拒絕非 loopback Host/Origin，移除通配 CORS 與無狀態服務虛構的 session ID；新增 2025-11-25 等協議版本協商、未知版本拒絕及 JSON-RPC 版本檢查。
+- 通用 UI 命令現在按私密資料、設定、插件程式碼及網路寫入分類，讓部分授權模式可精細使用；命令目錄提供每個操作的 `Args` 欄位、權限類別及授權方式提示，並標明依參數變化權限的命令；檔案選擇與儲存視窗可由 MCP 傳入絕對路徑，避免呼叫原生視窗；默認 CA 證書可指定路徑匯出且不覆寫既有檔案。MCP 權限設定變更一律須使用者直接確認。
+- 修正封包 Hex 檢視器在滑鼠座標尚未初始化時呼叫 `elementFromPoint`，造成前端 JavaScript 錯誤的問題。
+- 修正 MCP HTTP 重播：補回捕獲請求本文長度與 Host，讓 POST 等請求可正確重播；一般重播現在等待代理回應並回報 HTTP 狀態碼，失敗會回傳錯誤，不再把背景排隊當成已成功。
+- 修正 MCP 以進程名稱新增或移除攔截規則後，程序設定左右清單未同步的問題；名稱規則會即時顯示於左側，右側也會勾選所有匹配的執行中進程。
+
+### English
+
+- Added `mcpnet_list_commands` so AI clients can discover backend commands used by the UI and invoke them through `mcpnet_command` with the same `Args` shape.
+- Added direct network MCP tools for new HTTP/HTTPS requests, WebSocket messages, and TCP/UDP connections with Base64 payloads. Network writes and response reads use separate permission categories; responses are capped at 64 KiB and HTTP redirects are not followed. `mcpnet_send_session_data` remains available for existing WebSocket/TCP/UDP sessions.
+- Added named plugin MCP tools to read plugin manifests/source, create or update plugins, delete plugins, and invoke custom plugin UI actions. Saving always leaves a plugin disabled; enabling is a separate authorized operation.
+- Routed plugin listing, import, enablement, management, and custom UI actions directly through the Go backend instead of relying on frontend event forwarding; enabling/disabling now invalidates the plugin cache.
+- Fixed test isolation where a locally persisted unrestricted policy could bypass an injected MCP confirmation callback; expanded frontend/backend catalog coverage checks and added the private-read protected `枚舉進程` command.
+- The MCP and health-check HTTP endpoints now reject non-loopback Host/Origin values. The MCP service removes wildcard CORS and synthetic session IDs, negotiates protocol versions including 2025-11-25, rejects unsupported version headers, and validates the JSON-RPC version.
+- Categorized generic UI commands by private-read, settings, plugin-code, and network-write permissions so custom grants can use them selectively. Command discovery now lists each operation's `Args` fields, permission category, and authorization behavior, including context-dependent commands; file-picker commands accept explicit absolute paths without opening native dialogs; default CA certificate export accepts a path and refuses to overwrite existing files; changing MCP permissions always requires direct user confirmation.
+- Fixed a Hex packet-viewer JavaScript error caused by calling `elementFromPoint` before mouse coordinates were initialized.
+- Fixed MCP HTTP replay by preserving the captured body length and Host. Normal replay now waits for the proxy response and returns its HTTP status; transport failures are reported instead of treating background queuing as success.
+- Fixed process settings not refreshing after MCP adds or removes an executable-name filter. Name rules now appear in the left list immediately, and matching running processes are checked in the right list.
+
+Current stable release / 目前正式版本：**v1.2.3**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+
+- **Platform / 平台:** Windows x64
+- **File / 檔案:** `McpNet-v1.2.3-windows-x64.exe`
+- **Release / 發布:** [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.2.3)
 
 ## v1.2.2 — 2026-10-24 — MCP Permission Profiles and Live Plugins / MCP 權限設定與插件即時更新
 
@@ -10,6 +42,8 @@ Current stable release / 目前正式版本：**v1.2.2**. Previous releases rema
 - MCP 新增三種本機權限模式：逐次詢問（預設）、部分允許與完全允許。部分允許可分別授權讀取完整封包資料、變更設定／監聽代理、導入或啟用插件程式碼、發送或重播網路資料。
 - 完全允許會略過所有 MCP 操作確認，包括私密封包資料讀取與網路／插件操作；只連接可信任的 MCP 客戶端。權限設定保存在本機，原有設定預設仍是逐次詢問。
 - MCP 健康檢查與伺服器資訊改為使用同一個應用程式版本來源。
+- MCP 可依精確的執行檔名稱查找本機進程，並在授權後直接載入進程攔截驅動、增刪進程名稱／PID 規則或清除規則；不必透過滑鼠鍵盤操作介面。查找 PID 屬私密資料權限；驅動與篩選規則使用設定權限，載入驅動仍需 Windows 管理員權限。
+- Windows 建置改用 Go 內部 PE linker，保留應用程式 UAC manifest，避免 MinGW 重複插入 manifest 導致連結失敗。
 
 ### English
 
@@ -17,6 +51,8 @@ Current stable release / 目前正式版本：**v1.2.2**. Previous releases rema
 - Added three local MCP permission modes: ask per operation (default), custom/partial grants, and unrestricted access. Partial grants independently control full capture-data reads, settings/capture/proxy controls, plugin import or execution, and network sends/replays.
 - Unrestricted access skips all MCP confirmations, including private capture reads and network/plugin actions. Connect trusted MCP clients only. Permission settings are stored locally, and existing installations remain in ask-per-operation mode by default.
 - MCP health and server information now use the application's shared version value.
+- MCP can find local processes by exact executable name and, after authorization, load the process-interception driver, add/remove executable-name or PID filters, or clear filters directly without UI automation. PID lookup uses the private-read permission; driver/filter operations use settings permission, and driver loading still requires Windows administrator privileges.
+- Windows builds now use Go's internal PE linker to preserve the application's UAC manifest and avoid duplicate-manifest failures from MinGW.
 
 - **Platform / 平台:** Windows x64
 - **File / 檔案:** `McpNet-v1.2.2-windows-x64.exe`

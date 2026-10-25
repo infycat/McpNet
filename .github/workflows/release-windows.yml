@@ -68,7 +68,9 @@ jobs:
           RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
         run: |
           $exeName = "McpNet-$env:RELEASE_TAG-windows-x64.exe"
-          go build -a -buildvcs=false -tags 'desktop,production,wv2runtime.embed' -ldflags '-H windowsgui -s -w' -o $exeName .
+          # Use Go's PE linker so the checked-in UAC manifest in app.syso is
+          # not combined with MinGW's automatically injected default manifest.
+          go build -a -buildvcs=false -tags 'desktop,production,wv2runtime.embed' -ldflags '-H windowsgui -s -w -linkmode=internal' -o $exeName .
           if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $exeName)) {
             throw 'Windows x64 build failed.'
           }

@@ -367,6 +367,35 @@ export async function EventsDo(arg) {
                 window.vm.Footer.Title = "启动失败:  " + McpErrorReplaceAll(Args)
             }
             return
+        case "MCP狀態已更新":
+            if (window.dispatchEvent) {
+                window.dispatchEvent(new CustomEvent("mcpnet-state-changed", {detail: Args || "refresh"}))
+            }
+            if (Args === "listener") {
+                CallGoDo("监听状态", null).then(state => {
+                    if (!state || typeof state !== "object") return
+                    window.vm.ListenerState?.setRunning(!!state.running)
+                    window.vm.IEProxy?.setEnabled(!!state.proxy)
+                    if (state.running) {
+                        CallGoDo("获取运行端口", null).then(port => {
+                            window.vm.Footer.Title = "启动成功:" + port
+                        })
+                    } else {
+                        window.vm.Footer.Title = "监听未开启"
+                    }
+                })
+            }
+            if (Args === "process") {
+                CallGoDo("MCP進程驅動狀態", null).then(loaded => {
+                    if (window.vm.Settings && typeof loaded === "boolean") {
+                        window.vm.Settings.LoadDrive = loaded
+                    }
+                })
+            }
+            return
+        case "MCP操作已完成":
+            ElMessage({message: Args, type: "info", duration: 3200})
+            return
         case "插入列表":
             if (window.isHideHook) {
                 return
