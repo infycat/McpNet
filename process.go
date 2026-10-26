@@ -132,18 +132,32 @@ func (a *App) processFilterSnapshot() map[string]any {
 }
 
 func (a *App) startProcessDriver() (bool, error) {
-	a.processDriverMu.Lock()
-	defer a.processDriverMu.Unlock()
 	if a.App == nil {
 		return false, fmt.Errorf("McpNet core is not initialized")
 	}
+	listenerWasRunning, _ := a.listenerStatus()
+	if err := a.startProcessEndpoint(); err != nil {
+		return false, fmt.Errorf("start local process-capture endpoint: %w", err)
+	}
+	if !listenerWasRunning {
+		a.notifyMCPUIStateChanged("listener")
+	}
+
+	a.processDriverMu.Lock()
 	if a.processDriverLoaded {
+		a.processDriverMu.Unlock()
 		return true, nil
 	}
 	if !a.App.StartProcess() {
+		a.processDriverMu.Unlock()
+		if !listenerWasRunning {
+			a.stopListener()
+			a.notifyMCPUIStateChanged("listener")
+		}
 		return false, fmt.Errorf("process interception driver failed to load; run McpNet with required Windows privileges and inspect the startup log")
 	}
 	a.processDriverLoaded = true
+	a.processDriverMu.Unlock()
 	return true, nil
 }
 

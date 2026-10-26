@@ -15,17 +15,18 @@ import (
 
 // App struct
 type App struct {
-	ctx                 context.Context
-	App                 *McpNet.Mcp
-	listenerMu          sync.Mutex
-	listenerRunning     bool
-	proxyEnabled        bool
-	processDriverMu     sync.Mutex
-	processDriverLoaded bool
-	processFilterMu     sync.RWMutex
-	processPIDFilters   map[int]bool
-	processNameFilters  map[string]bool
-	processAllFiltered  bool
+	ctx                    context.Context
+	App                    *McpNet.Mcp
+	listenerMu             sync.Mutex
+	listenerRunning        bool
+	processEndpointRunning bool
+	proxyEnabled           bool
+	processDriverMu        sync.Mutex
+	processDriverLoaded    bool
+	processFilterMu        sync.RWMutex
+	processPIDFilters      map[int]bool
+	processNameFilters     map[string]bool
+	processAllFiltered     bool
 
 	mcpMu sync.Mutex
 	mcp   *mcpServer
@@ -74,6 +75,10 @@ func (a *App) startListener() error {
 	if pid, name, ok := findOriginalMcpNet(); ok {
 		return fmt.Errorf("检测到原版 %s 正在运行 (PID %d)，请先退出原版再启动监听，避免驱动冲突", name, pid)
 	}
+	if a.processEndpointRunning {
+		a.App.Close()
+		a.processEndpointRunning = false
+	}
 	a.App.Error = nil
 	if err := a.App.Start().Error; err != nil {
 		log.Printf("Start listener failed: %v", err)
@@ -95,10 +100,22 @@ func (a *App) stopListener() {
 		a.proxyEnabled = false
 		log.Printf("System proxy disabled")
 	}
-	if a.listenerRunning {
+	if a.listenerRunning || a.processEndpointRunning {
 		a.App.Close()
 		a.listenerRunning = false
+		a.processEndpointRunning = false
 		log.Printf("Listener stopped")
+		// Mcp.Close detaches the process interception callback on Windows.
+		// Keep the cached driver state in sync so the next load request can
+		// reattach it instead of reporting a stale loaded state.
+		a.processDriverMu.Lock()
+		wasLoaded := a.processDriverLoaded
+		a.processDriverLoaded = false
+		a.processDriverMu.Unlock()
+		if wasLoaded {
+			log.Printf("Process driver callback detached with listener; cached driver state reset")
+			a.notifyMCPUIStateChanged("process")
+		}
 	}
 }
 
@@ -110,8 +127,17 @@ func (a *App) setSystemProxy(enable bool) bool {
 	}
 	if enable {
 		if !a.listenerRunning {
-			log.Printf("Refusing to enable system proxy: listener is not running")
-			return false
+			if a.processEndpointRunning {
+				a.App.Close()
+				a.processEndpointRunning = false
+			}
+			a.App.Error = nil
+			if err := a.App.Start().Error; err != nil {
+				log.Printf("Could not expand process endpoint for system proxy: %v", err)
+				return false
+			}
+			a.listenerRunning = true
+			log.Printf("Listener started for explicit system proxy request; port=%d", a.App.Port())
 		}
 		if a.proxyEnabled {
 			return true
@@ -139,7 +165,29 @@ func (a *App) setSystemProxy(enable bool) bool {
 func (a *App) listenerStatus() (bool, bool) {
 	a.listenerMu.Lock()
 	defer a.listenerMu.Unlock()
-	return a.listenerRunning, a.proxyEnabled
+	return a.listenerRunning || a.processEndpointRunning, a.proxyEnabled
+}
+
+func (a *App) startProcessEndpoint() error {
+	a.listenerMu.Lock()
+	defer a.listenerMu.Unlock()
+	if a.App == nil {
+		return fmt.Errorf("McpNet is still initializing")
+	}
+	if a.listenerRunning || a.processEndpointRunning {
+		return nil
+	}
+	if pid, name, ok := findOriginalMcpNet(); ok {
+		return fmt.Errorf("检测到原版 %s 正在运行 (PID %d)，请先退出原版再启动进程攔截，避免驅動衝突", name, pid)
+	}
+	a.App.Error = nil
+	if err := a.App.StartLocal().Error; err != nil {
+		log.Printf("Start local process-capture endpoint failed: %v", err)
+		return err
+	}
+	a.processEndpointRunning = true
+	log.Printf("Local process-capture endpoint started; port=%d", a.App.Port())
+	return nil
 }
 
 func (a *App) shutdown(context.Context) {

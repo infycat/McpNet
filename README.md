@@ -8,9 +8,9 @@
 
 | 最新穩定版 | 平台 | 直接下載 | 全部版本 |
 |---|---|---|---|
-| **v1.2.4** · 新增本機 HTTPS CA 自動產生與套用 | Windows x64 | [下載 McpNet-v1.2.4-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.4/McpNet-v1.2.4-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
+| **v1.2.5** · 修復遊戲進程 HTTP／WebSocket 封包捕獲 | Windows x64 | [下載 McpNet-v1.2.5-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.5/McpNet-v1.2.5-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
 
-[v1.2.4 更新內容與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.4)
+[v1.2.5 更新內容與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.5)
 
 下載成品請使用上表的 EXE 連結；GitHub 頁面上的 **Source code ZIP/TAR.GZ 是原始碼，不是安裝程式**。首次使用前請查看下方的系統需求及安全提醒。
 
@@ -169,11 +169,11 @@ AI 也可透過 `mcpnet_get_plugin` 讀取插件清單與（經私密資料授�
 
 ## 版本與下載
 
-目前正式下載版本為 v1.2.4；舊版仍保留。v1.2.4 在 CA 設定中新增本機 RSA-2048 自簽根 CA 自動產生與套用功能，憑證與私鑰保存在使用者設定目錄；不會自動安裝至 Windows 受信任根憑證存放區，系統信任仍須使用者明確操作。v1.2.3 擴充 MCP 命令探索與網路工具，並修正進程規則同步、HTTP 重播與 Hex 檢視器錯誤。每次啟動日誌位於 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup_*.log`，最近 50 份會保留。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
+目前正式下載版本為 v1.2.5；舊版仍保留。v1.2.5 修復遊戲進程 HTTP／WebSocket 流量未進入捕獲：進程攔截改用 WFP/NFAPI，載入驅動時自動啟動僅綁定 127.0.0.1 的接收端，不會設定 Windows 系統代理或新增防火牆規則。v1.2.4 新增本機 RSA-2048 自簽根 CA 自動產生與套用；私鑰留在使用者設定目錄，信任安裝仍需使用者明確操作。每次啟動日誌位於 `%LOCALAPPDATA%\McpNet_new\logs\McpNet_startup_*.log`，最近 50 份會保留。GitHub 自動產生的原始碼壓縮檔不是可執行成品。
 
 | 版本 | 日期 | 狀態 | 平台 | 成品下載 | 發布資訊 |
 |---|---|---|---|---|---|
-| **v1.2.4** | 2026-10-25 | 本機 HTTPS CA 自動產生與套用；不自動安裝至 Windows 信任存放區 | Windows x64 | [McpNet-v1.2.4-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.4/McpNet-v1.2.4-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.4) |
+| **v1.2.5** | 2026-10-27 | 修復遊戲進程 HTTP／WebSocket 捕獲；使用本機回環接收端，不開系統代理 | Windows x64 | [McpNet-v1.2.5-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.5/McpNet-v1.2.5-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.5) |
 | **v1.2.1** | 2026-10-24 | MCP 工具擴充、操作確認與隱私遮蔽 | Windows x64 | [McpNet-v1.2.1-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.1) |
 | **v1.2.0** | 2026-10-23 | 大更新：開源插件平台、社群匯入、Go hook 與自訂插件 UI | Windows x64 | [McpNet-v1.2.0-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.0) |
 | **v1.1.4** | 2026-10-23 | 插件匯入、Go hook 封包處理、自訂 HTML/JavaScript 介面 | Windows x64 | [McpNet-v1.1.4-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.1.4/McpNet-v1.1.4-windows-x64.exe) | [更新說明與 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.1.4) |
@@ -245,9 +245,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | 最新稳定版 | 平台 | 直接下载 | 全部版本 |
 |---|---|---|---|
-| **v1.2.4** · 新增本机 HTTPS CA 自动生成与应用 | Windows x64 | [下载 McpNet-v1.2.4-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.4/McpNet-v1.2.4-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
+| **v1.2.5** · 修复游戏进程 HTTP／WebSocket 数据包捕获 | Windows x64 | [下载 McpNet-v1.2.5-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.5/McpNet-v1.2.5-windows-x64.exe) | [全部版本](https://github.com/infycat/McpNet/releases) |
 
-[v1.2.4 更新内容与 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.4)
+[v1.2.5 更新内容与 SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.5)
 
 McpNet 是以开源和可扩展为核心的 Windows 网络分析工具，由 Go/Wails 后端、Vue 3 界面和 McpNet 核心组成。除 HTTP(S)、WebSocket、TCP、UDP 流量分析、规则和本机 MCP 外，用户还可通过 Go 插件自行打造协议解码、封包条件、数据修改和小型工具界面，不必等待核心内置每项功能。启动应用不会自动开启全系统流量拦截；监听与系统代理由用户分别控制。
 
@@ -378,7 +378,7 @@ HTTP(S) 捕获可用 `mcpnet_replay_capture` 重发。AI 也可用 `mcpnet_send_
 
 | 版本 | 日期 | 状态 | 平台 | 成品下载 | 发布信息 |
 |---|---|---|---|---|---|
-| **v1.2.4** | 2026-10-25 | 本机 HTTPS CA 自动生成与应用；不会自动安装到 Windows 信任存储区 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.2.4/McpNet-v1.2.4-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.2.4) |
+| **v1.2.5** | 2026-10-27 | 修复游戏进程 HTTP／WebSocket 捕获；使用本机回环接收端，不开启系统代理 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.2.5/McpNet-v1.2.5-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.2.5) |
 | **v1.2.1** | 2026-10-24 | MCP 工具扩展、操作确认与隐私遮蔽 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.2.1) |
 | **v1.2.0** | 2026-10-23 | 大更新：开源插件平台、社区导入、Go hook 与自定义插件 UI | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.2.0) |
 | **v1.1.4** | 2026-10-23 | 插件导入、Go hook 封包处理、自定义 HTML/JavaScript 界面 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.4/McpNet-v1.1.4-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.4) |
@@ -388,7 +388,7 @@ HTTP(S) 捕获可用 `mcpnet_replay_capture` 重发。AI 也可用 `mcpnet_send_
 | **v1.1.0** | 2026-10-20 | 第二版；调整全屏设置窗口边界、补充功能截图 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 | **v1.0.0** | 2026-10-20 | 首个正式版本；修复主题底板与全屏设置窗口、更新图标与作者页 | Windows x64 | [下载 EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [更新说明与校验码](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-当前正式下载版本为 v1.2.4，旧版仍保留。v1.2.4 在 CA 设置中新增本机 RSA-2048 自签根 CA 自动生成与应用功能，证书与私钥保存在用户配置目录；不会自动安装到 Windows 受信任根证书存储区，系统信任仍需用户明确操作。v1.2.3 扩展 MCP 命令探索与网络工具，并修复进程规则同步、HTTP 重放与 Hex 查看器错误。插件代码仍在本机运行，只启用可信来源。每次启动会在 `%LOCALAPPDATA%\McpNet_new\logs\` 写入带时间和 PID 的诊断日志，保留最近 50 份；无法写入时回退到用户配置目录或 `%TEMP%`。每次发布 GitHub Release 后，GitHub Actions 会自动构建 Windows x64 EXE、上传成品并补充文件大小与 SHA-256。GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。
+当前正式下载版本为 v1.2.5，旧版仍保留。v1.2.5 修复游戏进程 HTTP／WebSocket 流量未进入捕获：进程拦截改用 WFP/NFAPI，加载驱动时自动启动仅绑定 127.0.0.1 的接收端，不会设置 Windows 系统代理或新增防火墙规则。v1.2.4 新增本机 RSA-2048 自签根 CA 自动生成与应用；私钥保存在用户配置目录，信任安装仍需用户明确操作。插件代码仍在本机运行，只启用可信来源。每次启动会在 `%LOCALAPPDATA%\McpNet_new\logs\` 写入带时间和 PID 的诊断日志，保留最近 50 份；无法写入时回退到用户配置目录或 `%TEMP%`。GitHub 自动生成的 Source code 压缩包是源码，不是应用程序。
 
 v1.1.0 文件大小：91,961,856 bytes；SHA-256：`6939D6EB999FE8869E0C89B987FE22C5EBC01446874429746B8D03F57F2E93CD`。v1.0.0 SHA-256：`BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`。
 
@@ -421,9 +421,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 | Latest stable | Platform | Direct download | All versions |
 |---|---|---|---|
-| **v1.2.4** · Automatic local HTTPS CA generation and application | Windows x64 | [Download McpNet-v1.2.4-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.4/McpNet-v1.2.4-windows-x64.exe) | [All releases](https://github.com/infycat/McpNet/releases) |
+| **v1.2.5** · Fixed process capture for game HTTP and WebSocket traffic | Windows x64 | [Download McpNet-v1.2.5-windows-x64.exe](https://github.com/infycat/McpNet/releases/download/v1.2.5/McpNet-v1.2.5-windows-x64.exe) | [All releases](https://github.com/infycat/McpNet/releases) |
 
-[v1.2.4 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.4)
+[v1.2.5 notes and SHA-256](https://github.com/infycat/McpNet/releases/tag/v1.2.5)
 
 McpNet is an open-source, extensible Windows network analysis tool built with a Go/Wails backend, Vue 3 UI, and the McpNet core. Alongside HTTP(S), WebSocket, TCP, and UDP analysis, rules, and local MCP, users can build Go plugins for protocol decoding, packet conditions, data modification, and small custom tools—without waiting for every capability to be built into the core. Launching the app does **not** enable system-wide interception; capture and system-proxy controls are separate.
 
@@ -554,7 +554,7 @@ HTTP(S) captures can be replayed with `mcpnet_replay_capture`. AI clients can al
 
 | Version | Date | Status | Platform | Download | Release info |
 |---|---|---|---|---|---|
-| **v1.2.4** | 2026-10-25 | Automatic local HTTPS CA generation and application; no automatic Windows trust-store installation | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.2.4/McpNet-v1.2.4-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.2.4) |
+| **v1.2.5** | 2026-10-27 | Fixed game-process HTTP/WebSocket capture; loopback-only receiver, no system proxy or firewall rule | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.2.5/McpNet-v1.2.5-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.2.5) |
 | **v1.2.1** | 2026-10-24 | Expanded MCP tools with per-action approval and privacy protections | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.2.1/McpNet-v1.2.1-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.2.1) |
 | **v1.2.0** | 2026-10-23 | Major update: open plugin platform, community imports, Go hooks, and custom plugin UI | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.2.0/McpNet-v1.2.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.2.0) |
 | **v1.1.4** | 2026-10-23 | Plugin imports, flexible Go hooks, and custom HTML/JavaScript UI | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.4/McpNet-v1.1.4-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.4) |
@@ -564,7 +564,7 @@ HTTP(S) captures can be replayed with `mcpnet_replay_capture`. AI clients can al
 | **v1.1.0** | 2026-10-20 | Second release; maximized settings bounds fixed and feature screenshots added | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.1.0/McpNet-v1.1.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.1.0) |
 | **v1.0.0** | 2026-10-20 | Initial stable release; themed panels, maximized settings, icon, and author page updated | Windows x64 | [Download EXE](https://github.com/infycat/McpNet/releases/download/v1.0.0/McpNet-v1.0.0-windows-x64.exe) | [Notes and checksum](https://github.com/infycat/McpNet/releases/tag/v1.0.0) |
 
-The current official download is v1.2.4, with older releases retained as history. This release adds automatic generation and application of a local RSA-2048 self-signed root CA in CA settings. The certificate and private key stay in the user configuration directory; the app does not install it into the Windows trusted root store, which still requires an explicit user action. v1.2.3 expanded MCP command discovery and network tools and fixed process-filter synchronization, HTTP replay, and the Hex viewer. Plugin code still runs locally; enable trusted code only. Each launch writes a timestamped diagnostic log under `%LOCALAPPDATA%\McpNet_new\logs\` (with config-directory and `%TEMP%` fallbacks); the newest 50 are retained. Publishing a GitHub Release triggers GitHub Actions to build and upload the Windows x64 executable and add its file size and SHA-256. GitHub's automatically generated source archives are not executable builds.
+The current official download is v1.2.5, with older releases retained as history. v1.2.5 fixes game-process HTTP/WebSocket traffic missing from capture: process interception uses WFP/NFAPI and starts a receiver bound only to 127.0.0.1 when the driver loads. It does not configure the Windows system proxy or add a firewall rule. v1.2.4 added local RSA-2048 self-signed root CA generation and application; the private key stays in the user configuration directory, and Windows trust installation remains an explicit user action. Plugin code runs locally; enable trusted code only. Each launch writes a timestamped diagnostic log under `%LOCALAPPDATA%\McpNet_new\logs\` (with config-directory and `%TEMP%` fallbacks); the newest 50 are retained. Publishing a GitHub Release triggers GitHub Actions to build and upload the Windows x64 executable and add its file size and SHA-256. GitHub's automatically generated source archives are not executable builds.
 
 v1.1.0 file size: 91,961,856 bytes; SHA-256: `6939D6EB999FE8869E0C89B987FE22C5EBC01446874429746B8D03F57F2E93CD`. v1.0.0 SHA-256: `BFC3825775BCE65E29169A6DE613294BB3D5B987B12E7425EDD83FF1218C7630`.
 

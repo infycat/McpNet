@@ -1,5 +1,23 @@
 # Release Notes / 版本紀錄
 
+## v1.2.5 — 2026-10-27 — Process Capture Repair / 進程封包捕獲修復
+
+### 繁體中文
+
+- 修復部分遊戲進程的 HTTP 與 WebSocket 流量無法進入捕獲的問題：進程攔截改用 WFP/NFAPI 路徑，並在載入驅動時自動啟動僅綁定 `127.0.0.1` 的本機捕獲接收端。
+- 此流程不會自動設定 Windows 系統代理，也不會新增防火牆規則；程式設定中的監聽狀態會反映本機接收端是否運行。
+- 已用 MiniGameApp 實際驗證，捕獲到 HTTP 200 與 WebSocket 101 流量。
+
+### English
+
+- Fixed HTTP and WebSocket traffic from some game processes missing from capture. Process interception now uses the WFP/NFAPI path and automatically starts a capture endpoint bound only to `127.0.0.1` when the driver is loaded.
+- This does not configure the Windows system proxy or add a firewall rule. The app's listener status reflects whether the local endpoint is running.
+- Verified against MiniGameApp with captured HTTP 200 and WebSocket 101 traffic.
+
+- **Platform / 平台:** Windows x64
+- **File / 檔案:** `McpNet-v1.2.5-windows-x64.exe`
+- **Release / 發布:** [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.2.5)
+
 ## v1.2.4 — 2026-10-25 — Automatic Local CA Generation / 本機 CA 自動產生
 
 ### 繁體中文
@@ -38,11 +56,11 @@
 - Fixed MCP HTTP replay by preserving the captured body length and Host. Normal replay now waits for the proxy response and returns its HTTP status; transport failures are reported instead of treating background queuing as success.
 - Fixed process settings not refreshing after MCP adds or removes an executable-name filter. Name rules now appear in the left list immediately, and matching running processes are checked in the right list.
 
-Current stable release / 目前正式版本：**v1.2.4**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
+Current stable release / 目前正式版本：**v1.2.5**. Previous releases remain available. GitHub's automatically generated source archives are source code, not executable builds. / 舊版仍保留下載；GitHub 自動產生的 Source code 壓縮檔是原始碼，不是可執行成品。
 
 - **Platform / 平台:** Windows x64
-- **File / 檔案:** `McpNet-v1.2.4-windows-x64.exe`
-- **Release / 發布:** [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.2.4)
+- **File / 檔案:** `McpNet-v1.2.5-windows-x64.exe`
+- **Release / 發布:** [GitHub Release](https://github.com/infycat/McpNet/releases/tag/v1.2.5)
 
 ## v1.2.2 — 2026-10-24 — MCP Permission Profiles and Live Plugins / MCP 權限設定與插件即時更新
 

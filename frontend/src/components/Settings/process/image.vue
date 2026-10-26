@@ -11,9 +11,11 @@ export default {
       PID: "null",
       icon: "",
       processName: "",
+      currentParams: null,
     }
   },
   created() {
+    this.currentParams = this.params;
     this.PID = "" + this.params.data["PID"];
     this.checkList = this.params.data["box"] === 1;
     this.icon = this.params.data.ico || "";
@@ -23,6 +25,9 @@ export default {
 
   }, methods: {
     refresh(params) {
+      // AgGrid reuses renderer instances while replacing row data. Keep the
+      // event handler bound to the refreshed row, not the params from create.
+      this.currentParams = params
       this.PID = "" + params.data["PID"]
       this.checkList = params.data["box"] === 1
       this.icon = params.data.ico || ""
@@ -30,13 +35,14 @@ export default {
       return true
     },
     onCheckChange(value) {
-      this.params.data["box"] = value ? 1 : 0;
+      const row = this.currentParams?.data || this.params.data
+      row["box"] = value ? 1 : 0;
 
       console.log("onCheckChange", value, this.PID);
       // A process-name rule applies to every matching PID. If this row is
       // checked because of that rule, toggle the name rule itself; otherwise
       // keep the existing per-PID behavior.
-      if (this.params.data.selectedByName) {
+      if (row.selectedByName) {
         CallGoDo("进程驱动添加进程名", {Name: this.processName, isSet: value})
       } else {
         CallGoDo("进程驱动添加PID", {PID: this.PID, isSelected: value})

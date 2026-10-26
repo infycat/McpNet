@@ -2522,7 +2522,10 @@ func (s *Mcp) SetCallback(httpCall, tcpCall, wsCall, udpCall int) *Mcp {
 
 // StartProcess v1.0.3 兼容存根（加载驱动）
 func (s *Mcp) StartProcess() bool {
-	return s.OpenDrive(false)
+	// The legacy Winsock LSP path can miss modern Winsock extension calls used by
+	// CEF-based game clients. NFAPI/WFP captures those connect requests, while
+	// the app starts the local capture endpoint before calling StartProcess.
+	return s.OpenDrive(true)
 }
 
 // SetGoCallback 设置Go回调地址
@@ -2640,6 +2643,16 @@ func (s *Mcp) SetScriptCall(log GoScriptCode.LogFuncInterface, save GoScriptCode
 
 // Start 开始启动  调用 Error 获取错误信息 成功=nil
 func (s *Mcp) Start() *Mcp {
+	return s.start("0.0.0.0", true)
+}
+
+// StartLocal starts a loopback-only listener for process interception. It
+// does not add the inbound firewall rule used by the general proxy listener.
+func (s *Mcp) StartLocal() *Mcp {
+	return s.start("127.0.0.1", false)
+}
+
+func (s *Mcp) start(host string, addFirewallRule bool) *Mcp {
 	if s.isRun {
 		s.Error = errors.New("已在运行中")
 		return s
@@ -2651,13 +2664,16 @@ func (s *Mcp) Start() *Mcp {
 	if !s.initCertOK {
 		return s
 	}
-	CrossCompiled.AddFirewallRule()
-	tcpListen, err := net.Listen("tcp", "0.0.0.0:"+strconv.Itoa(s.port))
+	if addFirewallRule {
+		CrossCompiled.AddFirewallRule()
+	}
+	address := net.JoinHostPort(host, strconv.Itoa(s.port))
+	tcpListen, err := net.Listen("tcp", address)
 	if err != nil {
 		s.Error = err
 		return s
 	}
-	udpListenAddr, err := net.ResolveUDPAddr("udp", "0.0.0.0:"+strconv.Itoa(s.port))
+	udpListenAddr, err := net.ResolveUDPAddr("udp", address)
 	if err != nil {
 		s.Error = err
 		_ = tcpListen.Close()
